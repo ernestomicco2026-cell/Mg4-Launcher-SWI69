@@ -1,6 +1,6 @@
 {
-  "version": "0.2.6",
-  "apk": "releases/MG4Launcher-SWI69-0.2.6.apk",
-  "size": 446493,
-  "notes": "Nuove impostazioni a sezioni con versione e Installa sempre visibili, musica Bluetooth che riprende da sola se passa alla radio dopo una notifica, temperatura interna attivabile dalle impostazioni."
+  "version": "0.2.7",
+  "apk": "releases/MG4Launcher-SWI69-0.2.7.apk",
+  "size": 459011,
+  "notes": "Il launcher parte all'accensione e sostituisce la home MG anche quando la apre il tasto Home; Impostazioni Android e File Android nella pagina App."
 }
