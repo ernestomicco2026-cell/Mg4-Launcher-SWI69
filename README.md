@@ -13,7 +13,7 @@
 > Per gli altri software usa la versione dedicata · for the other software use the dedicated version:
 > **SWI68 SAIC 1.0+** → [Mg4-Launcher-SWI68](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68) ·
 > **SWI132 (MG4 MY24)** → [Mg4-Launcher-SWI132](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI132) ·
-> **SWI133 (nuova MG4 Luxury / new MG4 Luxury)** → [Mg4-Launcher-SWI133](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI133)
+> **SWI133 (MG4 Luxury MY24)** → [Mg4-Launcher-SWI133](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI133)
 
 > Progetto amatoriale e **non ufficiale**: non è affiliato né approvato da MG Motor o SAIC Motor.
 > I nomi MG / MG4 servono solo a indicare l'auto compatibile (infotainment SWI69). Installalo e usalo a tuo rischio.
@@ -61,12 +61,12 @@ C'è **un launcher diverso per ciascun software** dell'infotainment MG4. Non son
 servizi dell'auto, radio, media e clima sono diversi, e con la versione sbagliata il launcher si apre ma non legge
 nulla dall'auto ("Servizio veicolo non disponibile").
 
-| Software dell'auto | Repository | File APK |
-|---|---|---|
-| **SWI68 SAIC 1.0+** | [Mg4-Launcher-SWI68](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68) | `MG4Launcher-X.Y.Z.apk` |
-| **SWI69 Color Radio** | **questo repository** | `MG4Launcher-SWI69-X.Y.Z.apk` |
-| **SWI132 (MG4 MY24)** | [Mg4-Launcher-SWI132](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI132) | in preparazione / in progress |
-| **SWI133 (nuova MG4 Luxury / new MG4 Luxury)** | [Mg4-Launcher-SWI133](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI133) | in preparazione / in progress |
+| Software dell'auto | Auto | Repository | File APK |
+|---|---|---|---|
+| **SWI68 SAIC 1.0+** | MG4 | [Mg4-Launcher-SWI68](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68) | `MG4Launcher-X.Y.Z.apk` |
+| **SWI69 Color Radio** | MG4 MY23 | **questo repository** | `MG4Launcher-SWI69-X.Y.Z.apk` |
+| **SWI132** | MG4 MY24 | [Mg4-Launcher-SWI132](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI132) | `MG4Launcher-SWI132-X.Y.Z.apk` |
+| **SWI133** | MG4 Luxury MY24 | [Mg4-Launcher-SWI133](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI133) | `MG4Launcher-SWI133-X.Y.Z.apk` |
 
 **Come sapere quale software hai:** con il computer collegato all'auto
 `adb shell getprop ro.build.mt2712.version` → inizia con `SWI68-`, `SWI69-`, `SWI132-` o `SWI133-`: è il software della tua auto.
