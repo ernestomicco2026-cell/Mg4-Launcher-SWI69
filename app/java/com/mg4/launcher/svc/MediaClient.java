@@ -26,7 +26,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Sorgenti audio dell'auto, versione SWI69 (EH32 Color Radio), come la home originale SWI69:
@@ -42,10 +41,14 @@ public final class MediaClient {
     public static final int SRC_RADIO = 1, SRC_USB = 2, SRC_ONLINE = 3, SRC_BT = 4, SRC_CARPLAY = 5, SRC_AAUTO = 6;
 
     public static String sourceName(Context c, int s) {
+        return sourceName(s);
+    }
+
+    public static String sourceName(int s) {
         switch (s) {
-            case SRC_RADIO: return c.getString(R.string.name_radio);
-            case SRC_USB: return c.getString(R.string.name_usb);
-            case SRC_ONLINE: return c.getString(R.string.name_online);
+            case SRC_RADIO: return "RADIO";
+            case SRC_USB: return "MUSICA USB";
+            case SRC_ONLINE: return "MUSICA ONLINE";
             case SRC_BT: return "BLUETOOTH";
             case SRC_CARPLAY: return "CARPLAY";
             case SRC_AAUTO: return "ANDROID AUTO";
@@ -86,14 +89,14 @@ public final class MediaClient {
         public String label() {
             if (!name.isEmpty()) return name;
             if (band == BAND_AM) return khz + " kHz";
-            return String.format(Locale.getDefault(), "%.1f", khz / 1000f);
+            return String.format(com.mg4.launcher.L.locale(), "%.1f", khz / 1000f);
         }
 
         /** Seconda riga nell'elenco: frequenza (FM) o multiplex (DAB). */
         public String detail() {
             if (band == BAND_DAB) return ensemble.isEmpty() ? "DAB+" : "DAB+ · " + ensemble;
             if (band == BAND_AM) return khz + " kHz";
-            return String.format(Locale.getDefault(), "%.1f MHz", khz / 1000f);
+            return String.format(com.mg4.launcher.L.locale(), "%.1f MHz", khz / 1000f);
         }
 
         JSONObject toJson() throws Exception {
@@ -491,20 +494,20 @@ public final class MediaClient {
         }
         switch (src) {
             case SRC_USB:
-                if (s.title.isEmpty()) s.title = ctx.getString(R.string.usb_no_track);
-                if (s.subtitle.isEmpty()) s.subtitle = ctx.getString(R.string.usb_plug);
+                if (s.title.isEmpty()) s.title = com.mg4.launcher.L.s(R.string.no_track);
+                if (s.subtitle.isEmpty()) s.subtitle = com.mg4.launcher.L.s(R.string.plug_usb);
                 break;
             case SRC_BT:
-                if (s.title.isEmpty()) s.title = ctx.getString(R.string.bt_title);
-                if (s.subtitle.isEmpty()) s.subtitle = ctx.getString(R.string.bt_start);
+                if (s.title.isEmpty()) s.title = com.mg4.launcher.L.s(R.string.bt_music);
+                if (s.subtitle.isEmpty()) s.subtitle = com.mg4.launcher.L.s(R.string.bt_start);
                 break;
             case SRC_ONLINE:
-                if (s.title.isEmpty()) s.title = ctx.getString(R.string.online_title);
+                if (s.title.isEmpty()) s.title = com.mg4.launcher.L.s(R.string.online_music);
                 break;
             case SRC_CARPLAY:
             case SRC_AAUTO:
                 if (s.title.isEmpty()) s.title = src == SRC_CARPLAY ? "CarPlay" : "Android Auto";
-                if (s.subtitle.isEmpty()) s.subtitle = s.deviceName.isEmpty() ? ctx.getString(R.string.from_phone) : s.deviceName;
+                if (s.subtitle.isEmpty()) s.subtitle = s.deviceName.isEmpty() ? com.mg4.launcher.L.s(R.string.from_phone) : s.deviceName;
                 break;
             default:
                 break;
@@ -558,7 +561,7 @@ public final class MediaClient {
                 s.radioFreq = khz > 0 ? String.valueOf(khz) : "";
                 s.radioUnit = "kHz";
             } else {
-                s.radioFreq = khz > 0 ? String.format(Locale.getDefault(), "%.1f", khz / 1000f) : "";
+                s.radioFreq = khz > 0 ? String.format(com.mg4.launcher.L.locale(), "%.1f", khz / 1000f) : "";
                 s.radioUnit = "MHz";
             }
             // per l'FM la sessione usa il nome RDS come titolo; se è solo la frequenza non è un nome
@@ -587,7 +590,7 @@ public final class MediaClient {
             if (st.key.equals(s.stationKey)) s.stationIsFavorite = true;
         }
         s.favorites = fav;
-        if (s.title.isEmpty()) s.title = s.radioFreq.isEmpty() ? ctx.getString(R.string.src_radio) : s.radioFreq + " " + s.radioUnit;
+        if (s.title.isEmpty()) s.title = s.radioFreq.isEmpty() ? com.mg4.launcher.L.s(R.string.src_radio) : s.radioFreq + " " + s.radioUnit;
     }
 
     /** Stazione DAB in onda: dal callback, oppure cercata per nome nell'elenco DAB. */
@@ -780,8 +783,12 @@ public final class MediaClient {
                 } else {
                     Browser b = browserFor(src);
                     MediaController.TransportControls tc = b == null ? null : b.controls();
+                    // Bluetooth: come l'app Media originale, prima si chiede all'auto la sorgente audio Bluetooth
+                    // (fuoco audio con key_car_source_type = 5), altrimenti l'auto resta sulla radio
+                    if (src == SRC_BT) requestBtSource();
                     if (tc != null) tc.play();
                     else Diag.put("media.avvio", sourceName(ctx, src) + ": sessione non collegata");
+                    if (src == SRC_BT) checkBtStarted(tc != null);
                     if (src == SRC_ONLINE) {
                         // se dopo qualche secondo non è partita, la funzione non c'è: si torna alla radio e si nasconde
                         bg.postDelayed(() -> {
@@ -799,6 +806,68 @@ public final class MediaClient {
             }
             poll();
         });
+    }
+
+    // --- Bluetooth: sorgente audio dell'auto, come l'app Media originale (com.saicmotor.media) ------------
+
+    private android.media.AudioFocusRequest btFocus;
+
+    /** Fuoco audio con la sorgente Bluetooth (AudioAttributes con bundle key_car_source_type = 5). */
+    private void requestBtSource() {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
+            android.os.Bundle b = new android.os.Bundle();
+            b.putInt("key_car_source_type", 5);
+            android.media.AudioAttributes.Builder ab = new android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA);
+            // addBundle è un'API di sistema (firma platform): si chiama per riflessione
+            ab.getClass().getMethod("addBundle", android.os.Bundle.class).invoke(ab, b);
+            if (btFocus != null) am.abandonAudioFocusRequest(btFocus);
+            btFocus = new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(ab.build())
+                    .setWillPauseWhenDucked(false)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setOnAudioFocusChangeListener(fc -> {
+                        if (fc == android.media.AudioManager.AUDIOFOCUS_LOSS && btFocus != null) {
+                            try {
+                                am.abandonAudioFocusRequest(btFocus);
+                            } catch (Exception ignored) {
+                            }
+                            btFocus = null;
+                        }
+                    })
+                    .build();
+            int r = am.requestAudioFocus(btFocus);
+            Diag.put("media.bt.sorgente", "richiesta sorgente Bluetooth: " + (r == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "concessa"
+                    : r == android.media.AudioManager.AUDIOFOCUS_REQUEST_DELAYED ? "in attesa" : "rifiutata"));
+        } catch (Throwable e) {
+            Diag.put("media.bt.sorgente", "errore " + e.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * Esito dopo 3 secondi: se il Bluetooth non è partito si ripiega sull'app Media originale (pagina Bluetooth),
+     * che fa partire la musica come quando si sceglie la sorgente lì.
+     */
+    private void checkBtStarted(boolean sent) {
+        bg.postDelayed(() -> {
+            boolean playing = bt.isPlaying();
+            if (playing) {
+                Diag.put("media.bt.esito", "partito");
+                return;
+            }
+            Diag.put("media.bt.esito", "non partito" + (sent ? "" : " (sessione non collegata)") + ": apro la pagina Bluetooth dell'app Media");
+            try {
+                Intent i = new Intent(Intent.ACTION_MAIN)
+                        .setComponent(new android.content.ComponentName(com.mg4.launcher.apps.MgApps.MEDIA_PKG, com.mg4.launcher.apps.MgApps.MEDIA_CLS))
+                        .putExtra("type", 2)   // MainActivity dell'app Media: type 2 = pagina Bluetooth
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(i);
+            } catch (Exception e) {
+                Diag.error("media.bt.app", e.toString());
+            }
+            poll();
+        }, 3000);
     }
 
     /**

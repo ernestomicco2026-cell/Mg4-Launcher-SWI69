@@ -1,7 +1,5 @@
 package com.mg4.launcher.svc;
 
-import com.mg4.launcher.R;
-
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,6 +11,9 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+
+import com.mg4.launcher.L;
+import com.mg4.launcher.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,10 +32,6 @@ import java.net.URL;
  * con PackageInstaller (il launcher è firmato con la chiave platform, quindi non serve conferma).
  */
 public final class Updater {
-    /** Repository dedicato alla SWI69: ramo main, cartella releases/, Release con tag "vX.Y.Z" (o "swi69-vX.Y.Z"). */
-    static final String BRANCH = "main";
-    static final String CHANNEL_DIR = "releases/";
-
     private static final String ACTION_RESULT = "com.mg4.launcher.INSTALL_RESULT";
 
     public static final class Release {
@@ -75,11 +72,6 @@ public final class Updater {
         return busy;
     }
 
-    /** Testo tradotto (lingua del launcher). */
-    private String tr(int id, Object... args) {
-        return args.length == 0 ? ctx.getString(id) : ctx.getString(id, args);
-    }
-
     public String currentVersion() {
         try {
             PackageInfo pi = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
@@ -100,22 +92,57 @@ public final class Updater {
     /** Controlla l'ultima release del repository. */
     public void check(String repo, String token) {
         if (busy) return;
-        status(tr(R.string.upd_checking), null, true);
+        status(L.s(R.string.upd_checking), null, true);
         bg.post(() -> {
             try {
                 Release r = latest(repo, token);
                 if (r.apkUrl == null) {
-                    status(tr(R.string.upd_no_apk, r.tag), r, false);
+                    status(L.f(R.string.upd_no_apk, r.tag), r, false);
                 } else if (r.newer) {
-                    status(tr(R.string.upd_new, r.tag), r, false);
+                    status(L.f(R.string.upd_available, r.tag), r, false);
                 } else {
-                    status(tr(R.string.upd_uptodate, currentVersion(), r.tag), r, false);
+                    status(L.f(R.string.upd_latest, currentVersion(), r.tag), r, false);
                 }
             } catch (HttpError e) {
                 status(e.getMessage(), null, false);
             } catch (Exception e) {
-                status(tr(R.string.upd_no_conn, e.getClass().getSimpleName()), null, false);
+                status(L.f(R.string.upd_no_connection, e.getClass().getSimpleName()), null, false);
                 Diag.error("aggiornamenti", e.toString());
+            }
+        });
+    }
+
+    public interface Found {
+        void found(Release r);
+    }
+
+    /**
+     * Controllo silenzioso in background (per il popup): non tocca lo stato mostrato nelle impostazioni e
+     * chiama {@code cb} sul thread principale solo se c'è una versione più nuova con l'APK.
+     */
+    public void checkQuiet(String repo, String token, Found cb) {
+        if (busy) return;
+        bg.post(() -> {
+            try {
+                Release r = latest(repo, token);
+                Diag.put("aggiornamenti.auto", "ultima " + r.tag + (r.newer ? " (nuova)" : ""));
+                if (r.newer && r.apkUrl != null) main.post(() -> cb.found(r));
+            } catch (Exception e) {
+                Diag.put("aggiornamenti.auto", "non riuscito: " + e.getClass().getSimpleName());
+            }
+        });
+    }
+
+    /** Controllo silenzioso per le impostazioni: restituisce sempre l'ultima release trovata (anche se non è nuova). */
+    public void checkSilent(String repo, String token, Found cb) {
+        if (busy) return;
+        bg.post(() -> {
+            try {
+                Release r = latest(repo, token);
+                Diag.put("aggiornamenti.controllo", "ultima " + r.tag + (r.newer ? " (nuova)" : ""));
+                main.post(() -> cb.found(r));
+            } catch (Exception e) {
+                Diag.put("aggiornamenti.controllo", "non riuscito: " + e.getClass().getSimpleName());
             }
         });
     }
@@ -124,31 +151,10 @@ public final class Updater {
      * Scarica l'APK della release e lo installa. L'APK resta in memoria e va direttamente nella sessione
      * di installazione: nessun file temporaneo da salvare (era il punto che non riusciva sull'auto).
      */
-    /** Risultato del controllo silenzioso (avviso di nuova versione nella home). */
-    public interface QuietResult {
-        void onRelease(Release r);
-    }
-
-    /**
-     * Controllo in background, senza messaggi di stato: usato per l'avviso discreto di nuova versione.
-     * Usa raw.githubusercontent.com (nessun limite di richieste); non fa nulla se è già in corso un'operazione.
-     */
-    public void checkQuiet(String repo, QuietResult cb) {
-        if (busy) return;
-        bg.post(() -> {
-            try {
-                Release r = latest(repo, "");
-                Diag.put("aggiornamenti.controllo", "ultima " + r.tag + (r.newer ? " (nuova)" : ""));
-                main.post(() -> cb.onRelease(r));
-            } catch (Exception e) {
-                Diag.put("aggiornamenti.controllo", "non riuscito: " + describe(e));
-            }
-        });
-    }
-
     public void install(Release r, String token) {
         if (busy || r == null || r.apkUrl == null) return;
-        status(tr(R.string.upd_downloading, r.apkName), r, true);
+        if (HomeMode.officina(ctx)) return;   // aggiornamenti sospesi durante la modalità officina
+        status(L.f(R.string.upd_downloading, r.apkName), r, true);
         bg.post(() -> {
             byte[] apk;
             try {
@@ -158,28 +164,32 @@ public final class Updater {
                 Diag.error("aggiornamenti.download", e.getMessage());
                 return;
             } catch (Exception e) {
-                status(tr(R.string.upd_dl_failed, describe(e)), r, false);
+                status(L.f(R.string.upd_download_failed, describe(e)), r, false);
                 Diag.error("aggiornamenti.download", Diag.trace(e));
                 return;
             }
-            if (apk.length < 1024 || apk[0] != 'P' || apk[1] != 'K') {
-                status(tr(R.string.upd_invalid, apk.length), r, false);
+            if (!isApk(apk)) {
+                status(L.f(R.string.upd_invalid_apk, apk.length), r, false);
                 Diag.error("aggiornamenti.download", "file non valido, " + apk.length + " byte");
                 return;
             }
             String version = checkPackage(apk);
             if (version == null) {
-                status(tr(R.string.upd_wrong_pkg), r, false);
+                status(L.s(R.string.upd_wrong_package), r, false);
                 return;
             }
-            status(tr(R.string.upd_installing, version), r, true);
+            status(L.f(R.string.upd_installing, version), r, true);
             try {
                 installApk(apk);
             } catch (Exception e) {
-                status(tr(R.string.upd_install_failed, describe(e)), r, false);
+                status(L.f(R.string.upd_install_failed, describe(e)), r, false);
                 Diag.error("aggiornamenti.installazione", Diag.trace(e));
             }
         });
+    }
+
+    private static boolean isApk(byte[] b) {
+        return b != null && b.length >= 1024 && b[0] == 'P' && b[1] == 'K';
     }
 
     private static String describe(Exception e) {
@@ -187,18 +197,30 @@ public final class Updater {
         return e.getClass().getSimpleName() + (m == null || m.isEmpty() ? "" : " – " + m);
     }
 
-    /** Prima l'API di GitHub, poi (per i file del repository) raw.githubusercontent.com. */
-    /** File del repository: prima raw.githubusercontent.com (senza limiti), poi l'API di GitHub. */
+    /**
+     * File del repository: prima raw.githubusercontent.com (nessun limite di richieste, come nella SWI69 0.2.x),
+     * poi l'API di GitHub. Allegati delle release: solo l'API.
+     */
     private byte[] downloadWithFallback(Release r, String token) throws Exception {
-        if (!r.raw || r.repo.isEmpty()) {
-            return download(r.apkUrl, r, token, "application/octet-stream");
+        if (r.raw && !r.repo.isEmpty()) {
+            try {
+                byte[] b = download("https://raw.githubusercontent.com/" + r.repo + "/main/" + r.path, r, "", "application/octet-stream");
+                if (isApk(b)) return b;
+            } catch (Exception e) {
+                Diag.error("aggiornamenti.download", "raw.githubusercontent.com: " + describe(e) + " → provo l'API di GitHub");
+            }
         }
+        Exception first;
         try {
-            return download("https://raw.githubusercontent.com/" + r.repo + "/" + BRANCH + "/" + r.path, r, "", "application/octet-stream");
-        } catch (Exception first) {
-            Diag.error("aggiornamenti.download", "raw.githubusercontent.com: " + describe(first) + " → provo l'API di GitHub");
-            return download(r.apkUrl, r, token, "application/vnd.github.raw");
+            byte[] b = download(r.apkUrl, r, token, r.raw ? "application/vnd.github.raw" : "application/octet-stream");
+            if (!r.raw || isApk(b)) return b;
+            first = new IOException("non è un APK (" + b.length + " byte)");
+        } catch (Exception e) {
+            first = e;
         }
+        if (!r.raw || r.repo.isEmpty()) throw first;
+        Diag.error("aggiornamenti.download", "API GitHub: " + describe(first) + " → provo raw.githubusercontent.com");
+        return download("https://raw.githubusercontent.com/" + r.repo + "/main/" + r.path, r, "", "application/octet-stream");
     }
 
     /**
@@ -225,7 +247,7 @@ public final class Updater {
                 f.delete();
             }
         }
-        return tr(R.string.upd_new_version);
+        return L.s(R.string.upd_new_version);
     }
 
     // ------------------------------------------------------------------------------------------
@@ -241,14 +263,6 @@ public final class Updater {
      * poi le Release di GitHub.
      */
     private Release latest(String repo, String token) throws Exception {
-        // 1) raw.githubusercontent.com: nessun limite di richieste (le API di GitHub senza token ne hanno 60 all'ora)
-        try {
-            Release raw = latestFromRaw(repo);
-            if (raw != null) return raw;
-        } catch (Exception e) {
-            Diag.error("aggiornamenti.raw", describe(e));
-        }
-        // 2) API di GitHub: cartella releases/ e Release con APK allegato
         Release fromRepo = null;
         HttpError err = null;
         try {
@@ -265,56 +279,38 @@ public final class Updater {
         if (fromRepo != null && (fromReleases == null || fromReleases.apkUrl == null
                 || compare(fromRepo.tag, fromReleases.tag) >= 0)) return fromRepo;
         if (fromReleases != null) return fromReleases;
-        throw err != null ? err : new HttpError(tr(R.string.upd_not_found_repo, repo));
-    }
-
-    /** latest.json letto da raw.githubusercontent.com (CDN di GitHub, senza limite di richieste). */
-    private Release latestFromRaw(String repo) throws Exception {
-        String base = "https://raw.githubusercontent.com/" + repo + "/" + BRANCH + "/";
-        HttpURLConnection c = open(base + CHANNEL_DIR + "latest.json?t=" + System.currentTimeMillis(), "", "application/json");
-        int code = c.getResponseCode();
-        if (code != 200) {
-            c.disconnect();
-            Diag.put("aggiornamenti.raw", "HTTP " + code);
-            return null;
-        }
-        JSONObject o = new JSONObject(readAll(c.getInputStream()));
-        c.disconnect();
-        Release r = new Release();
-        r.tag = o.optString("version", "");
-        r.name = "MG4 Launcher " + r.tag;
-        r.notes = o.optString("notes", "");
-        String apk = o.optString("apk", "");
-        if (!apk.isEmpty()) {
-            r.apkUrl = "https://api.github.com/repos/" + repo + "/contents/" + apk + "?ref=" + BRANCH;
-            r.apkName = apk.substring(apk.lastIndexOf('/') + 1);
-            r.apkSize = o.optLong("size");
-            r.raw = true;
-            r.repo = repo;
-            r.path = apk;
-        }
-        r.newer = compare(r.tag, currentVersion()) > 0;
-        Diag.put("aggiornamenti.raw", "ok, ultima " + r.tag);
-        return r;
+        throw err != null ? err : new HttpError(L.f(R.string.upd_not_found, repo));
     }
 
     private Release latestFromRepo(String repo, String token) throws Exception {
         String base = "https://api.github.com/repos/" + repo + "/contents/";
-        HttpURLConnection c = open(base + CHANNEL_DIR + "latest.json?ref=" + BRANCH, token, "application/vnd.github.raw");
-        int code = c.getResponseCode();
-        if (code != 200) {
-            c.disconnect();
-            throw httpError(code, token, repo);
+        JSONObject o = null;
+        // 1) raw.githubusercontent.com: nessun limite di richieste (le API di GitHub senza token ne hanno 60 all'ora)
+        try {
+            HttpURLConnection rc = open("https://raw.githubusercontent.com/" + repo + "/main/releases/latest.json", "", "*/*");
+            if (rc.getResponseCode() == 200) o = new JSONObject(readAll(rc.getInputStream()));
+            rc.disconnect();
+        } catch (Exception e) {
+            Diag.putQuiet("aggiornamenti.raw", describe(e));
         }
-        JSONObject o = new JSONObject(readAll(c.getInputStream()));
-        c.disconnect();
+        // 2) API di GitHub
+        if (o == null) {
+            HttpURLConnection c = open(base + "releases/latest.json", token, "application/vnd.github.raw");
+            int code = c.getResponseCode();
+            if (code != 200) {
+                c.disconnect();
+                throw httpError(code, token, repo);
+            }
+            o = new JSONObject(readAll(c.getInputStream()));
+            c.disconnect();
+        }
         Release r = new Release();
         r.tag = o.optString("version", "");
         r.name = "MG4 Launcher " + r.tag;
         r.notes = o.optString("notes", "");
         String apk = o.optString("apk", "");
         if (!apk.isEmpty()) {
-            r.apkUrl = base + apk + "?ref=" + BRANCH;
+            r.apkUrl = base + apk;
             r.apkName = apk.substring(apk.lastIndexOf('/') + 1);
             r.apkSize = o.optLong("size");
             r.raw = true;
@@ -325,31 +321,22 @@ public final class Updater {
         return r;
     }
 
-    private HttpError httpError(int code, String token, String repo) {
-        if (code == 404) return new HttpError(token.isEmpty() ? tr(R.string.upd_not_found) : tr(R.string.upd_not_found_repo, repo));
-        if (code == 401) return new HttpError(tr(R.string.upd_token));
-        if (code == 403) return new HttpError(tr(R.string.upd_refused));
-        return new HttpError(tr(R.string.upd_unexpected, code));
+    private static HttpError httpError(int code, String token, String repo) {
+        if (code == 404) return new HttpError(L.f(R.string.upd_not_found, repo));
+        if (code == 401) return new HttpError(L.s(R.string.upd_token_invalid));
+        if (code == 403) return new HttpError(L.s(R.string.upd_refused));
+        return new HttpError(L.f(R.string.upd_unexpected, code));
     }
 
-    /** Release di GitHub più recente (per versione) che ha un APK allegato. */
     private Release latestRelease(String repo, String token) throws Exception {
-        HttpURLConnection c = open("https://api.github.com/repos/" + repo + "/releases?per_page=30", token, "application/vnd.github+json");
+        HttpURLConnection c = open("https://api.github.com/repos/" + repo + "/releases/latest", token, "application/vnd.github+json");
         int code = c.getResponseCode();
         if (code != 200) {
             c.disconnect();
             throw httpError(code, token, repo);
         }
-        JSONArray list = new JSONArray(readAll(c.getInputStream()));
+        JSONObject o = new JSONObject(readAll(c.getInputStream()));
         c.disconnect();
-        JSONObject o = null;
-        for (int i = 0; i < list.length(); i++) {
-            JSONObject x = list.getJSONObject(i);
-            if (!x.optBoolean("draft") && hasApk(x)) {
-                if (o == null || compare(x.optString("tag_name"), o.optString("tag_name")) > 0) o = x;
-            }
-        }
-        if (o == null) throw new HttpError(tr(R.string.upd_no_release_apk, repo));
 
         Release r = new Release();
         r.tag = o.optString("tag_name", "");
@@ -379,13 +366,14 @@ public final class Updater {
         for (int hops = 0; code / 100 == 3 && hops < 5; hops++) {
             String loc = c.getHeaderField("Location");
             c.disconnect();
-            c = open(loc, "", "application/octet-stream");
+            boolean api = loc != null && loc.startsWith("https://api.github.com/");
+            c = open(loc, api ? token : "", api ? accept : "application/octet-stream");
             c.setInstanceFollowRedirects(false);
             code = c.getResponseCode();
         }
         if (code != 200) {
             c.disconnect();
-            throw new HttpError(tr(R.string.upd_dl_http, code));
+            throw new HttpError(L.f(R.string.upd_download_failed, L.f(R.string.upd_unexpected, code)));
         }
         long total = c.getContentLengthLong() > 0 ? c.getContentLengthLong() : r.apkSize;
         ByteArrayOutputStream bo = new ByteArrayOutputStream(total > 0 ? (int) total : 512 * 1024);
@@ -398,7 +386,7 @@ public final class Updater {
                 done += n;
                 if (total > 0 && done - lastShown > total / 20) {
                     lastShown = done;
-                    status(tr(R.string.upd_progress, (int) Math.min(100, done * 100 / total)), r, true);
+                    status(L.f(R.string.upd_download_pct, (int) Math.min(100, done * 100 / total)), r, true);
                 }
             }
         } finally {
@@ -452,7 +440,7 @@ public final class Updater {
                 // senza il permesso di sistema Android chiede conferma: si mostra la schermata standard
                 Intent confirm = i.getParcelableExtra(Intent.EXTRA_INTENT);
                 if (confirm != null) ctx.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-                status(tr(R.string.upd_confirm), null, true);
+                status(L.s(R.string.upd_confirm), null, true);
                 return;
             }
             try {
@@ -460,11 +448,11 @@ public final class Updater {
             } catch (Exception ignored) {
             }
             if (st == PackageInstaller.STATUS_SUCCESS) {
-                status(tr(R.string.upd_installed), null, false);
+                status(L.s(R.string.upd_installed), null, false);
             } else {
                 String msg = i.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
                 Diag.error("aggiornamenti.installazione", "stato " + st + ": " + msg);
-                status(tr(R.string.upd_install_failed, msg == null ? tr(R.string.upd_err_code, st) : msg), null, false);
+                status(L.f(R.string.upd_install_failed, msg == null ? L.f(R.string.upd_error_code, st) : msg), null, false);
             }
         }
     };
@@ -489,15 +477,6 @@ public final class Updater {
     }
 
     /** Confronta versioni tipo "v0.3.0" e "0.2.0" numero per numero. */
-    private static boolean hasApk(JSONObject release) {
-        JSONArray assets = release.optJSONArray("assets");
-        if (assets == null) return false;
-        for (int i = 0; i < assets.length(); i++) {
-            if (assets.optJSONObject(i) != null && assets.optJSONObject(i).optString("name").toLowerCase().endsWith(".apk")) return true;
-        }
-        return false;
-    }
-
     static int compare(String a, String b) {
         int[] x = nums(a), y = nums(b);
         for (int i = 0; i < Math.max(x.length, y.length); i++) {
@@ -508,8 +487,7 @@ public final class Updater {
     }
 
     private static int[] nums(String v) {
-        // "swi69-v0.1.0" (o il vecchio "sw169-…") → 0.1.0: il nome del software non fa parte della versione
-        String[] parts = v.replaceAll("(?i)sw\\s*-?[i1]69", "").replaceAll("[^0-9.]", "").replaceAll("^\\.+", "").split("\\.");
+        String[] parts = v.replaceAll("[^0-9.]", "").split("\\.");
         int[] out = new int[parts.length];
         for (int i = 0; i < parts.length; i++) {
             try {

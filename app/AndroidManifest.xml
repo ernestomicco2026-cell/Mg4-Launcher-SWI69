@@ -4,33 +4,38 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- indicatori Bluetooth e Wi-Fi in alto a destra -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- CarService: pressione pneumatici (TPMS) e temperatura interna -->
+    <uses-permission android:name="android.car.permission.CAR_TIRES" />
+    <uses-permission android:name="android.car.permission.CAR_ENGINE_DETAILED" />
+    <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION" />
+    <uses-permission android:name="android.car.permission.CONTROL_CAR_CLIMATE" />
+    <uses-permission android:name="android.car.permission.CAR_EXTERIOR_ENVIRONMENT" />
+    <uses-permission android:name="android.car.permission.CAR_INFO" />
     <!-- concessi automaticamente perché l'app è firmata con la chiave platform del sistema -->
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="android.permission.REAL_GET_TASKS" />
     <!-- avvio all'accensione e riconferma della home predefinita -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SET_PREFERRED_APPLICATIONS" />
-    <!-- attiva da solo il servizio di accessibilità dell'avvio rapido (concesso dalla firma platform) -->
+    <!-- attivazione permanente del servizio di accessibilità (concesso dalla firma platform) -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <!-- aggiornamento da GitHub senza conferma (permesso di sistema, concesso dalla firma platform) -->
     <uses-permission android:name="android.permission.INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- SWI69: proprietà batteria (manager "bms") e clima dal CarService, concesse dalla firma platform -->
-    <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION" />
+    <!-- loghi radio dell'utente (cartella MG4Launcher/loghi su memoria o chiavetta): il permesso si concede da solo -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GRANT_RUNTIME_PERMISSIONS" />
+
+    <!-- SWI69: gestore batteria ("bms"), clima e luci dal CarService, concessi dalla firma platform -->
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />
     <uses-permission android:name="android.car.permission.CAR_ENERGY_PORTS" />
-    <uses-permission android:name="android.car.permission.CAR_INFO" />
-    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
-    <uses-permission android:name="android.car.permission.CAR_EXTERIOR_ENVIRONMENT" />
-    <uses-permission android:name="android.car.permission.CONTROL_CAR_CLIMATE" />
     <uses-permission android:name="android.car.permission.CAR_HVAC" />
     <uses-permission android:name="android.car.permission.CAR_POWER" />
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
     <uses-permission android:name="android.car.permission.CAR_RADIO" />
-    <!-- pressioni degli pneumatici (TPMS) lette dal CarService: dati "dettagliati" del veicolo, solo lettura -->
-    <uses-permission android:name="android.car.permission.CAR_ENGINE_DETAILED" />
-    <uses-permission android:name="android.car.permission.CAR_TIRES" />
     <!-- telecamere: EvsService della home originale -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
@@ -43,6 +48,9 @@
         android:hardwareAccelerated="true"
         android:directBootAware="true"
         android:defaultToDeviceProtectedStorage="true">
+
+        <!-- libreria del CarService (presente sull'auto; facoltativa altrove) -->
+        <uses-library android:name="android.car" android:required="false" />
 
         <activity
             android:name=".MainActivity"
@@ -62,7 +70,7 @@
             </intent-filter>
         </activity>
 
-        <!-- all'accensione il firmware può aprire la home MG per nome: questo receiver riporta in primo piano il launcher -->
+        <!-- all'accensione il firmware apre la home MG per nome: questo receiver riporta in primo piano il launcher -->
         <receiver
             android:name=".svc.BootWatcher"
             android:directBootAware="true"
@@ -73,10 +81,10 @@
             </intent-filter>
         </receiver>
 
-        <!-- avvio rapido: vede solo quale app va in primo piano (nessun contenuto delle finestre) -->
+        <!-- solo per sapere quale app passa in primo piano all'accensione (nessun contenuto dello schermo) -->
         <service
             android:name=".svc.BootAccessibility"
-            android:label="@string/a11y_label"
+            android:label="@string/app_name"
             android:directBootAware="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -85,7 +93,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/boot_accessibility" />
+                android:resource="@xml/accessibility_boot" />
         </service>
 
         <receiver

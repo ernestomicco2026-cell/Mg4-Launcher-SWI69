@@ -8,16 +8,17 @@ import android.os.Looper;
 import android.os.RemoteException;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
- * Veicolo, versione SWI69 (EH32 Color Radio).
- *
- * Il servizio com.saicmotor.caradapter è un "hub" (ICarAdapterService.queryClient(codice)) che restituisce i
- * binder dei sotto-servizi, come fa la home originale SWI69 (libreria carapi). Da qui: batteria, autonomia,
- * stato di ricarica, V2L e climatizzatore. Limite di ricarica, corrente/tensione e consumo arrivano invece
- * dalle proprietà "bms" del CarService di Android (CarBms), come nell'app Energia.
+ * Veicolo, versione SWI69 (EH32 Color Radio). Stessa interfaccia della versione SWI68, ma con i servizi della SWI69:
+ * <ul>
+ *   <li>com.saicmotor.caradapter: "hub" (ICarAdapterService.queryClient(codice)) che restituisce i binder di
+ *       ricarica, clima, luci, configurazione, quadro e impostazioni veicolo, come la home originale (carapi);</li>
+ *   <li>gestore batteria "bms" del CarService (CarBms): percentuale, potenza e i comandi di ricarica, come la
+ *       pagina Gestione ricarica dell'app Energia (com.saicmotor.saicev, schede EH32 EU/UK);</li>
+ *   <li>proprietà del CarService (CarProps): pressione pneumatici e temperatura interna.</li>
+ * </ul>
  */
 public final class VehicleClient {
     private static final String PKG = "com.saicmotor.caradapter";
@@ -25,17 +26,20 @@ public final class VehicleClient {
 
     private static final String HUB = "com.saicmotor.carapi.ICarAdapterService";
     private static final int HUB_QUERY_CLIENT = 1;
-    private static final int BIND_EV = 4, BIND_HVAC = 7, BIND_CONFIG = 2, BIND_LAMP = 13, BIND_IPK = 5, BIND_VS = 8;
+    private static final int BIND_EV = 4, BIND_HVAC = 7, BIND_CONFIG = 2, BIND_LAMP = 13, BIND_IPK = 5;
 
     private static final String EV = "com.saicmotor.carapi.ev.ICarEvService";
     private static final int EV_PERCENT = 3;          // int  getChargePercentChange
     private static final int EV_STATUS = 4;           // int  getChargeStatus (stessi codici della SWI68)
     private static final int EV_REMAIN_TIME = 6;      // int  getChargingRemainTime (minuti)
     private static final int EV_DISCHG_TIME = 7;      // int  getDisChargingRemainTime
-    private static final int EV_UNITS = 11;           // int  getDistanceUnits (0 = km)
+    private static final int EV_UNITS = 11;           // int  getDistanceUnits (0 = km, 1 = miglia)
     private static final int EV_RANGE = 12;           // int  getCurrentRange
     private static final int EV_CHG_CTRL = 20;        // int  getChargeCtrlStatus
     private static final int EV_DISCHG_CTRL = 24;     // int  getDisChargeCtrl
+    public static final int CTRL_START = 1, CTRL_STOP = 2, CTRL_PREPARING = 3;
+    /** Correnti di ricarica AC ammesse dall'auto (codici 1..4, CarBMSManager.ALTNG_CHRG_CRNT_*). */
+    public static final String[] CURRENT_LABELS = {"6 A", "8 A", "16 A", "Max"};
 
     private static final String AC = "com.saicmotor.carapi.hvac.ICarHvacService";
     private static final int AC_SWITCH_POWER = 5;     // void switchHvacPowerStatus()
@@ -49,29 +53,16 @@ public final class VehicleClient {
     private static final int AC_GET_OUT_TEMP = 25;    // float getOutSideTemperature
     private static final int AC_SWITCH_AC = 7, AC_GET_AC = 8;                 // switchACStatus / getACStatus
     private static final int AC_SWITCH_DEFROST = 27, AC_GET_DEFROST = 28;     // parabrezza
+    // ricircolo, come la barra clima della home originale: "cambia" senza argomenti; 0 interno, 1 esterno, 2 auto
+    private static final int AC_SWITCH_LOOP = 15, AC_GET_LOOP = 16;
 
     // fendinebbia, come la schermata dell'auto originale: set(1) = "premuto" (commuta), get 1 = acceso
     private static final String LAMP = "com.saicmotor.carapi.lamp.ICarLampService";
     private static final int LAMP_SET_REAR_FOG = 30, LAMP_GET_REAR_FOG = 31, LAMP_SET_FRONT_FOG = 40, LAMP_GET_FRONT_FOG = 41;
     private static final String CONFIG = "com.saicmotor.carapi.config.ICarConfigService";
-
-    // pneumatici (TPMS): servizio impostazioni veicolo, zone 1 AS · 2 AD · 3 PS · 4 PD
-    private static final String VS = "com.saicmotor.carapi.vs.ICarVehicleSettingService";
-    private static final int VS_TPMS_CONFIG = 5, VS_TIRE_PRESS = 92, VS_TIRE_PRESS_FLOAT = 93, VS_TIRE_TEMP = 94, VS_TIRE_STATUS = 95;
-    private static final String IPK = "com.saicmotor.carapi.ipk.ICarIpkService";
-    private static final int IPK_TYRE_UNIT = 29;   // 0 bar, 1 kPa, 2 psi (scelta dell'utente sul quadro)
-    public static final int TYRE_BAR = 0, TYRE_KPA = 1, TYRE_PSI = 2;
-
-    // temperatura dell'abitacolo dal CarService (CarHvacManager)
-    private static final int HVAC_TEMP_ACTUAL = 358614274;      // ID_ZONED_TEMP_ACTUAL, per sedile
-    private static final int HVAC_AMBIENT_TEMP = 358622506;     // ID_AC_AMBIENT_TEMPERATURE (SAIC)
-
-    // pneumatici dal CarService (seconda strada): TIRE_PRESSURE standard in kPa per ruota,
-    // e le proprietà SAIC SENSOR_TIRE_PRESURE_FL/FR/RL/RR
-    private static final int PROP_TIRE_PRESSURE = 392168201;
-    private static final int[] WHEEL_AREA = {0x1, 0x2, 0x8, 0x4};   // AS, AD, PS, PD (VehicleAreaWheel)
-    private static final int[] PROP_SENSOR_TIRE = {557847891, 557847892, 557847893, 557847894};   // FL, FR, RL, RR
     private static final int CONFIG_FRONT_FOG = 60;   // getFrontFrogConfigData: 0 = fendinebbia anteriori presenti
+    private static final String IPK = "com.saicmotor.carapi.ipk.ICarIpkService";
+    private static final int IPK_TYRE_UNIT = 29;      // 0 bar, 1 kPa, 2 psi (scelta dell'utente sul quadro)
 
     /** Ventola come la barra del launcher: 0 = clima spento, 1..11, 15 = automatico. */
     public static final int FAN_OFF = 0, FAN_AUTO = 15;
@@ -92,23 +83,31 @@ public final class VehicleClient {
         public boolean connected;
         public float soc = -1;            // %
         public int rangeKm = -1;
-        public int chargingStatus = -1;   // 0 scollegata, 1 AC, 2 completata, 10/11 DC, 13 V2L…
+        public int chargingStatus = -1;   // codici SAIC (uguali alla SWI68), vedi chargeText
         public int predictMinutes = -1;
         public float chargeKw = 0;
         public int chargeLimit = -1;      // % (convertito dal codice SAIC)
-        public float consumption = -1;    // kWh/100km
+        public int chargeLimitCode = -1;  // 1..7
+        public int currentLimit = -1;     // 1..4 (6 A, 8 A, 16 A, Max), 0 = non disponibile
+        public int chargeControl = -1;    // 1 in carica, 2 fermo, 3 in preparazione
+        public int dischargeControl = -1; // idem per il V2L
+        public int dischargeLimit = -1;   // % sotto cui il V2L si ferma
+        public int dischargeMinutes = -1;
+        public boolean bmsAvailable;
+        public int distUnit = -1;         // 0 km, 1 miglia (dal quadro)
+        public int tyreUnitCluster = -1;  // unità pressione del quadro: 0 bar, 1 kPa, 2 psi
         public int dischargeStatus = -1;
+        public int loopMode = -1;         // ricircolo: 0 interno, 1 esterno, 2 auto, -1 non supportato
         public int acTemp = -1;           // 15 = LO, 16..30, 31 = HI
         public int hvacPower = -1;
         public int acOn = -1, autoOn = -1, defrostOn = -1;   // 1 acceso, 0 spento, -1 sconosciuto
+        public int seatLeft = -1, seatRight = -1;          // SWI69 R45: nessun comando dei sedili riscaldati
+        public int wheelHeat = -1;                         // SWI69 R45: nessun comando del volante riscaldato
+        public float[] tireBar = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};   // AS, AD, PS, PD
+        public float insideTemp = Float.NaN;
         public int rearFog = -1, frontFog = -1;           // 1 acceso, 0 spento, -1 non disponibile
         public boolean hasFrontFog;
-        public float insideTemp = Float.NaN;  // °C abitacolo, NaN = non disponibile
-        public boolean tpms;              // l'auto ha il TPMS e i valori sono leggibili
-        public final float[] tyreKpa = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};   // AS, AD, PS, PD
-        public final int[] tyreStatus = {-1, -1, -1, -1};   // 0 normale, 2 bassa, 3 perdita, 4 alta…
-        public int tyreUnit = TYRE_BAR;
-        public int fanLevel = -1;         // 0 spento, 1..max, 15 auto
+        public int fanLevel = -1;         // 0 spenta, 1..max, 15 auto
         public int fanMin = FAN_MIN, fanMax = FAN_MAX;
         public float outsideTemp = -10000f;   // °C
     }
@@ -117,6 +116,7 @@ public final class VehicleClient {
         void onVehicleState(State s);
     }
 
+    private final Context ctx;
     private final ServiceLink hub;
     private final CarBms bms;
     private final Map<Integer, IBinder> subs = new HashMap<>();
@@ -128,10 +128,10 @@ public final class VehicleClient {
     private volatile int pendingTemp = -1, pendingFan = -1;
     private volatile int heldTemp = -1, heldFan = -1;
     private volatile long tempHoldUntil, fanHoldUntil;
-    private volatile boolean lastPower, lastAuto;
     private boolean running;
 
     public VehicleClient(Context ctx) {
+        this.ctx = ctx.getApplicationContext();
         hub = new ServiceLink(ctx, "veicolo", ServiceLink.byAction(PKG, ACTION));
         bms = new CarBms(ctx);
         hub.setOnConnected(() -> {
@@ -210,10 +210,7 @@ public final class VehicleClient {
         }
     }
 
-    /**
-     * Limite di ricarica: il CarService restituisce un codice, non una percentuale
-     * (1 = 40% … 5 = 80% … 6 = 90%, altrimenti 100%, come l'app Energia SWI69).
-     */
+    /** Limite di ricarica: codice 1 = 40% … 7 = 100% (CarBMSManager.CHRG_TRGT_SOC_*). */
     static int limitPercent(int code) {
         if (code >= 1 && code <= 7) return (code + 3) * 10;
         return -1;
@@ -238,25 +235,28 @@ public final class VehicleClient {
         return !Float.isNaN(v);
     }
 
+    private int distUnit = -1;
+
     private void poll() {
         State s = new State();
         s.connected = hub.isConnected();
+        long now = android.os.SystemClock.uptimeMillis();
         if (s.connected) {
             try {
                 IBinder e = sub(BIND_EV);
                 if (e != null) {
-                    int percent = Rpc.callInt(e, EV, EV_PERCENT);
-                    s.soc = percent;
+                    s.soc = Rpc.callInt(e, EV, EV_PERCENT);
                     s.rangeKm = Rpc.callInt(e, EV, EV_RANGE);
                     s.chargingStatus = Rpc.callInt(e, EV, EV_STATUS);
                     s.predictMinutes = Rpc.callInt(e, EV, EV_REMAIN_TIME);
                     s.dischargeStatus = Rpc.callInt(e, EV, EV_DISCHG_CTRL);
-                    Diag.put("veicolo.soc(ev)", percent);
-                    Diag.put("veicolo.autonomia", s.rangeKm + " (unità " + Rpc.callInt(e, EV, EV_UNITS) + ")");
+                    if (isDischarging(s.chargingStatus)) s.dischargeMinutes = Rpc.callInt(e, EV, EV_DISCHG_TIME);
+                    if (distUnit < 0) distUnit = Rpc.callInt(e, EV, EV_UNITS);
+                    s.distUnit = distUnit;
+                    Diag.put("veicolo.autonomia", s.rangeKm + " (unità " + distUnit + ")");
                     Diag.put("veicolo.statoRicarica", s.chargingStatus);
                     Diag.put("veicolo.minutiRicarica", s.predictMinutes);
-                    Diag.put("veicolo.minutiScarica", Rpc.callInt(e, EV, EV_DISCHG_TIME));
-                    Diag.put("veicolo.comandoRicarica", Rpc.callInt(e, EV, EV_CHG_CTRL));
+                    Diag.put("veicolo.comandoRicarica(ev)", Rpc.callInt(e, EV, EV_CHG_CTRL));
                     Diag.put("veicolo.statoScarica(V2L)", s.dischargeStatus);
                 }
             } catch (Exception ex) {
@@ -267,11 +267,8 @@ public final class VehicleClient {
                 IBinder a = sub(BIND_HVAC);
                 if (a != null) {
                     sendPending(a);
-                    long now = android.os.SystemClock.uptimeMillis();
                     boolean power = Rpc.callBool(a, AC, AC_GET_POWER);
                     boolean auto = Rpc.callBool(a, AC, AC_GET_AUTO);
-                    lastPower = power;
-                    lastAuto = auto;
                     float drv = Rpc.callFloat(a, AC, AC_GET_DRV_TEMP);
                     int readTemp = tempFromCar(drv);
                     s.acTemp = (now < tempHoldUntil && heldTemp > 0) ? heldTemp : readTemp;
@@ -288,148 +285,166 @@ public final class VehicleClient {
                     s.autoOn = held(AC_GET_AUTO, auto ? 1 : 0, now);
                     s.defrostOn = held(AC_GET_DEFROST, Rpc.callBool(a, AC, AC_GET_DEFROST) ? 1 : 0, now);
                     Diag.put("clima.ac/auto/sbrinamento", s.acOn + " / " + s.autoOn + " / " + s.defrostOn);
+                    if (loopSupported) {
+                        try {
+                            int loop = Rpc.callInt(a, AC, AC_GET_LOOP);
+                            s.loopMode = held(AC_GET_LOOP, loop >= 0 && loop <= 2 ? loop : -1, now);
+                            Diag.put("clima.ricircolo", loop + " (0 interno, 1 esterno, 2 auto)");
+                        } catch (Exception ex) {
+                            loopSupported = false;   // non si richiede più: il pulsante resta nascosto
+                            Diag.put("clima.ricircolo", "non supportato: " + ex.getClass().getSimpleName());
+                        }
+                    }
                 }
             } catch (Exception ex) {
                 Diag.error("clima", ex.toString());
                 forget(BIND_HVAC);
             }
+            readCluster(s);
         }
         readLamps(s);
-        if (readInsideTemp) readInside(s);
-        readTyres(s);
-        readBms(s);
+        readBms(s, now);
+        readCarProps(s);
         last = s;
         main.post(() -> {
             if (listener != null) listener.onVehicleState(s);
         });
     }
 
-    /** Dati dell'app Energia: limite di ricarica, potenza, consumo, percentuale con decimali. */
-    private void readBms(State s) {
+    private boolean loopSupported = true;
+
+    /** Unità della pressione scelta sul quadro (per "Automatica"). */
+    private void readCluster(State s) {
+        if (clusterUnit != Integer.MIN_VALUE && android.os.SystemClock.uptimeMillis() - clusterAt < 60_000) {
+            s.tyreUnitCluster = clusterUnit;
+            return;
+        }
+        try {
+            IBinder ipk = sub(BIND_IPK);
+            if (ipk != null) {
+                clusterUnit = Rpc.callInt(ipk, IPK, IPK_TYRE_UNIT);
+                clusterAt = android.os.SystemClock.uptimeMillis();
+                Diag.put("tpms.unitàQuadro", clusterUnit + " (0 bar, 1 kPa, 2 psi)");
+            }
+        } catch (Exception e) {
+            forget(BIND_IPK);
+        }
+        s.tyreUnitCluster = clusterUnit == Integer.MIN_VALUE ? -1 : clusterUnit;
+    }
+
+    private int clusterUnit = Integer.MIN_VALUE;
+    private long clusterAt;
+
+    /** Gestore batteria: percentuale con decimali, potenza, limite e comandi di ricarica (come l'app Energia). */
+    private void readBms(State s, long now) {
         if (!bms.isReady()) {
             Diag.put("bms.letture", "non disponibile");
             return;
         }
+        s.bmsAvailable = true;
         float socDsp = bms.getFloat(CarBms.PACK_SOC_DSP);
         if (ok(socDsp) && socDsp >= 0 && socDsp <= 100) s.soc = socDsp;
         int code = bms.getInt(CarBms.CHRG_TRGT_SOC);
-        if (code != Integer.MIN_VALUE) {
+        if (code >= 1 && code <= 7) {
+            s.chargeLimitCode = code;
             s.chargeLimit = limitPercent(code);
-            if (s.chargeLimit < 0) s.chargeLimit = 100;
         }
+        int lim = held(CarBms.CHRG_TRGT_SOC, s.chargeLimitCode, now);
+        if (lim >= 1 && lim != s.chargeLimitCode) {
+            s.chargeLimitCode = lim;
+            s.chargeLimit = limitPercent(lim);
+        }
+        int cur = bms.getInt(CarBms.ALTNG_CHRG_CRNT);
+        s.currentLimit = held(CarBms.ALTNG_CHRG_CRNT, cur >= 0 && cur <= 4 ? cur : -1, now);
+        int ctl = bms.getInt(CarBms.CHRG_CTRL);
+        s.chargeControl = held(CarBms.CHRG_CTRL, ctl == Integer.MIN_VALUE ? -1 : ctl, now);
+        int v2x = bms.getInt(CarBms.V2X);
+        s.dischargeControl = held(CarBms.V2X, v2x == Integer.MIN_VALUE ? -1 : v2x, now);
+        int dl = bms.getInt(CarBms.V2X_SP_SOC);
+        s.dischargeLimit = dl >= 0 && dl <= 7 ? (dl + 1) * 10 : -1;
         float amps = bms.getFloat(CarBms.PACK_CRNT);
         float volts = bms.getFloat(CarBms.PACK_VOL);
         if (ok(amps) && ok(volts)) s.chargeKw = Math.abs(amps * volts) / 1000f;
-        float avg = bms.getFloat(CarBms.CRNT_AVG_ELEC_CSUMP);
-        float lastKm = bms.getFloat(CarBms.ELEC_CSUMP_PERKM);
-        s.consumption = ok(avg) && avg > 0 ? avg : (ok(lastKm) ? lastKm : -1);
         if (s.rangeKm <= 0) {
             int r = bms.getInt(CarBms.ESTD_ELEC_RNG);
             if (r > 0 && r < 2000) s.rangeKm = r;
         }
         Diag.put("bms.soc", socDsp);
         Diag.put("veicolo.limiteRicarica", "codice " + code + " = " + s.chargeLimit + "%");
+        Diag.put("ricarica.comandi", "corrente " + cur + " · avvia/ferma " + ctl + " · V2L " + v2x + " · limite V2L " + dl
+                + " · unità " + distUnit);
         Diag.putQuiet("veicolo.correnteA/tensioneV", amps + " / " + volts);
-        Diag.put("veicolo.consumo.media", ok(avg) ? String.format(Locale.ITALY, "%.1f", avg) : "nessun dato");
-        Diag.putQuiet("veicolo.consumo.ultimoKm", lastKm);
-        Diag.put("veicolo.consumo.altri", "reale " + bms.getFloat(CarBms.VEH_ACTU_ELEC_CSUMP)
-                + " · mediaBatteria " + bms.getFloat(CarBms.BAT_ELEC_ENRG_AVG_RATE));
     }
 
-    /** La temperatura interna si legge solo se l'opzione è attiva nelle impostazioni. */
-    private volatile boolean readInsideTemp;
+    // ---- TPMS e temperatura interna dal CarService ----------------------------------------------
 
-    public void setReadInsideTemp(boolean on) {
-        readInsideTemp = on;
+    private CarProps props;
+    private static volatile CarProps shared;
+
+    /** Lettore del CarService condiviso (null finché il servizio veicolo non l'ha creato). */
+    public static CarProps carProps() {
+        return shared;
     }
 
-    /** Temperatura interna: prima quella reale per il sedile del guidatore, poi quella "ambiente" del clima. */
-    private void readInside(State s) {
-        float actual1 = bms.hvacFloat(HVAC_TEMP_ACTUAL, 1);
-        float actual0 = bms.hvacFloat(HVAC_TEMP_ACTUAL, 0);
-        float ambient = bms.hvacFloat(HVAC_AMBIENT_TEMP, 0);
-        Diag.put("clima.tempInterna", "attuale(1) " + actual1 + " · attuale(0) " + actual0 + " · ambiente " + ambient);
-        if (plausible(actual1)) s.insideTemp = actual1;
-        else if (plausible(actual0)) s.insideTemp = actual0;
-        // la "ambiente" del clima conta solo se diversa dalla temperatura esterna (altrimenti è la stessa sonda)
-        else if (plausible(ambient) && Math.abs(ambient - s.outsideTemp) > 0.4f) s.insideTemp = ambient;
-    }
+    private long propsAt;
+    private final float[] tireCache = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};
+    private float insideCache = Float.NaN;
 
-    /** 0,0 esatto = "non disponibile" (è quello che restituisce l'auto quando il dato non c'è). */
-    private static boolean plausible(float t) {
-        return !Float.isNaN(t) && t != 0f && t > -40 && t < 80;
-    }
-
-    /** Pressioni degli pneumatici, normalizzate in kPa (il servizio può restituire bar, kPa o psi). */
-    private void readTyres(State s) {
-        try {
-            IBinder v = sub(BIND_VS);
-            if (v == null) return;
-            if (tpmsConfig == Integer.MIN_VALUE) {
-                tpmsConfig = Rpc.callInt(v, VS, VS_TPMS_CONFIG);
-                Diag.put("tpms.config", tpmsConfig + " (0 = presente)");
-            }
-            try {
-                IBinder ipk = sub(BIND_IPK);
-                if (ipk != null) s.tyreUnit = Rpc.callInt(ipk, IPK, IPK_TYRE_UNIT);
-            } catch (Exception e) {
-                forget(BIND_IPK);
-            }
+    private void readCarProps(State s) {
+        if (props == null) {
+            props = new CarProps(ctx);
+            props.connect();
+            shared = props;
+        }
+        long now = android.os.SystemClock.uptimeMillis();
+        if (props.ready() && now - propsAt > 5000) {
+            propsAt = now;
+            int[] ids = {CarProps.TIRE_FL, CarProps.TIRE_FR, CarProps.TIRE_RL, CarProps.TIRE_RR};
             StringBuilder raw = new StringBuilder();
-            int valid = 0;
-            for (int z = 1; z <= 4; z++) {
-                final int zone = z;
-                Float f = Rpc.call(v, VS, VS_TIRE_PRESS_FLOAT, p -> p.writeInt(zone), android.os.Parcel::readFloat);
-                Integer i = Rpc.call(v, VS, VS_TIRE_PRESS, p -> p.writeInt(zone), android.os.Parcel::readInt);
-                Integer st = Rpc.call(v, VS, VS_TIRE_STATUS, p -> p.writeInt(zone), android.os.Parcel::readInt);
-                Integer tc = Rpc.call(v, VS, VS_TIRE_TEMP, p -> p.writeInt(zone), android.os.Parcel::readInt);
-                float kpa = toKpa(f != null ? f : Float.NaN);
-                if (Float.isNaN(kpa) && i != null) kpa = toKpa(i);
-                s.tyreKpa[z - 1] = kpa;
-                s.tyreStatus[z - 1] = st != null ? st : -1;
-                if (!Float.isNaN(kpa)) valid++;
-                raw.append(z).append(": ").append(f).append(" / ").append(i).append(" st ").append(st)
-                        .append(" ").append(tc).append("°  ");
+            for (int i = 0; i < 4; i++) {
+                int v = props.getInt(ids[i]);
+                tireCache[i] = CarProps.toBar(v);
+                raw.append(i == 0 ? "" : " / ").append(v == Integer.MIN_VALUE ? "?" : String.valueOf(v));
             }
-            Diag.put("tpms.pneumatici", raw.toString().trim() + " · unità " + s.tyreUnit);
-            if (valid == 0) valid = readTyresFromCarService(s);
-            s.tpms = valid > 0 && tpmsConfig != 1;
-        } catch (Exception e) {
-            Diag.error("tpms", e.toString());
-            forget(BIND_VS);
+            Diag.put("pneumatici (grezzo AS/AD/PS/PD)", raw);
+            // temperatura interna: si legge solo se l'opzione è accesa (spesso l'auto non la fornisce)
+            android.content.SharedPreferences sp = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
+            boolean wantInside = sp.getBoolean("showInsideTemp", false);
+            Boolean avail = insideAvailable();
+            if (avail != null) sp.edit().putBoolean("tempInternaAssente", !avail).apply();
+            if (wantInside && Boolean.FALSE.equals(avail)) {
+                Diag.put("clima.tempInterna (corrente / ambient)", "non disponibile su questa auto");
+                insideCache = Float.NaN;
+            } else if (wantInside) {
+                float in = props.getFloat(CarProps.HVAC_TEMPERATURE_CURRENT);
+                float amb = props.getFloat(CarProps.HVAC_AMBIENT_TEMPERATURE);
+                Diag.put("clima.tempInterna (corrente / ambient)", in + " / " + amb);
+                insideCache = valid(in) ? in : valid(amb) && Math.abs(amb - s.outsideTemp) > 0.4f ? amb : Float.NaN;
+            } else {
+                Diag.put("clima.tempInterna (corrente / ambient)", "non letta (opzione spenta)");
+                insideCache = Float.NaN;
+            }
         }
+        System.arraycopy(tireCache, 0, s.tireBar, 0, 4);
+        s.insideTemp = insideCache;
     }
 
-    private int tpmsConfig = Integer.MIN_VALUE;
-
-    /** Se il servizio dell'auto dà 0, prova le proprietà del CarService (servono CAR_TIRES / CAR_ENGINE_DETAILED). */
-    private int readTyresFromCarService(State s) {
-        StringBuilder raw = new StringBuilder();
-        int valid = 0;
-        for (int i = 0; i < 4; i++) {
-            float std = bms.propFloat(PROP_TIRE_PRESSURE, WHEEL_AREA[i]);
-            int saic = bms.propInt(PROP_SENSOR_TIRE[i], 0);
-            float kpa = toKpa(std);
-            if (Float.isNaN(kpa) && saic != Integer.MIN_VALUE) kpa = toKpa(saic);
-            if (!Float.isNaN(kpa)) {
-                s.tyreKpa[i] = kpa;
-                valid++;
-            }
-            raw.append(i + 1).append(": ").append(std).append(" / ").append(saic == Integer.MIN_VALUE ? "—" : String.valueOf(saic)).append("  ");
-        }
-        Diag.put("tpms.carservice", raw.toString().trim());
-        return valid;
+    /** Temperatura interna leggibile? true / false, null finché non si sa (CarService non ancora pronto). */
+    public static Boolean insideAvailable() {
+        CarProps p = shared;
+        if (p == null) return null;
+        Boolean a = p.available(CarProps.HVAC_TEMPERATURE_CURRENT), b = p.available(CarProps.HVAC_AMBIENT_TEMPERATURE);
+        if (Boolean.TRUE.equals(a) || Boolean.TRUE.equals(b)) return true;
+        if (Boolean.FALSE.equals(a) && Boolean.FALSE.equals(b)) return false;
+        return null;
     }
 
-    /** Valore grezzo → kPa: sotto 10 sono bar, fino a 80 psi, oltre kPa. NaN se non valido. */
-    private static float toKpa(float v) {
-        if (Float.isNaN(v) || v <= 0.3f || v > 1000) return Float.NaN;
-        if (v < 10) return v * 100f;
-        if (v < 80) return v * 6.895f;
-        return v;
+    private static boolean valid(float t) {
+        return !Float.isNaN(t) && t > -40 && t < 80 && t != 0f;
     }
 
     private void readLamps(State s) {
+        if (!s.connected) return;
         try {
             if (frontFogConfig == Integer.MIN_VALUE) {
                 IBinder cfg = sub(BIND_CONFIG);
@@ -457,9 +472,35 @@ public final class VehicleClient {
         }
     }
 
-    // ---- pulsanti a commutazione (A/C, AUTO, sbrinamento, fendinebbia) ------------------------
+    // ---- stati di ricarica ----------------------------------------------------------------------
 
     private int frontFogConfig = Integer.MIN_VALUE;
+
+    /** Stati di ricarica (stessi codici della SWI68): in carica / bilanciamento / rapida / wireless. */
+    public static boolean isCharging(int st) {
+        return st == 1 || st == 3 || st == 10 || st == 16 || st == 11;
+    }
+
+    /** V2L: in scarica (13). */
+    public static boolean isDischarging(int st) {
+        return st == 13;
+    }
+
+    /**
+     * Modalità del pulsante avvia/ferma, come le due schede della Gestione ricarica originale:
+     * 2 = presa V2L collegata (11 collegato, 13 in scarica, 14 sospeso, 15 finito), 1 = cavo di ricarica collegato,
+     * 0 = niente di collegato.
+     */
+    public static int plugMode(State s) {
+        int st = s.chargingStatus;
+        if (st == 13 || st == 14 || st == 15) return 2;
+        if (st == 11) return s.chargeKw > 0.3f ? 1 : 2;
+        if (st == 1 || st == 2 || st == 3 || st == 4 || (st >= 6 && st <= 10)) return 1;
+        return 0;
+    }
+
+    // ---- pulsanti a commutazione ----------------------------------------------------------------
+
     private final Map<Integer, long[]> holds = new HashMap<>();   // codice lettura -> {valore, scadenza}
 
     /** Dopo un tocco mostra subito il nuovo stato per qualche secondo, finché l'auto non lo conferma. */
@@ -470,6 +511,13 @@ public final class VehicleClient {
             if (now < h[1] && read != h[0]) return (int) h[0];
             holds.remove(getCode);
             return read;
+        }
+    }
+
+    private int predicted(int getCode, int fallback) {
+        synchronized (holds) {
+            long[] h = holds.get(getCode);
+            return h != null && android.os.SystemClock.uptimeMillis() < h[1] ? (int) h[0] : fallback;
         }
     }
 
@@ -506,6 +554,10 @@ public final class VehicleClient {
         press(BIND_HVAC, AC, AC_SWITCH_AUTO, false, AC_GET_AUTO, last.autoOn, "clima.auto");
     }
 
+    public void toggleFrontDefrost() {
+        press(BIND_HVAC, AC, AC_SWITCH_DEFROST, false, AC_GET_DEFROST, last.defrostOn, "clima.sbrinamento");
+    }
+
     public void toggleRearFog() {
         press(BIND_LAMP, LAMP, LAMP_SET_REAR_FOG, true, LAMP_GET_REAR_FOG, last.rearFog, "luci.retronebbia");
     }
@@ -513,6 +565,40 @@ public final class VehicleClient {
     public void toggleFrontFog() {
         press(BIND_LAMP, LAMP, LAMP_SET_FRONT_FOG, true, LAMP_GET_FRONT_FOG, last.frontFog, "luci.fendinebbia");
     }
+
+    /** Sedili e volante riscaldati: la SWI69 R45 non ha questi comandi (i pulsanti restano nascosti). */
+    public void pressSeatLeft() {
+    }
+
+    public void pressSeatRight() {
+    }
+
+    public void toggleWheelHeat() {
+    }
+
+    /**
+     * Ricircolo: il servizio ha solo "cambia" (passa allo stato successivo, come il pulsante della home originale);
+     * si mostra subito lo stato previsto (interno ↔ esterno) e poi quello letto dall'auto.
+     */
+    public void toggleRecirc() {
+        if (bg == null) return;
+        int cur = predicted(AC_GET_LOOP, last.loopMode);
+        if (cur < 0) return;
+        hold(AC_GET_LOOP, cur == 0 ? 1 : 0);
+        bg.post(() -> {
+            try {
+                IBinder a = sub(BIND_HVAC);
+                if (a != null) Rpc.call(a, AC, AC_SWITCH_LOOP, Rpc.NONE);
+                Diag.put("clima.ricircoloComando", "cambia (era " + cur + ")");
+            } catch (Exception e) {
+                Diag.error("clima.ricircolo", e.toString());
+                forget(BIND_HVAC);
+            }
+            poll();
+        });
+    }
+
+    // ---- temperatura e ventola --------------------------------------------------------------------
 
     /** Imposta la temperatura lato guida (15 = LO … 31 = HI). Il valore richiesto resta visibile per qualche secondo. */
     public void setDriverTemp(int celsius) {
@@ -580,6 +666,40 @@ public final class VehicleClient {
             } catch (Exception e) {
                 Diag.error("clima.accensione", e.toString());
             }
+            poll();
+        });
+    }
+
+    // ---- ricarica: comandi del gestore batteria, come la Gestione ricarica dell'app Energia --------
+
+    /** Limite di ricarica: codice 1..7 (40..100 %). */
+    public void setChargeLimitCode(int code) {
+        if (code < 1 || code > 7) return;
+        chargeCommand(CarBms.CHRG_TRGT_SOC, code, code, "ricarica.limite → " + limitPercent(code) + "%");
+    }
+
+    /** Corrente di ricarica AC: codice 1..4 (6 A, 8 A, 16 A, Max). */
+    public void setCurrentLimit(int code) {
+        if (code < 1 || code > 4) return;
+        chargeCommand(CarBms.ALTNG_CHRG_CRNT, code, code, "ricarica.corrente → " + CURRENT_LABELS[code - 1]);
+    }
+
+    /** Avvia o ferma la ricarica (cavo collegato). */
+    public void setCharging(boolean start) {
+        chargeCommand(CarBms.CHRG_CTRL, CTRL_PREPARING, start ? CTRL_START : CTRL_STOP, "ricarica." + (start ? "avvia" : "ferma"));
+    }
+
+    /** Avvia o ferma la scarica V2L. */
+    public void setDischarging(boolean start) {
+        chargeCommand(CarBms.V2X, CTRL_PREPARING, start ? CTRL_START : CTRL_STOP, "v2l." + (start ? "avvia" : "ferma"));
+    }
+
+    private void chargeCommand(int prop, int shown, int value, String what) {
+        if (bg == null) return;
+        hold(prop, shown);
+        bg.post(() -> {
+            boolean sent = bms.setInt(prop, value);
+            Diag.put("ricarica.ultimoComando", what + (sent ? " · inviato" : " · non inviato (gestore batteria non pronto)"));
             poll();
         });
     }

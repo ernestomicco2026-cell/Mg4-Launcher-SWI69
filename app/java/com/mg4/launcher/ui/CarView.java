@@ -55,26 +55,6 @@ public final class CarView extends View {
         cv.drawBitmap(roofMask, 0, 0, p);
     }
 
-    // pressioni degli pneumatici sotto le ruote (anteriore a sinistra nell'immagine, posteriore a destra)
-    private String tyreFront, tyreRear, tyreUnit;
-    private int tyreFrontColor, tyreRearColor, tyreUnitColor;
-    private final Paint tyrePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint unitPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    /** Centri delle ruote in proporzione alla larghezza dell'immagine (misurati su car_base.png). */
-    private static final float WHEEL_FRONT = 0.19f, WHEEL_REAR = 0.825f;
-
-    /** null = niente pressioni. front/rear = "2,5 · 2,5" (sinistra · destra), colori per gli avvisi. */
-    public void setTyres(String front, String rear, String unit, int frontColor, int rearColor, int unitColor) {
-        tyreFront = front;
-        tyreRear = rear;
-        tyreUnit = unit;
-        tyreFrontColor = frontColor;
-        tyreRearColor = rearColor;
-        tyreUnitColor = unitColor;
-        floor.setShader(null);
-        invalidate();
-    }
-
     public void setLook(int bodyColor, boolean blackRoof, Theme t) {
         paintLayer.setColorFilter(new PorterDuffColorFilter(bodyColor, PorterDuff.Mode.MULTIPLY));
         this.blackRoof = blackRoof;
@@ -89,10 +69,6 @@ public final class CarView extends View {
         int w = getWidth(), h = getHeight();
         if (w == 0 || h == 0 || base == null) return;
         float bw = base.getWidth(), bh = base.getHeight();
-        boolean tyres = tyreFront != null && tyreRear != null;
-        float dpx = getResources().getDisplayMetrics().density;
-        float reserve = tyres ? 34 * dpx : 0;   // spazio per le pressioni sotto le ruote
-        h -= (int) reserve;
         float s = Math.min(w / bw, (h * 0.9f) / bh);
         float dw = bw * s, dh = bh * s;
         float left = (w - dw) / 2f, top = (h - dh) / 2f - h * 0.02f;
@@ -114,24 +90,5 @@ public final class CarView extends View {
         if (blackRoof) c.drawBitmap(roofShade, null, dst, roofLayer);
         c.drawBitmap(highlight, null, dst, hlLayer);
         c.drawBitmap(base, null, dst, plain);
-
-        if (tyres) {
-            float size = 18 * getResources().getDisplayMetrics().scaledDensity;
-            tyrePaint.setTextSize(size);
-            tyrePaint.setTypeface(Ui.MEDIUM);
-            tyrePaint.setTextAlign(Paint.Align.CENTER);
-            float y = dst.bottom + reserve * 0.55f + size * 0.35f;
-            tyrePaint.setColor(tyreFrontColor);
-            c.drawText(tyreFront, dst.left + dw * WHEEL_FRONT, y, tyrePaint);
-            tyrePaint.setColor(tyreRearColor);
-            c.drawText(tyreRear, dst.left + dw * WHEEL_REAR, y, tyrePaint);
-            if (tyreUnit != null) {
-                unitPaint.setTextSize(size * 0.8f);
-                unitPaint.setTypeface(Ui.REGULAR);
-                unitPaint.setTextAlign(Paint.Align.CENTER);
-                unitPaint.setColor(tyreUnitColor);
-                c.drawText(tyreUnit, dst.left + dw * 0.5f, y, unitPaint);
-            }
-        }
     }
 }

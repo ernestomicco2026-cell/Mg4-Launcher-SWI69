@@ -26,18 +26,15 @@ public final class Ui {
     public static final Typeface REGULAR = Typeface.create("sans-serif", Typeface.NORMAL);
     public static final Typeface MEDIUM = Typeface.create("sans-serif-medium", Typeface.NORMAL);
 
-    /**
-     * Dimensione dei comandi toccabili (impostazione "Dimensione comandi"): 1 Normale, 1,15 Grande, 1,3 Molto grande.
-     * Ingrandisce in proporzione pulsanti, icone e testo dentro i pulsanti; il resto della grafica non cambia.
-     */
+    /** Dimensione dei comandi toccabili: 1 Normale, 1,15 Grande, 1,3 Molto grande. */
     public static float K = 1f;
 
-    /** Misura di un comando toccabile, in dp moltiplicati per K. */
+    /** Misura di un comando toccabile (dp × K). */
     public static int tp(Context c, float v) {
         return dp(c, v * K);
     }
 
-    /** Dimensione del testo dentro un comando toccabile (sp moltiplicati per K). */
+    /** Testo scritto su un comando toccabile (sp × K). */
     public static float ts(float sp) {
         return sp * K;
     }

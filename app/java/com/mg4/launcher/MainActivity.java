@@ -10,10 +10,12 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.Gravity;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.mg4.launcher.apps.AppCatalog;
-import com.mg4.launcher.apps.MgApps;
 import com.mg4.launcher.apps.IconStyler;
 import com.mg4.launcher.svc.Diag;
 import com.mg4.launcher.svc.MediaClient;
@@ -22,13 +24,11 @@ import com.mg4.launcher.svc.Updater;
 import com.mg4.launcher.svc.VehicleClient;
 import com.mg4.launcher.ui.AppsView;
 import com.mg4.launcher.ui.HomeView;
-import com.mg4.launcher.ui.Lang;
 import com.mg4.launcher.ui.Pager;
 import com.mg4.launcher.ui.Prefs;
 import com.mg4.launcher.ui.SettingsView;
 import com.mg4.launcher.ui.Theme;
 import com.mg4.launcher.ui.Ui;
-import com.mg4.launcher.ui.UpdateBanner;
 
 /** Home del launcher: costruisce l'interfaccia e collega i servizi dell'auto. */
 public final class MainActivity extends Activity implements HomeView.Host, AppsView.Host, SettingsView.Host {
@@ -47,27 +47,42 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     private NavClient nav;
     private Updater updater;
     private com.mg4.launcher.svc.LogUploader logs;
-    private UpdateBanner banner;
-    private Updater.Release pendingUpdate;
-    private static final long UPDATE_FIRST_MS = 2 * 60_000, UPDATE_PERIOD_MS = 6 * 3_600_000L, SNOOZE_MS = 24 * 3_600_000L;
 
     private FrameLayout root;
     private Theme theme;
     private HomeView home;
     private AppsView apps;
     private Pager pager;
+    private com.mg4.launcher.svc.ConnClient conn;
     private SettingsView settings;
     private int lastUiMode;
-    private java.util.Locale appliedLocale;
+
+    /** Versione per SWI69 su un altro firmware (es. SWI68): solo la schermata di avviso, nessun collegamento ai servizi. */
+    private boolean wrongFirmware;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         prefs = new Prefs(this);
-        appliedLocale = Lang.apply(this, prefs.language());
+        L.init(this, prefs.language());
+        // schermo intero dal primo disegno: niente ridimensionamento della finestra all'avvio
+        getWindow().getDecorView().setSystemUiVisibility(IMMERSIVE);
+        if (com.mg4.launcher.svc.Firmware.wrong(this)) {
+            wrongFirmware = true;
+            logs = new com.mg4.launcher.svc.LogUploader(this);
+            root = new FrameLayout(this);
+            setContentView(root);
+            showWrongFirmware();
+            logs.start();
+            root.postDelayed(saveDiag, 15000);
+            return;
+        }
         catalog = new AppCatalog(this);
         vehicle = new VehicleClient(this);
-        vehicle.setReadInsideTemp(prefs.showInsideTemp());
+        conn = new com.mg4.launcher.svc.ConnClient(this);
+        conn.setListener(st -> {
+            if (home != null) home.onConn(st);
+        });
         media = new MediaClient(this);
         nav = new NavClient(this);
         updater = new Updater(this);
@@ -86,21 +101,49 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         });
         goFullscreen();
         build();
+        // primo avvio dopo un aggiornamento: popup "Novità" (una sola volta per versione)
+        root.postDelayed(this::showNewsIfUpdated, 1500);
 
         vehicle.setListener(s -> {
             if (home != null) home.onVehicle(s);
+            // lato di guida letto dall'auto solo dopo l'avvio del CarService: se cambia, si ricostruisce la home
+            if (home != null && Prefs.DRIVE_AUTO.equals(prefs.driveSide())) {
+                Boolean known = com.mg4.launcher.svc.CarFeatures.knownRhd(this);
+                if (known != null && known != home.isRightHand()) {
+                    boolean wasSettings = settings != null;
+                    build();
+                    if (wasSettings) openSettings();
+                }
+            }
         });
         media.setListener(s -> {
-            if (home != null) home.onMedia(s);
+            if (home != null) {
+                home.onMedia(s);
+                // SWI69: le indicazioni arrivano solo da CarPlay / Android Auto (dati del telefono nello stato media)
+                home.onNav(nav.last());
+            }
         });
         nav.setListener(s -> {
             if (home != null) home.onNav(s);
         });
-        vehicle.start();
-        media.start();
-        logs.start();
-        root.postDelayed(updateCheck, UPDATE_FIRST_MS);
-        // SWI69: nessun navigatore MG, il servizio di navigazione non si usa (resta nav.last() vuoto)
+        // collegamento ai servizi dopo il primo disegno: la home compare subito, già nelle dimensioni finali
+        root.post(() -> {
+            vehicle.start();
+            conn.start();
+            media.start();
+            // SWI69: nessun navigatore MG (si naviga con CarPlay / Android Auto): il servizio di navigazione non si usa
+            logs.start();
+        });
+        // avvio all'accensione: servizio di accessibilità, scadenza officina, riconferma della home predefinita
+        com.mg4.launcher.svc.StartGuard.markProcess();
+        com.mg4.launcher.svc.HomeMode.checkExpiry(getApplicationContext());
+        com.mg4.launcher.svc.HomeMode.diag(getApplicationContext());
+        new Thread(() -> {
+            com.mg4.launcher.svc.BootAccessibility.ensureEnabled(getApplicationContext());
+            com.mg4.launcher.svc.HomeDefault.ensure(getApplicationContext());
+            com.mg4.launcher.svc.StartGuard.resolvedHome(getApplicationContext());
+            com.mg4.launcher.svc.StartGuard.reportKeyApps(getApplicationContext());
+        }, "mg4-home").start();
 
         IntentFilter f = new IntentFilter();
         f.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -111,15 +154,191 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         registerReceiver(packages, f);
         // all'avvio dell'auto le app utente compaiono solo dopo lo sblocco dell'utente Android
         registerReceiver(packages, new IntentFilter(Intent.ACTION_USER_UNLOCKED));
+        // orologio nel riquadro batteria: ogni minuto e al cambio di ora / fuso
+        IntentFilter tf = new IntentFilter(Intent.ACTION_TIME_TICK);
+        tf.addAction(Intent.ACTION_TIME_CHANGED);
+        tf.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+        registerReceiver(clockTick, tf);
         root.postDelayed(saveDiag, 15000);
-        // riconferma che il launcher è la home predefinita (un aggiornamento di sistema può averla azzerata)
-        new Thread(() -> {
-            com.mg4.launcher.svc.HomeDefault.ensure(getApplicationContext());
-            // servizio di accessibilità per l'avvio rapido: attivato una volta e poi resta attivo
-            com.mg4.launcher.svc.BootAccessibility.ensureEnabled(getApplicationContext());
-            com.mg4.launcher.svc.BootAccessibility.resolvedHome(getApplicationContext());
-            com.mg4.launcher.svc.BootAccessibility.reportKeyApps(getApplicationContext());
-        }, "mg4-home").start();
+        // primo controllo aggiornamenti dopo l'avvio, quando la radio ha finito di caricare
+        root.postDelayed(autoCheck, 90_000);
+    }
+
+    // ---- modalità officina: aperto il launcher durante l'officina, si chiede se disattivarla ----------
+
+    private boolean officinaAsked;
+
+    private void askOfficina() {
+        android.content.Context app = getApplicationContext();
+        if (!com.mg4.launcher.svc.HomeMode.officina(app)) {
+            officinaAsked = false;
+            return;
+        }
+        if (officinaAsked) return;
+        officinaAsked = true;
+        root.post(() -> com.mg4.launcher.ui.Confirm.show(root, theme, L.s(R.string.officina_active_title),
+                L.f(R.string.officina_active_msg, com.mg4.launcher.svc.HomeMode.officinaDate(app)),
+                L.s(R.string.btn_keep), L.s(R.string.btn_deactivate), () -> {
+                    com.mg4.launcher.svc.HomeMode.end(app, "annullata");
+                    if (settings != null) {
+                        closeSettings();
+                        openSettings();
+                    }
+                }));
+    }
+
+    // ---- popup discreto per i nuovi aggiornamenti ----------------------------------------------
+
+    private static final long CHECK_EVERY = 6 * 60 * 60 * 1000L;   // ogni 6 ore
+    private static final long POPUP_SHOW = 20_000;                  // poi si nasconde da solo
+    private View updPopup;
+
+    private final Runnable autoCheck = new Runnable() {
+        @Override
+        public void run() {
+            if (prefs.updatePopup() && !com.mg4.launcher.svc.HomeMode.officina(getApplicationContext())) updater.checkQuiet(prefs.updateRepo(), prefs.githubToken(), r -> showUpdatePopup(r));
+            root.postDelayed(this, CHECK_EVERY);
+        }
+    };
+
+    private final Runnable hidePopup = () -> hideUpdatePopup();
+
+    private void showUpdatePopup(Updater.Release r) {
+        if (r == null || updPopup != null || !prefs.updatePopup()) return;
+        if (r.tag.equals(prefs.dismissedUpdate()) || updater.isBusy()) return;
+        Theme t = theme;
+        LinearLayout card = Ui.row(this);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(24), dp(14), dp(14), dp(14));
+        android.graphics.drawable.GradientDrawable bgd = Ui.round(t.panel, dp(22));
+        bgd.setStroke(dp(1), t.track);
+        card.setBackground(bgd);
+        card.setElevation(dp(14));
+        card.setClickable(true);   // i tocchi sul popup non passano alla home sotto
+
+        LinearLayout txt = Ui.column(this);
+        txt.addView(Ui.text(this, L.s(R.string.upd_popup_title), 18, t.text, Ui.MEDIUM));
+        txt.addView(Ui.text(this, L.f(R.string.upd_popup_text, r.tag), 15, t.sub, Ui.REGULAR));
+        card.addView(txt, Ui.margins(Ui.lp(-2, -2), 0, 0, dp(28), 0));
+
+        card.addView(popupButton(L.s(R.string.upd_later), t.chip, t.text, v -> {
+            prefs.setDismissedUpdate(r.tag);
+            hideUpdatePopup();
+        }), Ui.margins(Ui.lp(-2, dp(48)), 0, 0, dp(10), 0));
+        card.addView(popupButton(L.s(R.string.upd_now), t.accent, t.onAccent, v -> {
+            hideUpdatePopup();
+            SettingsView.openAt(SettingsView.SEC_SYSTEM);
+            closeSettings();
+            openSettings();
+            updater.install(r, prefs.githubToken());
+        }), Ui.lp(-2, dp(48)));
+
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        lp.topMargin = dp(20);
+        root.addView(card, lp);
+        updPopup = card;
+        card.setAlpha(0f);
+        card.setTranslationY(-dp(30));
+        card.animate().alpha(1f).translationY(0).setDuration(280).start();
+        root.removeCallbacks(hidePopup);
+        root.postDelayed(hidePopup, POPUP_SHOW);
+    }
+
+    private void hideUpdatePopup() {
+        root.removeCallbacks(hidePopup);
+        View v = updPopup;
+        updPopup = null;
+        if (v == null) return;
+        v.animate().alpha(0f).translationY(-dp(30)).setDuration(220).withEndAction(() -> root.removeView(v)).start();
+    }
+
+    private TextView popupButton(String text, int bg, int fg, View.OnClickListener l) {
+        TextView b = Ui.text(this, text, 16, fg, Ui.MEDIUM);
+        b.setGravity(Gravity.CENTER);
+        b.setPadding(dp(20), 0, dp(20), 0);
+        b.setBackground(Ui.pressable(this, bg, 14, theme));
+        b.setClickable(true);
+        b.setOnClickListener(l);
+        return b;
+    }
+
+    private int dp(float v) {
+        return Ui.dp(this, v);
+    }
+
+    // ---- firmware sbagliato ------------------------------------------------------------------
+
+    private void showWrongFirmware() {
+        theme = Theme.resolve(this, prefs);
+        Theme t = theme;
+        root.removeAllViews();
+        root.setBackgroundColor(t.bg);
+        boolean swi68 = com.mg4.launcher.svc.Firmware.kind(this) == com.mg4.launcher.svc.Firmware.SWI68;
+        LinearLayout card = Ui.column(this);
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
+        card.setBackground(Ui.round(t.panel, dp(28)));
+        card.setPadding(dp(56), dp(44), dp(56), dp(40));
+        card.addView(Ui.icon(this, R.drawable.ic_info, t.text, 56));
+        TextView title = Ui.text(this, L.s(swi68 ? R.string.fw_swi68_title : R.string.fw_other_title), 36, t.text, Ui.MEDIUM);
+        title.setGravity(Gravity.CENTER);
+        card.addView(title, Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(20), 0, 0));
+        TextView msg = Ui.text(this, L.s(swi68 ? R.string.fw_swi68_msg : R.string.fw_other_msg), 21, t.sub, Ui.REGULAR);
+        msg.setGravity(Gravity.CENTER);
+        msg.setLineSpacing(0, 1.2f);
+        card.addView(msg, Ui.margins(new LinearLayout.LayoutParams(-1, -2), 0, dp(16), 0, 0));
+        TextView link = Ui.text(this, com.mg4.launcher.svc.Firmware.SWI68_URL.replace("https://", ""), 22, t.text, Ui.MEDIUM);
+        link.setGravity(Gravity.CENTER);
+        link.setPadding(dp(24), dp(14), dp(24), dp(14));
+        link.setBackground(Ui.round(t.chip, dp(16)));
+        link.setTextIsSelectable(true);
+        card.addView(link, Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(26), 0, 0));
+        TextView open = Ui.text(this, L.s(R.string.fw_open_original), 20, t.panel, Ui.MEDIUM);
+        open.setGravity(Gravity.CENTER);
+        open.setPadding(dp(30), 0, dp(30), 0);
+        open.setBackground(Ui.pressable(this, t.text, 16, t));
+        open.setClickable(true);
+        open.setOnClickListener(v -> openAnyOtherHome());
+        card.addView(open, Ui.margins(new LinearLayout.LayoutParams(-2, dp(64)), 0, dp(30), 0, 0));
+        root.addView(card, new FrameLayout.LayoutParams(dp(1100), -2, Gravity.CENTER));
+    }
+
+    /** Apre la home originale dell'auto (qualunque firmware): la prima home che non è questo launcher. */
+    private void openAnyOtherHome() {
+        try {
+            Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+            for (android.content.pm.ResolveInfo ri : getPackageManager().queryIntentActivities(home, 0)) {
+                if (ri.activityInfo == null || getPackageName().equals(ri.activityInfo.packageName)) continue;
+                startActivity(new Intent(home).setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                return;
+            }
+        } catch (Exception e) {
+            Diag.error("home originale", e.toString());
+        }
+    }
+
+    // ---- popup "Novità" dopo un aggiornamento -------------------------------------------------
+
+    /** Una sola volta per versione, nella lingua scelta; non dopo la prima installazione. */
+    private void showNewsIfUpdated() {
+        String ver = updater.currentVersion();
+        if (ver.equals(prefs.newsShownFor())) return;
+        boolean updated = false;
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            updated = pi.lastUpdateTime > pi.firstInstallTime + 1000;
+        } catch (Exception ignored) {
+        }
+        prefs.setNewsShownFor(ver);
+        if (!updated) return;
+        showNews(ver);
+    }
+
+    private void showNews(String ver) {
+        String[] items = {L.s(R.string.news_1), L.s(R.string.news_2), L.s(R.string.news_3), L.s(R.string.news_4),
+                L.s(R.string.news_5), L.s(R.string.news_6), L.s(R.string.news_7)};
+        com.mg4.launcher.ui.Confirm.notice(root, theme, L.f(R.string.news_title, ver), L.s(R.string.news_sub), items,
+                L.s(R.string.btn_ok), null);
     }
 
     /** Ogni 15 s salva la diagnostica su file: adb pull /sdcard/Android/data/com.mg4.launcher/files/diagnostica.txt */
@@ -150,8 +369,12 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     protected void onResume() {
         super.onResume();
+        if (wrongFirmware) {
+            goFullscreen();
+            return;
+        }
+        askOfficina();
         goFullscreen();
-        com.mg4.launcher.svc.BootAccessibility.BootTimes.ours(android.os.SystemClock.elapsedRealtime());
     }
 
     @Override
@@ -162,9 +385,11 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     private void build() {
         theme = Theme.resolve(this, prefs);
-        Ui.K = prefs.uiScaleFactor();   // dimensione dei comandi toccabili
+        Ui.K = prefs.uiScaleFactor();
         root.setBackgroundColor(theme.bg);
         root.removeAllViews();
+        root.removeCallbacks(hidePopup);
+        updPopup = null;
         int keepPage = pager != null ? pager.page() : 0;
         pager = new Pager(this);
         home = new HomeView(this, theme, prefs, this, vehicle, media, nav);
@@ -178,25 +403,9 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         settings = null;
         pager.show(keepPage, false);
         home.onVehicle(vehicle.last());
+        home.onConn(conn.last());
         home.onMedia(media.last());
         home.onNav(nav.last());
-        // avviso discreto di nuova versione, in basso a destra sopra la barra
-        banner = new UpdateBanner(this, theme, new UpdateBanner.Actions() {
-            @Override
-            public void onUpdate() {
-                Updater.Release r = pendingUpdate;
-                openSettings();
-                if (r != null) updater.install(r, prefs.githubToken());
-            }
-
-            @Override
-            public void onLater() {
-                if (pendingUpdate != null) prefs.snoozeUpdate(pendingUpdate.tag, System.currentTimeMillis() + SNOOZE_MS);
-            }
-        });
-        FrameLayout.LayoutParams bl = new FrameLayout.LayoutParams(-2, -2, android.view.Gravity.BOTTOM | android.view.Gravity.END);
-        bl.setMargins(0, 0, Ui.dp(this, 40), Ui.dp(this, 132));
-        root.addView(banner, bl);
         getWindow().setStatusBarColor(theme.bg);
         root.requestApplyInsets();
     }
@@ -204,15 +413,20 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     protected void onStart() {
         super.onStart();
+        if (wrongFirmware) return;
         // il collegamento ai servizi resta attivo; qui si riprendono solo le letture periodiche
         vehicle.resume();
+        conn.resume();
+        if (home != null) home.updateClock();
         media.resume();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        if (wrongFirmware) return;
         vehicle.pause();
+        conn.pause();
         media.pause();
     }
 
@@ -220,11 +434,17 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     protected void onDestroy() {
         super.onDestroy();
         root.removeCallbacks(saveDiag);
-        root.removeCallbacks(updateCheck);
         logs.stop();
+        if (wrongFirmware) return;
+        root.removeCallbacks(autoCheck);
+        root.removeCallbacks(hidePopup);
         vehicle.stop();
+        conn.stop();
+        try {
+            unregisterReceiver(clockTick);
+        } catch (Exception ignored) {
+        }
         media.stop();
-        nav.stop();
         try {
             unregisterReceiver(packages);
         } catch (Exception ignored) {
@@ -234,6 +454,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (wrongFirmware) return;
         // tasto Home: torna sempre alla schermata principale
         closeSettings();
         closeApps();
@@ -241,6 +462,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     @Override
     public void onBackPressed() {
+        if (wrongFirmware) return;
         if (settings != null) closeSettings();
         else if (pager != null && pager.page() != 0) closeApps();
         // altrimenti il launcher resta dov'è
@@ -249,12 +471,13 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     public void onConfigurationChanged(Configuration cfg) {
         super.onConfigurationChanged(cfg);
-        // lingua: il sistema ha appena riscritto le risorse con la sua lingua; si riapplica quella scelta
-        // e, se è cambiata (es. "Come l'auto" e lingua dell'auto modificata), si ricostruisce l'interfaccia
-        java.util.Locale loc = Lang.apply(this, prefs.language());
-        if (!loc.equals(appliedLocale)) {
-            appliedLocale = loc;
-            IconStyler.clearCache();
+        if (wrongFirmware) {
+            if (L.init(this, prefs.language())) showWrongFirmware();
+            return;
+        }
+        // lingua di sistema cambiata: con "Automatica" il launcher la segue subito
+        if (L.init(this, prefs.language())) {
+            catalog.refreshLabels();
             build();
             return;
         }
@@ -267,6 +490,13 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         }
     }
 
+    private final BroadcastReceiver clockTick = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            if (home != null) home.updateClock();
+        }
+    };
+
     private final BroadcastReceiver packages = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent i) {
@@ -277,20 +507,6 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     // --- HomeView.Host ------------------------------------------------------------------------
 
-    /** Controllo silenzioso degli aggiornamenti: all'avvio (dopo 2 minuti) e poi ogni 6 ore. */
-    private final Runnable updateCheck = new Runnable() {
-        @Override
-        public void run() {
-            updater.checkQuiet(prefs.updateRepo(), r -> {
-                if (r == null || !r.newer || r.apkUrl == null) return;
-                pendingUpdate = r;
-                boolean snoozed = r.tag.equals(prefs.snoozedUpdateTag()) && System.currentTimeMillis() < prefs.snoozedUpdateUntil();
-                if (!snoozed && settings == null && banner != null) banner.show(r.tag);
-            });
-            root.postDelayed(this, UPDATE_PERIOD_MS);
-        }
-    };
-
     @Override
     public void openApps() {
         if (pager != null) pager.show(1, true);
@@ -298,10 +514,10 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     @Override
     public void openSettings() {
-        if (banner != null) banner.hide();
         if (settings == null) {
             settings = new SettingsView(this, theme, prefs, this);
             root.addView(settings, new FrameLayout.LayoutParams(-1, -1));
+            if (updPopup != null) updPopup.bringToFront();
         }
     }
 
@@ -310,12 +526,54 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         catalog.launchComponent(pkg, cls);
     }
 
-    /** App Energia SWI69 (ricarica, scarica V2L, consumi): non ha schede apribili dall'esterno. */
+    /** App Energia SWI69 (ricarica, scarica V2L, consumi): non ha schede apribili dall'esterno, si apre la principale. */
     @Override
     public void openEnergy(String module) {
-        if (!catalog.launchComponent(MgApps.ENERGY_PKG, MgApps.ENERGY_CLS)) {
-            com.mg4.launcher.svc.Diag.error("energia " + module, "app Energia non trovata");
+        Intent i = catalog.resolveLaunch(com.mg4.launcher.apps.MgApps.ENERGY_PKG, com.mg4.launcher.apps.MgApps.ENERGY_CLS);
+        if (i == null) return;
+        try {
+            startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Exception e) {
+            com.mg4.launcher.svc.Diag.error("energia " + module, e.toString());
         }
+    }
+
+    /**
+     * Telecamere (360° o retrocamera), come il pulsante della home originale SWI69: EvsService con "state" = 1.
+     * Se il servizio non c'è si apre la schermata delle telecamere.
+     */
+    @Override
+    public boolean openCamera() {
+        try {
+            Intent i = new Intent().setComponent(new ComponentName("com.saicmotor.evs", "com.saicmotor.evs.service.EvsService")).putExtra("state", 1);
+            if (startService(i) != null) {
+                Diag.put("telecamere", "aperte (EvsService)");
+                return true;
+            }
+        } catch (Exception e) {
+            Diag.error("telecamere", e.toString());
+        }
+        return catalog.launchComponent("com.saicmotor.evs", "com.saicmotor.evs.view.EvsActivity");
+    }
+
+    @Override
+    public boolean canOpenCamera() {
+        try {
+            getPackageManager().getPackageInfo("com.saicmotor.evs", 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean canLaunch(String pkg, String cls) {
+        return catalog.canLaunch(pkg, cls);
+    }
+
+    @Override
+    public FrameLayout overlay() {
+        return root;
     }
 
     @Override
@@ -326,9 +584,14 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Apre il navigatore scelto: MG, quello del telefono (CarPlay/Android Auto) o un'app installata. */
     @Override
     public void launchNavigator(String which) {
-        // SWI69: il navigatore è quello del telefono (CarPlay / Android Auto) o un'app installata sull'auto
         boolean phone = media.last().deviceType != 0;
-        if (!Prefs.NAV_AUTO.equals(which) && !Prefs.NAV_PHONE.equals(which) && !Prefs.NAV_MG.equals(which)) {
+        if (Prefs.NAV_PHONE.equals(which) || (Prefs.NAV_AUTO.equals(which) && phone)) {
+            if (phone) {
+                media.openProjection();
+                media.openRemoteNavigation();
+                return;
+            }
+        } else if (!Prefs.NAV_AUTO.equals(which) && !Prefs.NAV_MG.equals(which)) {
             Intent li = getPackageManager().getLaunchIntentForPackage(which);
             if (li != null) {
                 try {
@@ -339,22 +602,20 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
                 }
             }
         }
+        // nessun navigatore MG sulla SWI69: senza telefono si apre il primo navigatore installato, se c'è
         if (phone) {
             media.openProjection();
             media.openRemoteNavigation();
             return;
         }
-        java.util.List<AppCatalog.App> others = otherNavApps();
+        java.util.List<AppCatalog.App> others = catalog.otherNavApps("");
         if (!others.isEmpty()) {
             try {
                 startActivity(others.get(0).intent());
-                return;
             } catch (Exception e) {
-                Diag.error("navigatore.altro", e.toString());
+                Diag.error("navigatore.app", e.toString());
             }
         }
-        android.widget.Toast.makeText(this, getString(R.string.nav_sub_nophone),
-                android.widget.Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -387,21 +648,23 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     public void settingsChanged(boolean rebuild) {
         if (rebuild) {
-            appliedLocale = Lang.apply(this, prefs.language());
             IconStyler.clearCache();
             build();
             openSettings();
         } else if (home != null) {
             home.applyCarLook();
             home.refreshNav();
-            vehicle.setReadInsideTemp(prefs.showInsideTemp());
-            home.onVehicle(vehicle.last());   // decimali della batteria e pressioni subito aggiornati
+            home.onVehicle(vehicle.last());
         }
     }
 
     @Override
-    public com.mg4.launcher.svc.LogUploader logs() {
-        return logs;
+    public void languageChanged() {
+        L.init(this, prefs.language());
+        catalog.refreshLabels();
+        IconStyler.clearCache();
+        build();
+        openSettings();
     }
 
     @Override
@@ -410,12 +673,17 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     }
 
     @Override
+    public com.mg4.launcher.svc.LogUploader logs() {
+        return logs;
+    }
+
+    @Override
     public void openOriginalHome() {
-        // aperta apposta: per un po' il controllo all'accensione non riporta in primo piano il launcher
-        com.mg4.launcher.svc.BootWatcher.userOpenedOriginal(this);
         try {
+            // aperta apposta: il controllo all'accensione per un po' non deve riportare il nostro launcher
+            com.mg4.launcher.svc.BootWatcher.userOpenedOriginal(this);
             startActivity(new Intent(Intent.ACTION_MAIN)
-                    .setComponent(new ComponentName(MgApps.HOME_PKG, MgApps.HOME_CLS))
+                    .setComponent(new ComponentName(com.mg4.launcher.apps.MgApps.HOME_PKG, com.mg4.launcher.apps.MgApps.HOME_CLS))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         } catch (Exception e) {
             Diag.error("home originale", e.toString());

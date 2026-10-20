@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.mg4.launcher.L;
 import com.mg4.launcher.R;
 import com.mg4.launcher.svc.CarFeatures;
 import com.mg4.launcher.svc.Diag;
@@ -40,12 +41,20 @@ public final class SettingsView extends FrameLayout {
         Updater updater();
 
         LogUploader logs();
+
+        /** La lingua è cambiata: ricostruire tutta l'interfaccia. */
+        void languageChanged();
     }
 
-    private static final int SEC_CAR = 0, SEC_HOME = 1, SEC_LOOK = 2, SEC_DRIVE = 3, SEC_SYSTEM = 4;
+    public static final int SEC_CAR = 0, SEC_HOME = 1, SEC_LOOK = 2, SEC_DRIVE = 3, SEC_SYSTEM = 4;
+
+    /** Sezione da mostrare alla prossima apertura (es. Sistema dal popup degli aggiornamenti). */
+    public static void openAt(int s) {
+        section = s;
+    }
     private static final int[] SEC_ICON = {R.drawable.ic_car, R.drawable.ic_home, R.drawable.ic_palette, R.drawable.ic_steering, R.drawable.ic_gear};
-    private static final int[] SEC_NAME = {R.string.set_sec_car, R.string.set_sec_home, R.string.set_sec_look, R.string.set_sec_drive, R.string.set_sec_system};
-    private static final int[] SEC_SUB = {R.string.set_sec_car_sub, R.string.set_sec_home_sub, R.string.set_sec_look_sub, R.string.set_sec_drive_sub, R.string.set_sec_system_sub};
+    private static final int[] SEC_NAME = {R.string.sec_car, R.string.sec_home, R.string.sec_look, R.string.sec_drive, R.string.sec_system};
+    private static final int[] SEC_SUB = {R.string.sec_car_sub, R.string.sec_home_sub, R.string.sec_look_sub, R.string.sec_drive_sub, R.string.sec_system_sub};
     /** Spazio in alto a sinistra per la spia luci del sistema (come nella home). */
     private static final int SYSTEM_LIGHT_INSET = 64;
     private static final long QUIET_CHECK_MS = 30 * 60_000L;
@@ -80,7 +89,7 @@ public final class SettingsView extends FrameLayout {
         boolean carRhd = CarFeatures.isRightHandDrive(c);
         String side = prefs.driveSide();
         rhd = Prefs.DRIVE_RIGHT.equals(side) || (Prefs.DRIVE_AUTO.equals(side) && carRhd);
-        sysIndicator = CarFeatures.hasSystemFogIndicator(c) || carRhd;
+        sysIndicator = CarFeatures.hasSystemLightIndicator(c) || carRhd;
 
         setBackgroundColor(t.bg);
         setClickable(true);
@@ -97,7 +106,7 @@ public final class SettingsView extends FrameLayout {
         LinearLayout menu = Ui.column(c);
         menu.setBackgroundColor(t.day ? 0xFFF6F7F9 : 0xFF111317);
         menu.setPadding(dp(24), dp(30), dp(24), dp(24));
-        TextView title = Ui.text(c, c.getString(R.string.set_menu_title), 32, t.text, Ui.MEDIUM);
+        TextView title = Ui.text(c, L.s(R.string.set_menu_title), 32, t.text, Ui.MEDIUM);
         title.setPadding(dp(12) + (sysIndicator && !rhd ? dp(SYSTEM_LIGHT_INSET) : 0), 0, dp(12), dp(26));
         menu.addView(title);
         menuItems = Ui.column(c);
@@ -132,7 +141,7 @@ public final class SettingsView extends FrameLayout {
         });
         if (SystemClock.elapsedRealtime() - lastQuietCheck > QUIET_CHECK_MS || lastQuietCheck == 0) {
             lastQuietCheck = SystemClock.elapsedRealtime();
-            up.checkQuiet(prefs.updateRepo(), r -> {
+            up.checkSilent(prefs.updateRepo(), prefs.githubToken(), r -> {
                 if (r != null) lastRelease = r;
                 refreshUpdateViews(up.isBusy());
             });
@@ -175,12 +184,12 @@ public final class SettingsView extends FrameLayout {
             box.addView(Ui.icon(c, SEC_ICON[i], on ? t.panel : t.text, 28), new LayoutParams(dp(28), dp(28), Gravity.CENTER));
             r.addView(box, Ui.lp(dp(52), dp(52)));
             LinearLayout tx = Ui.column(c);
-            tx.addView(Ui.oneLine(Ui.text(c, c.getString(SEC_NAME[i]), 23, t.text, on ? Ui.MEDIUM : Ui.REGULAR)));
-            TextView sub = Ui.oneLine(Ui.text(c, c.getString(SEC_SUB[i]), 15, t.sub, Ui.REGULAR));
+            tx.addView(Ui.oneLine(Ui.text(c, L.s(SEC_NAME[i]), 23, t.text, on ? Ui.MEDIUM : Ui.REGULAR)));
+            TextView sub = Ui.oneLine(Ui.text(c, L.s(SEC_SUB[i]), 15, t.sub, Ui.REGULAR));
             tx.addView(sub, Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(4), 0, 0));
             r.addView(tx, Ui.margins(Ui.lpWeight(0, -2, 1), dp(18), 0, 0, 0));
             item.addView(r, new LayoutParams(-1, -1));
-            item.setContentDescription(c.getString(SEC_NAME[i]));
+            item.setContentDescription(L.s(SEC_NAME[i]));
             menuItems.addView(item, Ui.margins(new LinearLayout.LayoutParams(-1, dp(92)), 0, 0, 0, dp(8)));
         }
     }
@@ -199,12 +208,12 @@ public final class SettingsView extends FrameLayout {
             box.setBackground(Ui.round(t.text, dp(20)));
             box.addView(Ui.icon(c, R.drawable.ic_download, t.panel, 28));
             LinearLayout tx = Ui.column(c);
-            tx.addView(Ui.oneLine(Ui.text(c, c.getString(R.string.upd_new_short, r.tag), 18, t.panel, Ui.MEDIUM)));
-            String sub = busy && lastStatus != null ? lastStatus : c.getString(R.string.upd_installed_ver, up.currentVersion());
+            tx.addView(Ui.oneLine(Ui.text(c, L.f(R.string.upd_new_short, r.tag), 18, t.panel, Ui.MEDIUM)));
+            String sub = busy && lastStatus != null ? lastStatus : L.f(R.string.upd_installed_ver, up.currentVersion());
             tx.addView(Ui.oneLine(Ui.text(c, sub, 14, t.panel, Ui.REGULAR)), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(4), 0, 0));
             tx.getChildAt(1).setAlpha(0.75f);
             box.addView(tx, Ui.margins(Ui.lpWeight(0, -2, 1), dp(14), 0, dp(10), 0));
-            TextView inst = Ui.text(c, c.getString(R.string.btn_install), Ui.ts(18), t.text, Ui.MEDIUM);
+            TextView inst = Ui.text(c, L.s(R.string.btn_install), Ui.ts(18), t.text, Ui.MEDIUM);
             inst.setGravity(Gravity.CENTER);
             inst.setPadding(tp(20), 0, tp(20), 0);
             inst.setBackground(Ui.pressable(c, t.panel, 14 * Ui.K, t));
@@ -218,7 +227,7 @@ public final class SettingsView extends FrameLayout {
             box.addView(Ui.icon(c, known ? R.drawable.ic_check : R.drawable.ic_info, known ? t.battery : t.sub, 26));
             LinearLayout tx = Ui.column(c);
             tx.addView(Ui.oneLine(Ui.text(c, "MG4 Launcher " + up.currentVersion(), 18, t.text, Ui.MEDIUM)));
-            String sub = busy && lastStatus != null ? lastStatus : c.getString(known ? R.string.upd_current : R.string.upd_unknown);
+            String sub = busy && lastStatus != null ? lastStatus : L.s(known ? R.string.upd_current : R.string.upd_unknown);
             tx.addView(Ui.oneLine(Ui.text(c, sub, 14, t.sub, Ui.REGULAR)), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(4), 0, 0));
             box.addView(tx, Ui.margins(Ui.lpWeight(0, -2, 1), dp(14), 0, 0, 0));
         }
@@ -231,9 +240,9 @@ public final class SettingsView extends FrameLayout {
             Context c = getContext();
             updSub.setVisibility(VISIBLE);
             updSub.setText(lastStatus != null ? lastStatus
-                    : lastRelease == null ? c.getString(R.string.upd_unknown)
-                    : lastRelease.newer ? c.getString(R.string.upd_new, lastRelease.tag)
-                    : c.getString(R.string.upd_current));
+                    : lastRelease == null ? L.s(R.string.upd_unknown)
+                    : lastRelease.newer ? L.f(R.string.upd_new, lastRelease.tag)
+                    : L.s(R.string.upd_current));
             updCheckBtn.setEnabled(!busy);
             updCheckBtn.setAlpha(busy ? 0.5f : 1f);
             boolean canInstall = !busy && lastRelease != null && lastRelease.newer && lastRelease.apkUrl != null;
@@ -256,13 +265,13 @@ public final class SettingsView extends FrameLayout {
         // intestazione: titolo + chiudi
         LinearLayout head = Ui.row(c);
         if (diagOpen) {
-            head.addView(Ui.iconButton(c, t, R.drawable.ic_chev_left, t.text, t.chip, 64, 30, 32, c.getString(R.string.btn_back), v -> {
+            head.addView(Ui.iconButton(c, t, R.drawable.ic_chev_left, t.text, t.chip, 64, 30, 32, L.s(R.string.btn_back), v -> {
                 diagOpen = false;
                 showSection(section);
             }), Ui.margins(Ui.lp(tp(64), tp(64)), 0, 0, dp(20), 0));
         }
-        head.addView(Ui.oneLine(Ui.text(c, c.getString(diagOpen ? R.string.set_diag_title : SEC_NAME[s]), 34, t.text, Ui.MEDIUM)), Ui.lpWeight(0, -2, 1));
-        head.addView(Ui.iconButton(c, t, R.drawable.ic_close, t.text, t.chip, 64, 30, 32, c.getString(R.string.close), v -> host.closeSettings()));
+        head.addView(Ui.oneLine(Ui.text(c, L.s(diagOpen ? R.string.set_diag_title : SEC_NAME[s]), 34, t.text, Ui.MEDIUM)), Ui.lpWeight(0, -2, 1));
+        head.addView(Ui.iconButton(c, t, R.drawable.ic_close, t.text, t.chip, 64, 30, 32, L.s(R.string.close), v -> host.closeSettings()));
         content.addView(head, new LinearLayout.LayoutParams(-1, -2));
 
         if (diagOpen) {
@@ -290,7 +299,7 @@ public final class SettingsView extends FrameLayout {
     }
 
     private void buildCar(Context c, LinearLayout col) {
-        col.addView(label(c, c.getString(R.string.set_car_color)));
+        col.addView(label(c, L.s(R.string.set_car_color)));
         LinearLayout sw = Ui.row(c);
         int sel = prefs.carColorIndex();
         for (int i = 0; i < Prefs.CAR_COLORS.length; i++) {
@@ -304,9 +313,9 @@ public final class SettingsView extends FrameLayout {
         col.addView(sw, top(14));
         col.addView(Ui.text(c, Prefs.CAR_COLORS[sel], 18, t.sub, Ui.REGULAR), top(14));
 
-        col.addView(label(c, c.getString(R.string.set_bodywork)), top(30));
+        col.addView(label(c, L.s(R.string.set_bodywork)), top(30));
         LinearLayout card = card(c);
-        card.addView(row(c, c.getString(R.string.set_black_roof), c.getString(R.string.set_black_roof_sub),
+        card.addView(row(c, L.s(R.string.set_black_roof), L.s(R.string.set_black_roof_sub),
                 toggle(c, prefs.blackRoof(), on -> {
                     prefs.setBlackRoof(on);
                     host.settingsChanged(false);
@@ -324,30 +333,92 @@ public final class SettingsView extends FrameLayout {
     }
 
     private void buildHome(Context c, LinearLayout col) {
-        col.addView(label(c, c.getString(R.string.set_home_card)));
+        col.addView(label(c, L.s(R.string.set_home_card)));
         LinearLayout card = card(c);
-        card.addView(row(c, c.getString(R.string.set_soc_decimals), c.getString(R.string.set_soc_decimals_sub),
+        card.addView(row(c, L.s(R.string.set_show_date), L.s(R.string.set_show_date_sub),
+                toggle(c, prefs.showDate(), on -> {
+                    prefs.setShowDate(on);
+                    host.settingsChanged(true);
+                }), false));
+        card.addView(row(c, L.s(R.string.set_soc_decimals), L.s(R.string.set_soc_decimals_sub),
                 toggle(c, prefs.socDecimals(), on -> {
                     prefs.setSocDecimals(on);
                     host.settingsChanged(false);
                 }), false));
-        card.addView(row(c, c.getString(R.string.set_tpms_title), c.getString(R.string.set_tpms_sub),
+        card.addView(row(c, L.s(R.string.set_tpms_title), L.s(R.string.set_tpms_sub),
                 toggle(c, prefs.showTpms(), on -> {
                     prefs.setShowTpms(on);
-                    host.settingsChanged(false);
+                    host.settingsChanged(true);
+                    showSection(SEC_HOME);
                 }), false));
-        card.addView(row(c, c.getString(R.string.set_show_inside_temp), c.getString(R.string.set_inside_sub),
-                toggle(c, prefs.showInsideTemp(), on -> {
-                    prefs.setShowInsideTemp(on);
-                    host.settingsChanged(false);
+        if (prefs.showTpms()) {
+            String[] units = {Prefs.TYRE_AUTO, Prefs.TYRE_BAR, Prefs.TYRE_KPA, Prefs.TYRE_PSI};
+            String[] names = {L.s(R.string.unit_auto), "bar", "kPa", "psi"};
+            int sel = java.util.Arrays.asList(units).indexOf(prefs.tyreUnit());
+            card.addView(row(c, L.s(R.string.set_tyre_unit), L.s(R.string.set_tyre_unit_sub),
+                    choices(c, names, sel, i -> {
+                        prefs.setTyreUnit(units[i]);
+                        host.settingsChanged(false);
+                        showSection(SEC_HOME);
+                    }), false));
+        }
+        // temperatura interna: l'opzione si nasconde se l'auto non la fornisce
+        if (!prefs.insideTempMissing()) {
+            card.addView(row(c, L.s(R.string.set_show_inside_temp), L.s(R.string.set_inside_sub),
+                    toggle(c, prefs.showInsideTemp(), on -> {
+                        prefs.setShowInsideTemp(on);
+                        host.settingsChanged(true);
+                    }), false));
+        }
+        card.addView(row(c, L.s(R.string.set_charge_buttons), L.s(R.string.set_charge_buttons_sub),
+                toggle(c, prefs.chargeButtons(), on -> {
+                    prefs.setChargeButtons(on);
+                    host.settingsChanged(true);
+                }), true));
+        col.addView(card, topFull(14));
+
+        col.addView(label(c, L.s(R.string.set_bar_card)), top(30));
+        card = card(c);
+        card.addView(row(c, L.s(R.string.set_big_bar), L.s(R.string.set_big_bar_sub),
+                toggle(c, prefs.bigBar(), on -> {
+                    prefs.setBigBar(on);
+                    host.settingsChanged(true);
+                }), false));
+        // retronebbia: Automatico (nascosto se la barra di sistema ha già la spia) / Mostra / Nascondi
+        String[] fogModes = {Prefs.FOG_AUTO, Prefs.FOG_SHOW, Prefs.FOG_HIDE};
+        String[] fogNames = {L.s(R.string.fog_auto), L.s(R.string.fog_show), L.s(R.string.fog_hide)};
+        card.addView(row(c, L.s(R.string.set_rear_fog), L.s(R.string.set_rear_fog_sub),
+                choices(c, fogNames, java.util.Arrays.asList(fogModes).indexOf(prefs.rearFogMode()), i -> {
+                    prefs.setRearFogMode(fogModes[i]);
+                    host.settingsChanged(true);
+                    showSection(SEC_HOME);
                 }), true));
         col.addView(card, topFull(14));
     }
 
+    private interface OnChoice {
+        void chosen(int index);
+    }
+
+    /** Piccole scelte in una riga della scheda (selezionata = colori invertiti, le altre su sfondo pannello). */
+    private LinearLayout choices(Context c, String[] names, int sel, OnChoice l) {
+        LinearLayout r = Ui.row(c);
+        for (int i = 0; i < names.length; i++) {
+            final int idx = i;
+            TextView ch = choice(c, names[i], i == sel, v -> {
+                if (idx != sel) l.chosen(idx);
+            });
+            ch.setPadding(tp(20), 0, tp(20), 0);
+            if (i != sel) ch.setBackground(Ui.pressable(c, t.panel, 16 * Ui.K, t));
+            r.addView(ch, Ui.margins(new LinearLayout.LayoutParams(-2, tp(60)), i == 0 ? 0 : dp(8), 0, 0, 0));
+        }
+        return r;
+    }
+
     private void buildLook(Context c, LinearLayout col) {
-        col.addView(label(c, c.getString(R.string.set_theme)));
+        col.addView(label(c, L.s(R.string.set_theme)));
         String mode = prefs.themeMode();
-        String[][] modes = {{Prefs.THEME_AUTO, c.getString(R.string.theme_auto)}, {Prefs.THEME_NIGHT, c.getString(R.string.theme_night)}, {Prefs.THEME_DAY, c.getString(R.string.theme_day)}};
+        String[][] modes = {{Prefs.THEME_AUTO, L.s(R.string.theme_auto)}, {Prefs.THEME_NIGHT, L.s(R.string.theme_night)}, {Prefs.THEME_DAY, L.s(R.string.theme_day)}};
         Flow f = new Flow(c);
         for (String[] m : modes) {
             f.addView(choice(c, m[1], m[0].equals(mode), v -> {
@@ -358,12 +429,12 @@ public final class SettingsView extends FrameLayout {
         }
         col.addView(f, topFull(14));
 
-        col.addView(label(c, c.getString(R.string.set_ui_size)), top(28));
+        col.addView(label(c, L.s(R.string.set_ui_size)), top(28));
         int[] names = {R.string.ui_size_normal, R.string.ui_size_large, R.string.ui_size_xlarge};
         f = new Flow(c);
         for (int i = 0; i < names.length; i++) {
             final int idx = i;
-            f.addView(choice(c, c.getString(names[i]), prefs.uiScale() == i, v -> {
+            f.addView(choice(c, L.s(names[i]), prefs.uiScale() == i, v -> {
                 if (prefs.uiScale() == idx) return;
                 prefs.setUiScale(idx);
                 host.settingsChanged(true);   // ricostruisce home e impostazioni con la nuova dimensione
@@ -371,13 +442,13 @@ public final class SettingsView extends FrameLayout {
         }
         col.addView(f, topFull(14));
 
-        col.addView(label(c, c.getString(R.string.set_language)), top(28));
+        col.addView(label(c, L.s(R.string.set_language)), top(28));
         String cur = prefs.language();
         f = new Flow(c);
-        f.addView(choice(c, c.getString(R.string.lang_auto) + " · " + Lang.systemName(), Lang.AUTO.equals(cur), v -> setLang(Lang.AUTO)));
-        for (int i = 0; i < Lang.CODES.length; i++) {
-            final String code = Lang.CODES[i];
-            f.addView(choice(c, Lang.NAMES[i], code.equals(cur), v -> setLang(code)));
+        f.addView(choice(c, L.s(R.string.lang_auto) + " · " + L.nameOf(L.resolve(L.AUTO)), L.AUTO.equals(cur), v -> setLang(L.AUTO)));
+        for (int i = 0; i < L.CODES.length; i++) {
+            final String code = L.CODES[i];
+            f.addView(choice(c, L.NAMES[i], code.equals(cur), v -> setLang(code)));
         }
         col.addView(f, topFull(14));
     }
@@ -385,16 +456,16 @@ public final class SettingsView extends FrameLayout {
     private void setLang(String code) {
         if (code.equals(prefs.language())) return;
         prefs.setLanguage(code);
-        host.settingsChanged(true);   // riapplica la lingua e ricostruisce l'interfaccia
+        host.languageChanged();   // riapplica la lingua e ricostruisce l'interfaccia
     }
 
     private void buildDrive(Context c, LinearLayout col) {
-        col.addView(label(c, c.getString(R.string.set_drive_side)));
+        col.addView(label(c, L.s(R.string.set_drive_side)));
         boolean carRight = CarFeatures.isRightHandDrive(c);
         String[][] sides = {
-                {Prefs.DRIVE_AUTO, c.getString(R.string.drive_auto) + " · " + c.getString(carRight ? R.string.drive_right : R.string.drive_left)},
-                {Prefs.DRIVE_LEFT, c.getString(R.string.drive_left)},
-                {Prefs.DRIVE_RIGHT, c.getString(R.string.drive_right)}};
+                {Prefs.DRIVE_AUTO, L.s(R.string.drive_auto) + " · " + L.s(carRight ? R.string.drive_right : R.string.drive_left)},
+                {Prefs.DRIVE_LEFT, L.s(R.string.drive_left)},
+                {Prefs.DRIVE_RIGHT, L.s(R.string.drive_right)}};
         Flow f = new Flow(c);
         for (String[] m : sides) {
             f.addView(choice(c, m[1], m[0].equals(prefs.driveSide()), v -> {
@@ -404,44 +475,113 @@ public final class SettingsView extends FrameLayout {
             }));
         }
         col.addView(f, topFull(14));
-        col.addView(Ui.text(c, c.getString(R.string.drive_hint), 17, t.sub, Ui.REGULAR), top(14));
+        col.addView(Ui.text(c, L.s(R.string.drive_hint), 17, t.sub, Ui.REGULAR), top(14));
 
-        col.addView(label(c, c.getString(R.string.set_original_label)), top(30));
+        col.addView(label(c, L.s(R.string.set_original_label)), top(30));
         LinearLayout card = card(c);
-        card.addView(row(c, c.getString(R.string.set_open_original), c.getString(R.string.set_original_sub),
-                button(c, c.getString(R.string.btn_open), v -> host.openOriginalHome()), true));
+        card.addView(row(c, L.s(R.string.set_open_original), L.s(R.string.set_original_sub),
+                button(c, L.s(R.string.btn_open), v -> host.openOriginalHome()), true));
         col.addView(card, topFull(14));
     }
 
+    private static int officinaDays = 3;
+
     private void buildSystem(Context c, LinearLayout col) {
         Updater up = host.updater();
-        col.addView(label(c, c.getString(R.string.set_updates)));
+        // home predefinita e modalità officina
+        Context app = c.getApplicationContext();
+        boolean officina = com.mg4.launcher.svc.HomeMode.officina(app);
+        col.addView(label(c, L.s(R.string.set_start_section)));
+        LinearLayout hc = card(c);
+        String homeSub = officina ? L.f(R.string.officina_until_sub, com.mg4.launcher.svc.HomeMode.officinaDate(app))
+                : L.s(com.mg4.launcher.svc.HomeMode.enabled(app) ? R.string.home_default_sub : R.string.home_default_off_sub);
+        hc.addView(row(c, L.s(R.string.home_default_title), homeSub, toggle(c, com.mg4.launcher.svc.HomeMode.enabled(app), on -> {
+            if (on) {
+                com.mg4.launcher.svc.HomeMode.setEnabled(app, true);
+                showSection(SEC_SYSTEM);
+            } else {
+                Confirm.show(this, t, L.s(R.string.confirm_home_off_title), L.s(R.string.confirm_home_off_msg),
+                        L.s(R.string.btn_cancel), L.s(R.string.btn_turn_off), () -> com.mg4.launcher.svc.HomeMode.setEnabled(app, false));
+                showSection(SEC_SYSTEM);   // finché non si conferma l'interruttore resta acceso
+            }
+        }), false));
+        LinearLayout oc = Ui.row(c);
+        if (officina) {
+            oc.addView(button(c, L.s(R.string.btn_deactivate), v -> {
+                com.mg4.launcher.svc.HomeMode.end(app, "annullata");
+                showSection(SEC_SYSTEM);
+            }));
+        } else {
+            int[] days = {1, 3, 7};
+            int[] names = {R.string.days_1, R.string.days_3, R.string.days_7};
+            for (int i = 0; i < 3; i++) {
+                final int d = days[i];
+                TextView ch = choice(c, L.s(names[i]), officinaDays == d, v -> {
+                    officinaDays = d;
+                    showSection(SEC_SYSTEM);
+                });
+                // sulla scheda (sfondo chip) le scelte non selezionate hanno lo sfondo del pannello
+                if (officinaDays != d) ch.setBackground(Ui.pressable(c, t.panel, 16 * Ui.K, t));
+                oc.addView(ch, Ui.margins(new LinearLayout.LayoutParams(-2, tp(60)), 0, 0, dp(10), 0));
+            }
+            TextView act = button(c, L.s(R.string.btn_activate), v -> {
+                String until = new java.text.SimpleDateFormat("dd/MM", java.util.Locale.ITALY)
+                        .format(new java.util.Date(System.currentTimeMillis() + officinaDays * 24L * 3600_000L));
+                Confirm.show(this, t, L.s(R.string.confirm_officina_title), L.f(R.string.confirm_officina_msg, until),
+                        L.s(R.string.btn_cancel), L.s(R.string.btn_activate), () -> com.mg4.launcher.svc.HomeMode.startOfficina(app, officinaDays));
+            });
+            act.setTextColor(t.panel);
+            act.setBackground(Ui.pressable(c, t.text, 16 * Ui.K, t));
+            oc.addView(act, Ui.margins(new LinearLayout.LayoutParams(-2, tp(60)), dp(6), 0, 0, 0));
+        }
+        hc.addView(row(c, L.s(R.string.officina_title), officina
+                ? L.f(R.string.officina_until_sub, com.mg4.launcher.svc.HomeMode.officinaDate(app)) : L.s(R.string.officina_sub), oc, false));
+        // premi Home da solo dopo l'accensione (servizio di accessibilità)
+        int[] secs = Prefs.AUTO_HOME_SECONDS;
+        String[] secNames = new String[secs.length];
+        int secSel = 0;
+        for (int i = 0; i < secs.length; i++) {
+            secNames[i] = secs[i] == 0 ? L.s(R.string.off) : secs[i] + " s";
+            if (secs[i] == prefs.autoHomeSeconds()) secSel = i;
+        }
+        LinearLayout ah = Ui.column(c);
+        ah.setPadding(dp(28), dp(18), dp(28), dp(20));
+        ah.addView(Ui.text(c, L.s(R.string.set_auto_home), 24, t.text, Ui.REGULAR));
+        ah.addView(Ui.text(c, L.s(R.string.set_auto_home_sub), 17, t.sub, Ui.REGULAR), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(6), 0, 0));
+        ah.addView(choices(c, secNames, secSel, i -> {
+            prefs.setAutoHomeSeconds(secs[i]);
+            showSection(SEC_SYSTEM);
+        }), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(14), 0, 0));
+        hc.addView(ah);
+        col.addView(hc, topFull(14));
+
+        col.addView(label(c, L.s(R.string.set_updates)), top(30));
         LinearLayout card = card(c);
         LinearLayout btns = Ui.row(c);
-        updInstallBtn = button(c, c.getString(R.string.btn_install), v -> {
+        updInstallBtn = button(c, L.s(R.string.btn_install), v -> {
             if (lastRelease != null) up.install(lastRelease, prefs.githubToken());
         });
         ((TextView) updInstallBtn).setTextColor(t.panel);
         updInstallBtn.setBackground(Ui.pressable(c, t.text, 16 * Ui.K, t));
         btns.addView(updInstallBtn, Ui.margins(Ui.lp(-2, tp(60)), 0, 0, dp(12), 0));
-        updCheckBtn = button(c, c.getString(R.string.btn_check), v -> up.check(prefs.updateRepo(), prefs.githubToken()));
+        updCheckBtn = button(c, L.s(R.string.btn_check), v -> up.check(prefs.updateRepo(), prefs.githubToken()));
         btns.addView(updCheckBtn, Ui.lp(-2, tp(60)));
         LinearLayout ur = row(c, "MG4 Launcher " + up.currentVersion(), "", btns, true);
         updSub = (TextView) ((ViewGroup) ur.getChildAt(0)).getChildAt(1);
         card.addView(ur);
         col.addView(card, topFull(14));
 
-        col.addView(label(c, c.getString(R.string.set_diag_section)), top(30));
+        col.addView(label(c, L.s(R.string.set_diag_section)), top(30));
         card = card(c);
-        LinearLayout lr = row(c, c.getString(R.string.log_upload_on), "", toggle(c, host.logs().enabled(), on -> host.logs().setEnabled(on)), false);
+        LinearLayout lr = row(c, L.s(R.string.log_upload_on), "", toggle(c, host.logs().enabled(), on -> host.logs().setEnabled(on)), false);
         if (!LogUploader.configured()) lr.getChildAt(1).setEnabled(false);
         logUploadSub = (TextView) ((ViewGroup) lr.getChildAt(0)).getChildAt(1);
         card.addView(lr);
-        logSaveBtn = button(c, c.getString(R.string.btn_save), v -> saveLog());
-        LinearLayout sr = row(c, c.getString(R.string.save_log), c.getString(R.string.save_log_sub), logSaveBtn, false);
+        logSaveBtn = button(c, L.s(R.string.btn_save), v -> saveLog());
+        LinearLayout sr = row(c, L.s(R.string.save_log), L.s(R.string.save_log_sub), logSaveBtn, false);
         logSaveSub = (TextView) ((ViewGroup) sr.getChildAt(0)).getChildAt(1);
         card.addView(sr);
-        LinearLayout dr = row(c, c.getString(R.string.set_diag_title), c.getString(R.string.set_diag_sub),
+        LinearLayout dr = row(c, L.s(R.string.set_diag_title), L.s(R.string.set_diag_sub),
                 Ui.icon(c, R.drawable.ic_chev_right, t.sub, Math.round(30 * Ui.K)), true);
         dr.setBackground(Ui.pressable(c, 0x00000000, 0, t));
         dr.setClickable(true);
@@ -470,7 +610,7 @@ public final class SettingsView extends FrameLayout {
     private void saveLog() {
         logSaveBtn.setEnabled(false);
         logSaveBtn.setAlpha(0.5f);
-        if (logSaveSub != null) logSaveSub.setText(getContext().getString(R.string.log_saving));
+        if (logSaveSub != null) logSaveSub.setText(L.s(R.string.log_saving));
         Context app = getContext().getApplicationContext();
         new Thread(() -> {
             Diag.Saved r = Diag.saveLog(app);
@@ -481,12 +621,12 @@ public final class SettingsView extends FrameLayout {
                 }
                 if (logSaveSub == null) return;
                 if (r.paths.isEmpty()) {
-                    logSaveSub.setText(app.getString(R.string.log_failed));
+                    logSaveSub.setText(L.s(R.string.log_failed));
                     return;
                 }
-                StringBuilder sb = new StringBuilder(app.getString(r.onUsb ? R.string.log_saved_usb : R.string.log_saved)).append(' ');
+                StringBuilder sb = new StringBuilder(L.s(r.onUsb ? R.string.log_saved_usb : R.string.log_saved)).append(' ');
                 sb.append(r.paths.get(0));
-                if (!r.onUsb) sb.append('\n').append(app.getString(R.string.log_usb_hint));
+                if (!r.onUsb) sb.append('\n').append(L.s(R.string.log_usb_hint));
                 logSaveSub.setSingleLine(false);
                 logSaveSub.setText(sb.toString());
             });
@@ -514,7 +654,7 @@ public final class SettingsView extends FrameLayout {
     }
 
     private TextView label(Context c, String s) {
-        TextView tv = Ui.text(c, s.toUpperCase(java.util.Locale.getDefault()), 15, t.sub, Ui.MEDIUM);
+        TextView tv = Ui.text(c, s.toUpperCase(L.locale()), 15, t.sub, Ui.MEDIUM);
         tv.setLetterSpacing(0.08f);
         return tv;
     }
@@ -684,12 +824,12 @@ public final class SettingsView extends FrameLayout {
 
     private String logUploadText() {
         Context c = getContext();
-        if (!LogUploader.configured()) return c.getString(R.string.log_upload_nokey);
-        if (!host.logs().enabled()) return c.getString(R.string.log_upload_off);
+        if (!LogUploader.configured()) return L.s(R.string.log_upload_nokey);
+        if (!host.logs().enabled()) return L.s(R.string.log_upload_off);
         String st = LogUploader.status();
-        if (st.startsWith("ok ")) return c.getString(R.string.log_upload_last, st.substring(3));
-        if (st.startsWith("errore ")) return c.getString(R.string.log_upload_error, st.substring(7));
-        return c.getString(R.string.log_upload_never);
+        if (st.startsWith("ok ")) return L.f(R.string.log_upload_last, st.substring(3));
+        if (st.startsWith("errore ")) return L.f(R.string.log_upload_error, st.substring(7));
+        return L.s(R.string.log_upload_never);
     }
 
     private final Runnable refreshTick = new Runnable() {
@@ -699,7 +839,7 @@ public final class SettingsView extends FrameLayout {
             if (diagText == null && logUploadSub == null) return;
             if (diagText != null) {
                 String d = Diag.dump();
-                diagText.setText(d.isEmpty() ? getContext().getString(R.string.diag_waiting) : d);
+                diagText.setText(d.isEmpty() ? L.s(R.string.diag_waiting) : d);
             }
             if (logUploadSub != null) {
                 logUploadSub.setVisibility(VISIBLE);

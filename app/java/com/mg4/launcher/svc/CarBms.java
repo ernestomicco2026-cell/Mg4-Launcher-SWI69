@@ -15,14 +15,14 @@ import java.lang.reflect.Method;
  * ID presi da android.car.hardware.CarBMSManager del firmware SWI69.
  */
 public final class CarBms {
-    public static final int CHRG_TRGT_SOC = 557904908;      // int, codice 1..7 (40%..100%)
+    public static final int CHRG_TRGT_SOC = 557904908;      // int, codice 1..7 (40%..100%), lettura e comando
+    public static final int ALTNG_CHRG_CRNT = 557904907;    // int, corrente AC 1..4 (6 A, 8 A, 16 A, Max), lettura e comando
+    public static final int CHRG_CTRL = 557904914;          // int, 1 avvia, 2 ferma (come la Gestione ricarica)
+    public static final int V2X = 557904944;                // int, scarica V2L: 1 avvia, 2 ferma
+    public static final int V2X_SP_SOC = 557904943;         // int, limite di scarica V2L (codice)
     public static final int PACK_SOC_DSP = 560002052;       // float, % mostrata
     public static final int PACK_VOL = 560002054;           // float, V
     public static final int PACK_CRNT = 560002055;          // float, A
-    public static final int CRNT_AVG_ELEC_CSUMP = 560002075;// float, kWh/100 km (media corrente)
-    public static final int ELEC_CSUMP_PERKM = 560002077;   // float, consumo dell'ultimo km
-    public static final int VEH_ACTU_ELEC_CSUMP = 560002127;// float (solo diagnostica, se presente)
-    public static final int BAT_ELEC_ENRG_AVG_RATE = 560002081; // float (solo diagnostica)
     public static final int ESTD_ELEC_RNG = 557904918;      // int, km
     public static final int CHRG_STS = 557904905;           // int, stato ricarica BMS
 
@@ -30,7 +30,9 @@ public final class CarBms {
     private final Handler main = new Handler(Looper.getMainLooper());
     private volatile Object car;
     private volatile Object bms;
-    private volatile Method getProperty;
+    private volatile Method getProperty, setProperty;
+    /** Proprietà che l'auto restituisce vuote o non supporta: non si rileggono più (niente errori ripetuti). */
+    private final java.util.Set<Integer> unsupported = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
     /** Manager "hvac" del CarService (temperatura dell'abitacolo). */
     private volatile Object hvac;
     private volatile Method hvacGetFloat;
@@ -64,6 +66,11 @@ public final class CarBms {
                         bms = car.getClass().getMethod("getCarManager", String.class).invoke(car, "bms");
                         if (bms != null) {
                             getProperty = bms.getClass().getMethod("getProperty", Class.class, int.class, int.class);
+                            try {
+                                setProperty = bms.getClass().getMethod("setProperty", Class.class, int.class, int.class, Object.class);
+                            } catch (Throwable e) {
+                                Diag.error("bms.comandi", e.toString());
+                            }
                         }
                         Diag.put("bms.stato", bms != null ? "collegato" : "manager bms assente");
                         try {
@@ -156,13 +163,44 @@ public final class CarBms {
     private Object get(Class<?> type, int id) {
         Object m = bms;
         Method g = getProperty;
-        if (m == null || g == null) return null;
+        if (m == null || g == null || unsupported.contains(id)) return null;
         try {
-            return g.invoke(m, type, id, 0);
+            Object v = g.invoke(m, type, id, 0);
+            if (v == null) {
+                // valore vuoto: si segna una volta e non si rilegge più (prima generava un errore ogni 2 secondi)
+                unsupported.add(id);
+                Diag.put("bms.0x" + Integer.toHexString(id), "valore vuoto: non disponibile su questa auto");
+            }
+            return v;
         } catch (Throwable e) {
             Throwable c = e.getCause() != null ? e.getCause() : e;
-            Diag.error("bms.0x" + Integer.toHexString(id), c.toString());
+            if (c instanceof NullPointerException || c instanceof IllegalArgumentException) {
+                unsupported.add(id);
+                Diag.put("bms.0x" + Integer.toHexString(id), "non disponibile su questa auto (" + c.getClass().getSimpleName() + ")");
+            } else {
+                Diag.error("bms.0x" + Integer.toHexString(id), c.toString());
+            }
             return null;
         }
+    }
+
+    /** Comando intero al gestore batteria (come la pagina Gestione ricarica). True se inviato. */
+    public boolean setInt(int id, int value) {
+        Object m = bms;
+        Method s = setProperty;
+        if (m == null || s == null) return false;
+        try {
+            s.invoke(m, Integer.class, id, 0, value);
+            return true;
+        } catch (Throwable e) {
+            Throwable c = e.getCause() != null ? e.getCause() : e;
+            Diag.error("bms.comando.0x" + Integer.toHexString(id), c.toString());
+            return false;
+        }
+    }
+
+    /** True se la proprietà si legge (non segnata come vuota o non supportata). */
+    public boolean supported(int id) {
+        return !unsupported.contains(id);
     }
 }
