@@ -242,6 +242,22 @@ public final class MediaClient {
             return ps != null && ps.getState() == PlaybackState.STATE_PLAYING;
         }
 
+        /** Stato della sessione per i log: "in riproduzione", "in pausa", "fermo"… */
+        String stateName() {
+            MediaController c = controller;
+            PlaybackState ps = c == null ? null : c.getPlaybackState();
+            if (c == null) return "sessione non collegata";
+            if (ps == null) return "nessuno stato";
+            switch (ps.getState()) {
+                case PlaybackState.STATE_PLAYING: return "in riproduzione";
+                case PlaybackState.STATE_PAUSED: return "in pausa";
+                case PlaybackState.STATE_STOPPED: return "fermo";
+                case PlaybackState.STATE_BUFFERING: return "in caricamento";
+                case PlaybackState.STATE_NONE: return "nessuno";
+                default: return "stato " + ps.getState();
+            }
+        }
+
         boolean isPaused() {
             MediaController c = controller;
             PlaybackState ps = c == null ? null : c.getPlaybackState();
@@ -440,6 +456,12 @@ public final class MediaClient {
         else if (online.isPlaying()) active = SRC_ONLINE;
         else if (remote.isPlaying() && s.deviceType != 0) active = s.deviceType == DEV_AAUTO ? SRC_AAUTO : SRC_CARPLAY;
         Diag.put("media.attiva", sourceName(ctx, active));
+        if (s.deviceType != 0) Diag.put("carplay.riproduzione", remote.stateName());
+        // quando il telefono (CarPlay / Android Auto) inizia a suonare diventa la sorgente attiva: i tasti comandano lui
+        if ((active == SRC_CARPLAY || active == SRC_AAUTO) && prevActive != active && chosen != active) {
+            chosen = active;
+            Diag.put("carplay.sorgente", sourceName(ctx, active) + " in riproduzione: diventa la sorgente attiva");
+        }
         checkHijack(active);
 
         // di default si vede la sorgente in riproduzione, altrimenti la radio
@@ -1228,7 +1250,7 @@ public final class MediaClient {
             State s = last;
             try {
                 if (s.source == SRC_CARPLAY || s.source == SRC_AAUTO) {
-                    remotePlay(!s.playing);
+                    remotePlay(!remote.isPlaying());
                 } else {
                     Browser b = browserFor(s.source);
                     MediaController.TransportControls tc = b == null ? null : b.controls();
@@ -1249,13 +1271,23 @@ public final class MediaClient {
         post(() -> {
             State s = last;
             try {
-                Browser b = browserFor(s.source);
-                MediaController.TransportControls tc = b == null ? null : b.controls();
-                if (tc != null) {
-                    if (forward) tc.skipToNext();
-                    else tc.skipToPrevious();
-                } else if (s.source == SRC_CARPLAY || s.source == SRC_AAUTO) {
-                    remoteKey(forward ? 7 : 8, forward ? 11 : 12);
+                if (s.source == SRC_CARPLAY || s.source == SRC_AAUTO) {
+                    // CarPlay / Android Auto: sempre i tasti del servizio RemoteUI, come la home originale
+                    if (!remoteKey(forward ? "avanti" : "indietro", forward ? 7 : 8, forward ? 11 : 12)) {
+                        MediaController.TransportControls tc = remote.controls();
+                        if (tc != null) {
+                            if (forward) tc.skipToNext();
+                            else tc.skipToPrevious();
+                            Diag.put("carplay.tasto", (forward ? "avanti" : "indietro") + " · RemoteUI non collegato: MediaController");
+                        }
+                    }
+                } else {
+                    Browser b = browserFor(s.source);
+                    MediaController.TransportControls tc = b == null ? null : b.controls();
+                    if (tc != null) {
+                        if (forward) tc.skipToNext();
+                        else tc.skipToPrevious();
+                    }
                 }
             } catch (Exception e) {
                 Diag.error("media.salto", e.toString());
@@ -1264,20 +1296,43 @@ public final class MediaClient {
         });
     }
 
+    /**
+     * Play o pausa per CarPlay / Android Auto. Come la home originale (CPAAModel.mediaControlCPAA) si manda sempre il
+     * tasto del servizio RemoteUI: 20 premuto / 21 rilasciato, un tasto unico che commuta. Per questo si preme solo se
+     * lo stato attuale della sessione è diverso da quello voluto (altrimenti scegliendo la sorgente CarPlay la musica
+     * andrebbe in pausa). Il MediaController di Android si usa solo se il servizio RemoteUI non è collegato: molti
+     * adattatori wireless (es. AutoKit) lo ignorano.
+     */
     private void remotePlay(boolean play) throws RemoteException {
+        boolean playingNow = remote.isPlaying();
+        if (playingNow == play) {
+            Diag.put("carplay.tasto", (play ? "play" : "pausa") + " · già " + remote.stateName() + ": nessun tasto");
+            return;
+        }
+        if (remoteKey(play ? "play" : "pausa", 20, 21)) return;
         MediaController.TransportControls tc = remote.controls();
         if (tc != null) {
             if (play) tc.play();
             else tc.pause();
+            Diag.put("carplay.tasto", (play ? "play" : "pausa") + " · RemoteUI non collegato: MediaController");
         } else {
-            remoteKey(20, 21);
+            Diag.put("carplay.tasto", (play ? "play" : "pausa") + " · né RemoteUI né sessione collegati");
         }
     }
 
-    private void remoteKey(int down, int up) throws RemoteException {
+    /** Tasto media del servizio RemoteUI (sendMediaPlayControlKey, transazione 18): premuto e poi rilasciato. */
+    private boolean remoteKey(String what, int down, int up) {
         IBinder r = rui.binder();
-        Rpc.call(r, RUI, RUI_MEDIA_KEY, p -> p.writeInt(down), Parcel::readInt);
-        Rpc.call(r, RUI, RUI_MEDIA_KEY, p -> p.writeInt(up), Parcel::readInt);
+        if (r == null) return false;
+        try {
+            Integer a = Rpc.call(r, RUI, RUI_MEDIA_KEY, p -> p.writeInt(down), Parcel::readInt);
+            Integer b = Rpc.call(r, RUI, RUI_MEDIA_KEY, p -> p.writeInt(up), Parcel::readInt);
+            Diag.put("carplay.tasto", what + " · sendMediaPlayControlKey " + down + "/" + up + " → " + a + "/" + b);
+            return true;
+        } catch (Exception e) {
+            Diag.error("carplay.tasto", what + ": " + e);
+            return false;
+        }
     }
 
     /** Apre CarPlay o Android Auto a schermo intero. */

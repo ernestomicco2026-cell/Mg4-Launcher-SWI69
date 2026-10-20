@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.0](releases/MG4Launcher-SWI69-0.3.0.apk)**
+**Ultima versione / Latest version: [0.3.1](releases/MG4Launcher-SWI69-0.3.1.apk)**
 
 <a href="https://www.paypal.com/pool/9tv7fQ36nA?sr=wccr"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
@@ -162,7 +162,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.0.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.1.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -179,7 +179,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.0.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.1.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -239,6 +239,17 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.1
+
+**Correzioni**
+- **CarPlay / Android Auto**: indietro, play/pausa e avanti (pannello Media e mini-player) ora funzionano anche con gli
+  adattatori CarPlay wireless (es. AutoKit). Come la home originale, il launcher manda sempre i tasti del servizio
+  CarPlay/Android Auto (premuto e rilasciato); i comandi di Android si usano solo se quel servizio non è collegato.
+- Play/pausa di CarPlay è un tasto unico che commuta: si preme solo se lo stato è diverso da quello voluto, quindi
+  scegliendo la sorgente CarPlay la musica non va più in pausa.
+- Quando CarPlay o Android Auto iniziano a suonare diventano la sorgente attiva, e i tasti comandano il telefono.
+- Diagnostica: ogni tasto mandato con la risposta del servizio e lo stato di riproduzione di CarPlay.
 
 #### 0.3.0
 
@@ -488,7 +499,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.0.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.1.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -504,7 +515,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.0.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.1.apk
    ```
 2. Make it the default home:
    ```bash
@@ -545,6 +556,17 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.1
+
+**Fixes**
+- **CarPlay / Android Auto**: previous, play/pause and next (Media panel and mini player) now work with wireless
+  CarPlay adapters too (e.g. AutoKit). Like the original home, the launcher always sends the CarPlay/Android Auto
+  service keys (press and release); Android's media commands are used only if that service is not connected.
+- CarPlay play/pause is a single toggle key: it is pressed only if the state differs from the one wanted, so choosing
+  the CarPlay source no longer pauses the music.
+- When CarPlay or Android Auto start playing they become the active source, and the buttons control the phone.
+- Diagnostics: every key sent with the service's answer, and the CarPlay playback state.
 
 #### 0.3.0
 
