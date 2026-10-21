@@ -74,7 +74,7 @@ public final class MediaClient {
 
     // --- CarPlay / Android Auto ---------------------------------------------------------------
     private static final String RUI = "com.allgo.rui.IRemoteUIService";
-    private static final int RUI_LAUNCH_APP = 8, RUI_ACTIVE_DEVICE = 15, RUI_MEDIA_KEY = 18;
+    private static final int RUI_LAUNCH_APP = 8, RUI_ACTIVE_DEVICE = 15, RUI_GET_STATUS = 17, RUI_MEDIA_KEY = 18;
     public static final int DEV_CARPLAY = 1, DEV_AAUTO = 2;
 
     /** Stazione radio (preferiti FM / DAB). Per il DAB servono tutti i campi di RadioDabStation. */
@@ -314,6 +314,19 @@ public final class MediaClient {
 
     public void setListener(Listener l) {
         listener = l;
+    }
+
+    /** Chiamata in corso su CarPlay/Android Auto (stato di Allgo: com.allgo.extra.CallStatus diverso da 0). */
+    public boolean remoteCallActive() {
+        IBinder r = rui.binder();
+        if (r == null) return false;
+        try {
+            android.os.Bundle b = Rpc.call(r, RUI, RUI_GET_STATUS, Rpc.NONE,
+                    p -> Rpc.readNullable(p, q -> android.os.Bundle.CREATOR.createFromParcel(q)));
+            return b != null && b.getInt("com.allgo.extra.CallStatus", 0) != 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public State last() {
@@ -690,6 +703,7 @@ public final class MediaClient {
                     scanning = false;
                     Diag.put("radio.ricerca", "finita, banda " + band + ": " + found.size() + " stazioni");
                     if (!found.isEmpty() && band != BAND_DAB) mergeFm(found, true);
+                    if (band != BAND_DAB) LogoPacks.noteStations(BAND_FM, found);
                 } else if (code == 3) {            // onRadioBandChanged(int)
                     bandFromCallback = data.readInt();
                     Diag.put("radio.banda", bandFromCallback);
@@ -722,6 +736,8 @@ public final class MediaClient {
                         saveList("radio_dab_elenco", out);
                     }
                     Diag.put("radio.dab.elenco", out.size() + " stazioni");
+                    // paese RDS dalle stazioni DAB (conferma o corregge il paese automatico dei loghi)
+                    LogoPacks.noteStations(BAND_DAB, out);
                 } else if (code == 3) {            // notifyDabMainInfoChanged(RadioDabStation)
                     if (data.readInt() != 0) {
                         dabCurrent = readDabStation(data);

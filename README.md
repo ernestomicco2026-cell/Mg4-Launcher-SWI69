@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.1](releases/MG4Launcher-SWI69-0.3.1.apk)**
+**Ultima versione / Latest version: [0.3.2](releases/MG4Launcher-SWI69-0.3.2.apk)**
 
 <a href="https://www.paypal.com/pool/9tv7fQ36nA?sr=wccr"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
@@ -22,6 +22,7 @@
 > The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
 
 ---
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.2 – gruppo Clima, LKA e OPD, loghi radio (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.2.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema notte" src="screenshots/MG4Launcher-SWI69-0.3.0-notte.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema giorno" src="screenshots/MG4Launcher-SWI69-0.3.0-giorno.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – pulsanti di ricarica e data" src="screenshots/MG4Launcher-SWI69-0.3.0-pulsanti-ricarica.png" />
@@ -167,7 +168,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.1.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.2.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -184,7 +185,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.1.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.2.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -244,6 +245,28 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.2
+Stesse novità della versione SWI68 0.8.2 e 0.8.3, con i servizi della SWI69.
+- **Pulsanti raggruppati** nella barra: **Clima** (A/C, AUTO, ricircolo). Un tocco apre sopra la barra un riquadro con le
+  caselle grandi (si chiude toccando fuori o da solo dopo pochi secondi); pressione lunga: A/C. Funzionano anche con la
+  barra grande, che ora ha di nuovo il mini player. Si possono spegnere nelle impostazioni (*Pulsanti raggruppati*).
+  Il gruppo **Comfort** (sedili e volante riscaldati) non compare: sulla SWI69 questi comandi non sono usati dalle app
+  originali dell'auto.
+- **LKA** (mantenimento corsia) e **OPD** (One Pedal Drive) nella barra, con lo stato reale dell'auto e gli stessi
+  comandi dell'app Impostazioni veicolo: solo comando manuale, nessun automatismo all'avvio. Compaiono solo se l'auto li
+  ha; si possono nascondere.
+- **Pacchetti dei loghi radio per paese**, per FM e DAB: si scaricano una volta (con controllo dell'integrità) e poi
+  funzionano senza internet; paese automatico (dal **fuso orario** dell'auto, poi dalla lingua del launcher, confermato
+  dalle stazioni DAB) o scelta di uno o più paesi, *Aggiorna* ed *Elimina* nelle impostazioni, installazione da chiavetta.
+  I nomi DAB con `#` davanti e le varianti di una stazione (es. RTL 102.5) trovano il logo.
+- **Nome delle stazioni sempre visibile**: nella lista delle stazioni e nei preferiti ci sono sempre logo, nome e
+  frequenza (o DAB+). Solo nella copertina grande il logo resta da solo, con il nome accanto.
+- **Riavvio del dongle CarPlay/Android Auto** che non si collega: solo con un dongle wireless riconosciuto (mai con un
+  telefono via cavo o una chiavetta), al massimo 2 tentativi per accensione, mai durante una chiamata. Attesa
+  regolabile e pulsante *Riavvia CarPlay/AA* nelle impostazioni.
+- Launcher più leggero: log senza le righe di sistema ripetitive, tolti testi e icone non più usati, immagini dell'auto
+  più leggere (identiche), i loghi non sono più dentro l'app.
 
 #### 0.3.1
 
@@ -504,7 +527,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.1.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.2.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -520,7 +543,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.1.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.2.apk
    ```
 2. Make it the default home:
    ```bash
@@ -561,6 +584,27 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.2
+Same changes as the SWI68 versions 0.8.2 and 0.8.3, with the SWI69 services.
+- **Grouped buttons** in the bar: **Climate** (A/C, AUTO, recirculation). One tap opens a panel with big tiles above the
+  bar (it closes when you tap outside or by itself after a few seconds); long press: A/C. They also work with the large
+  bar, which now has the mini player again. They can be turned off in settings (*Grouped buttons*). The **Comfort**
+  group (heated seats and steering wheel) does not appear: on the SWI69 the car's original apps don't use these commands.
+- **LKA** (lane keeping) and **OPD** (One Pedal Drive) in the bar, with the car's real state and the same commands as the
+  Vehicle settings app: manual command only, nothing automatic at start-up. They only appear if the car has them; they
+  can be hidden.
+- **Radio logo packs per country**, for FM and DAB: downloaded once (with an integrity check) and then they work
+  offline; automatic country (from the car's **time zone**, then the launcher language, confirmed by DAB stations) or
+  one or more countries of your choice, *Update* and *Delete* in settings, install from a USB stick. DAB names starting
+  with `#` and station variants (e.g. RTL 102.5) find their logo.
+- **Station names always shown**: the station list and the favourites always show logo, name and frequency (or DAB+).
+  Only the large cover keeps the logo on its own, with the name next to it.
+- **Restart of a CarPlay/Android Auto dongle** that does not connect: only with a recognised wireless dongle (never with a
+  wired phone or a USB stick), at most 2 attempts per start, never during a call. Adjustable wait and a *Restart
+  CarPlay/AA* button in settings.
+- Lighter launcher: logs without repetitive system lines, unused texts and icons removed, lighter car images (identical),
+  logos no longer inside the app.
 
 #### 0.3.1
 

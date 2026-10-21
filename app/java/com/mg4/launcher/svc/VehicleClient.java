@@ -26,7 +26,7 @@ public final class VehicleClient {
 
     private static final String HUB = "com.saicmotor.carapi.ICarAdapterService";
     private static final int HUB_QUERY_CLIENT = 1;
-    private static final int BIND_EV = 4, BIND_HVAC = 7, BIND_CONFIG = 2, BIND_LAMP = 13, BIND_IPK = 5;
+    private static final int BIND_EV = 4, BIND_HVAC = 7, BIND_CONFIG = 2, BIND_LAMP = 13, BIND_IPK = 5, BIND_VS = 8;
 
     private static final String EV = "com.saicmotor.carapi.ev.ICarEvService";
     private static final int EV_PERCENT = 3;          // int  getChargePercentChange
@@ -61,6 +61,17 @@ public final class VehicleClient {
     private static final int LAMP_SET_REAR_FOG = 30, LAMP_GET_REAR_FOG = 31, LAMP_SET_FRONT_FOG = 40, LAMP_GET_FRONT_FOG = 41;
     private static final String CONFIG = "com.saicmotor.carapi.config.ICarConfigService";
     private static final int CONFIG_FRONT_FOG = 60;   // getFrontFrogConfigData: 0 = fendinebbia anteriori presenti
+    // assistenza alla guida, come l'app Impostazioni veicolo originale della SWI69 R45 (ICarConfigService)
+    private static final int CONFIG_LKA = 20;         // getLkaConfigData: 0 = LKA presente, 1 assente
+    private static final int CONFIG_ONE_PEDAL = 43;   // getOnePedalConfig: 0 = One Pedal presente (H17A), 1 assente
+    private static final String VS = "com.saicmotor.carapi.vs.ICarVehicleSettingService";
+    // LKA (getLasMode/setLasMode): 0 nessuna richiesta, 1 spento, 2 LDW, 3 LDP, 4 LKA, 5 ELK
+    private static final int VS_SET_LAS = 30, VS_GET_LAS = 31;
+    // One Pedal: setSignalPedalState / getSignalPedalState (1 acceso, 0 spento) / getSignalPedalEnable (blocco:
+    // 1 limite di carica, 2 sistema frenante, 3 condizioni, 0 nessuno)
+    private static final int VS_SET_OPD = 162, VS_GET_OPD = 163, VS_GET_OPD_INHIBIT = 164;
+    // chiavi dello stato "previsto" (diverse dai codici delle luci: 31 è anche il retronebbia)
+    private static final int K_LKA = 80031, K_OPD = 80163;
     private static final String IPK = "com.saicmotor.carapi.ipk.ICarIpkService";
     private static final int IPK_TYRE_UNIT = 29;      // 0 bar, 1 kPa, 2 psi (scelta dell'utente sul quadro)
 
@@ -107,6 +118,10 @@ public final class VehicleClient {
         public float insideTemp = Float.NaN;
         public int rearFog = -1, frontFog = -1;           // 1 acceso, 0 spento, -1 non disponibile
         public boolean hasFrontFog;
+        public int lka = -1;              // 1 acceso, 0 spento, -1 non disponibile
+        public int lkaMode = -1;          // valore grezzo dell'auto (vedi VS_GET_LAS)
+        public int opd = -1;              // One Pedal Drive: 1 acceso, 0 spento, -1 non disponibile
+        public int opdInhibit;            // motivo del blocco OPD (1 in carica, 2 sistema, 3 condizioni), 0 nessuno
         public int fanLevel = -1;         // 0 spenta, 1..max, 15 auto
         public int fanMin = FAN_MIN, fanMax = FAN_MAX;
         public float outsideTemp = -10000f;   // °C
@@ -470,6 +485,96 @@ public final class VehicleClient {
             Diag.error("luci", e.toString());
             forget(BIND_LAMP);
         }
+        try {
+            readAssist(s, android.os.SystemClock.uptimeMillis());
+        } catch (Exception e) {
+            Diag.error("assistenza", e.toString());
+            forget(BIND_VS);
+        }
+    }
+
+    private int lkaConfig = Integer.MIN_VALUE, onePedalConfig = Integer.MIN_VALUE;
+    private Boolean vsValid;
+
+    /** Servizio impostazioni veicolo, solo se il collegamento 8 risponde con l'interfaccia giusta. */
+    private IBinder vs() throws RemoteException {
+        IBinder b = sub(BIND_VS);
+        if (b == null) return null;
+        if (vsValid == null) {
+            String d = b.getInterfaceDescriptor();
+            vsValid = VS.equals(d);
+            Diag.put("assistenza.servizio", String.valueOf(d));
+        }
+        return vsValid ? b : null;
+    }
+
+    /** LKA e OPD: configurazione letta una volta, stato a ogni giro. Senza configurazione valida il pulsante non c'è. */
+    private void readAssist(State s, long now) throws Exception {
+        if (lkaConfig == Integer.MIN_VALUE || onePedalConfig == Integer.MIN_VALUE) {
+            IBinder cfg = sub(BIND_CONFIG);
+            if (cfg == null) return;
+            lkaConfig = Rpc.callInt(cfg, CONFIG, CONFIG_LKA);
+            onePedalConfig = Rpc.callInt(cfg, CONFIG, CONFIG_ONE_PEDAL);
+            Diag.put("assistenza.config", "LKA " + lkaConfig + ", One Pedal " + onePedalConfig);
+        }
+        if (lkaConfig != 0 && onePedalConfig != 0) return;
+        IBinder v = vs();
+        if (v == null) return;
+        if (lkaConfig == 0) {
+            int mode = Rpc.callInt(v, VS, VS_GET_LAS);
+            s.lkaMode = mode;
+            int on = mode == 1 ? 0 : mode >= 2 && mode <= 5 ? 1 : -1;
+            s.lka = held(K_LKA, on, now);
+        }
+        if (onePedalConfig == 0) {
+            int o = Rpc.callInt(v, VS, VS_GET_OPD);
+            s.opd = held(K_OPD, o == 1 ? 1 : o == 0 ? 0 : -1, now);
+            s.opdInhibit = Rpc.callInt(v, VS, VS_GET_OPD_INHIBIT);
+        }
+        Diag.put("assistenza.stato", "LKA " + s.lka + " (modo " + s.lkaMode + "), OPD " + s.opd + " (blocco " + s.opdInhibit + ")");
+    }
+
+    /** LKA acceso/spento: come l'interruttore dell'app originale SWI69, accende con 2 (LDW) e spegne con 1. */
+    public void toggleLka() {
+        if (bg == null) return;
+        int cur = predicted(K_LKA, last.lka);
+        if (cur < 0) return;
+        boolean turnOn = cur == 0;
+        hold(K_LKA, turnOn ? 1 : 0);
+        bg.post(() -> {
+            try {
+                IBinder v = vs();
+                if (v == null) return;
+                int value = turnOn ? 2 : 1;
+                Rpc.call(v, VS, VS_SET_LAS, p -> p.writeInt(value));
+                Diag.put("comando.ultimo", "assistenza.lka · " + (turnOn ? "acceso (modo " + value + ")" : "spento"));
+            } catch (Exception e) {
+                Diag.error("assistenza.lka", e.toString());
+                forget(BIND_VS);
+            }
+            poll();
+        });
+    }
+
+    /** One Pedal Drive acceso/spento. Se l'auto lo blocca (in carica, condizioni…) lo stato letto resta com'era. */
+    public void toggleOpd() {
+        if (bg == null) return;
+        int cur = predicted(K_OPD, last.opd);
+        if (cur < 0) return;
+        int next = cur == 1 ? 0 : 1;
+        hold(K_OPD, next);
+        bg.post(() -> {
+            try {
+                IBinder v = vs();
+                if (v == null) return;
+                Rpc.call(v, VS, VS_SET_OPD, p -> p.writeInt(next));
+                Diag.put("comando.ultimo", "assistenza.opd · " + (next == 1 ? "acceso" : "spento") + " · blocco " + Rpc.callInt(v, VS, VS_GET_OPD_INHIBIT));
+            } catch (Exception e) {
+                Diag.error("assistenza.opd", e.toString());
+                forget(BIND_VS);
+            }
+            poll();
+        });
     }
 
     // ---- stati di ricarica ----------------------------------------------------------------------
@@ -574,6 +679,10 @@ public final class VehicleClient {
     }
 
     public void toggleWheelHeat() {
+    }
+
+    /** Gruppo Comfort: sulla SWI69 R45 i sedili riscaldati non hanno comandi verificati (il gruppo non compare). */
+    public void stepSeat(boolean driver) {
     }
 
     /**
