@@ -1,6 +1,6 @@
 {
-  "version": "0.3.1",
-  "apk": "releases/MG4Launcher-SWI69-0.3.1.apk",
-  "size": 553796,
-  "notes": "Nuova grafica come la SWI68 0.8.0; tasti indietro, play/pausa e avanti di CarPlay e Android Auto corretti."
+  "version": "0.3.2",
+  "apk": "releases/MG4Launcher-SWI69-0.3.2.apk",
+  "size": 523997,
+  "notes": "Gruppo Clima, LKA e OPD, loghi radio per paese (FM e DAB), riavvio del dongle CarPlay/AA, launcher più leggero."
 }
