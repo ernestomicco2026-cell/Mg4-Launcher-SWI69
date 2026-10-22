@@ -47,12 +47,12 @@ Guarda la [video recensione su YouTube](https://youtu.be/JKZ0N3Lr7FI) · Watch t
 ## Sostieni il progetto / Support the project
 
 MG4 Launcher è gratuito e lo resterà. Se ti è utile e ti va di contribuire alle ore passate a svilupparlo e a provarlo
-in auto, puoi lasciare una piccola offerta libera. È del tutto **facoltativa**: grazie anche solo per usarlo e per
-le segnalazioni.
+in auto, puoi lasciare un'offerta. È del tutto **volontaria** e **non c'è un importo minimo**: puoi donare quello che
+vuoi. Grazie anche solo per usarlo e per le segnalazioni.
 
 MG4 Launcher is free and will stay free. If you find it useful and would like to support the hours spent building and
-testing it in the car, you can leave a small donation of any amount. It is entirely **optional**: thank you just for
-using it and reporting issues.
+testing it in the car, you can leave a donation. It is entirely **voluntary** and **there is no minimum amount**: you
+can give whatever you like. Thank you just for using it and reporting issues.
 
 <a href="https://www.paypal.com/pool/9tv7fQ36nA?sr=wccr"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
