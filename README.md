@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.3](releases/MG4Launcher-SWI69-0.3.3.apk)**
+**Ultima versione / Latest version: [0.3.4](releases/MG4Launcher-SWI69-0.3.4.apk)**
 
 <a href="https://www.paypal.com/pool/9tv7fQ36nA?sr=wccr"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
@@ -22,6 +22,7 @@
 > The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
 
 ---
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.4 – percentuale batteria in grande (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.4-percentuale.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.3 – temperatura e batteria più grandi (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.3.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.2 – gruppo Clima, LKA e OPD, loghi radio (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.2.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema notte" src="screenshots/MG4Launcher-SWI69-0.3.0-notte.png" />
@@ -169,7 +170,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.3.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.4.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -186,7 +187,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.3.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.4.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -248,6 +249,15 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.4
+- **La home si apre da sola all'accensione**: dai log di questa versione la home MG arriva spesso *dopo* il launcher
+  (da 29 a 81 secondi dopo), quando il controllo dell'avvio era già finito. Ora, finché la home MG non è comparsa, il launcher la
+  aspetta (al massimo 3 minuti) e poi torna davanti; anche *Premi Home da solo* riprova invece di fare un solo
+  tentativo. Retrocamera, CarPlay/Android Auto, chiamate e la home MG aperta apposta restano come prima.
+- **Niente più crash all'accensione**: prima dello sblocco del sistema le impostazioni del launcher non sono leggibili;
+  ora il launcher aspetta lo sblocco invece di chiudersi a ogni avvio.
+- **Percentuale batteria in grande** (Impostazioni → Home): inverte km e percentuale.
 
 #### 0.3.3
 Correzioni dalle prove sulla SWI69 (firmware EH32 LL R45), fatte sui servizi originali di questa versione.
@@ -541,7 +551,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.3.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.4.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -557,7 +567,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.3.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.4.apk
    ```
 2. Make it the default home:
    ```bash
@@ -600,6 +610,15 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.4
+- **The home opens by itself at start-up**: the logs of this version show the MG home often arriving *after* the
+  launcher (29 to 81 seconds later), when the start-up check had already ended. Now, until the MG home has appeared,
+  the launcher waits for it (up to 3 minutes) and then comes back to the front; *Press Home automatically* also
+  retries instead of trying once. Rear camera, CarPlay/Android Auto, calls and an MG home opened on purpose are left alone.
+- **No more crashes at start-up**: before the system is unlocked the launcher settings can't be read; the launcher now
+  waits for the unlock instead of closing at every start.
+- **Large battery percentage** (Settings → Home): swaps km and percentage.
 
 #### 0.3.3
 Fixes from testing on the SWI69 (EH32 LL R45 firmware), made with this version's original services.

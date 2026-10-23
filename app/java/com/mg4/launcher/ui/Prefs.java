@@ -129,6 +129,15 @@ public final class Prefs {
         sp.edit().putBoolean("socDecimals", b).apply();
     }
 
+    /** 0.3.4: percentuale della batteria in grande e autonomia accanto alla barra (km e % invertiti). */
+    public boolean socBig() {
+        return sp.getBoolean("socBig", false);
+    }
+
+    public void setSocBig(boolean b) {
+        sp.edit().putBoolean("socBig", b).apply();
+    }
+
     public boolean showTpms() {
         return sp.getBoolean("showTpms", true);
     }

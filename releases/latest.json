@@ -1,6 +1,6 @@
 {
-  "version": "0.3.3",
-  "apk": "releases/MG4Launcher-SWI69-0.3.3.apk",
+  "version": "0.3.4",
+  "apk": "releases/MG4Launcher-SWI69-0.3.4.apk",
   "size": 528093,
-  "notes": "Pulsante 360° solo se l'auto ha telecamere, passaggio radio→Bluetooth corretto, disinstallazione dall'auto, temperatura e batteria più grandi."
+  "notes": "Home che si apre da sola all'accensione anche quando la home MG arriva tardi, niente crash all'avvio, opzione percentuale batteria in grande."
 }
