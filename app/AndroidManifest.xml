@@ -32,6 +32,8 @@
     <!-- 0.8.2: riavvio del dongle CarPlay/AA (permesso USB e reset della porta, arresto del servizio Allgo) -->
     <uses-permission android:name="android.permission.MANAGE_USB" />
     <uses-permission android:name="android.permission.FORCE_STOP_PACKAGES" />
+    <!-- 0.3.3: disinstallazione dalle impostazioni, senza computer -->
+    <uses-permission android:name="android.permission.DELETE_PACKAGES" />
 
     <!-- SWI69: gestore batteria ("bms"), clima e luci dal CarService, concessi dalla firma platform -->
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />

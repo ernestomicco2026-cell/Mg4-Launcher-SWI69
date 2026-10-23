@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Install</string>
     <string name="btn_open" formatted="false">Open</string>
     <string name="btn_save" formatted="false">Save</string>
+    <string name="uninstall_title" formatted="false">Uninstall MG4 Launcher</string>
+    <string name="uninstall_sub" formatted="false">Restores the original MG home and removes the launcher from the car</string>
+    <string name="btn_uninstall" formatted="false">Uninstall</string>
+    <string name="uninstall_confirm" formatted="false">The launcher will be removed and the original MG home will come back. To get it back you will need to install it again.</string>
+    <string name="uninstall_failed">Uninstall failed: %1$s</string>
     <string name="diag_waiting" formatted="false">Waiting for the car services…</string>
     <string name="drive_hint" formatted="false">With right-hand drive the home is mirrored: car and climate on the driver\'s side.</string>
     <string name="log_saving" formatted="false">Saving log…</string>

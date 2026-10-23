@@ -725,6 +725,12 @@ public final class SettingsView extends FrameLayout {
         card.addView(dr);
         col.addView(card, topFull(14));
 
+        // 0.3.3: disinstallazione dall'auto (rimette la home MG e toglie il launcher)
+        card = card(c);
+        View unBtn = button(c, L.s(R.string.btn_uninstall), v -> askUninstall());
+        card.addView(row(c, L.s(R.string.uninstall_title), L.s(R.string.uninstall_sub), unBtn, false));
+        col.addView(card, topFull(14));
+
         refreshUpdateViews(up.isBusy());
     }
 
@@ -737,6 +743,15 @@ public final class SettingsView extends FrameLayout {
         diagText.setLineSpacing(0, 1.15f);
         ds.addView(diagText);
         content.addView(ds, Ui.margins(Ui.lpWeight(-1, 0, 1), 0, dp(24), 0, 0));
+    }
+
+    /** Conferma e disinstallazione del launcher; se non riesce lo si dice. */
+    private void askUninstall() {
+        Confirm.show(this, t, L.s(R.string.uninstall_title), L.s(R.string.uninstall_confirm),
+                L.s(R.string.btn_cancel), L.s(R.string.btn_uninstall),
+                () -> com.mg4.launcher.svc.SelfUninstall.run(getContext(), why -> post(() ->
+                        Confirm.show(this, t, L.s(R.string.uninstall_title), L.f(R.string.uninstall_failed, why),
+                                L.s(R.string.btn_cancel), "OK", () -> { }))));
     }
 
     /** Salva il log completo (in background) e mostra dove è finito. */

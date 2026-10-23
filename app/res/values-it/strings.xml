@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Installa</string>
     <string name="btn_open" formatted="false">Apri</string>
     <string name="btn_save" formatted="false">Salva</string>
+    <string name="uninstall_title" formatted="false">Disinstalla MG4 Launcher</string>
+    <string name="uninstall_sub" formatted="false">Rimette la home MG originale e toglie il launcher dall\'auto</string>
+    <string name="btn_uninstall" formatted="false">Disinstalla</string>
+    <string name="uninstall_confirm" formatted="false">Il launcher verrà tolto e tornerà la home MG originale. Per riaverlo dovrai installarlo di nuovo.</string>
+    <string name="uninstall_failed">Disinstallazione non riuscita: %1$s</string>
     <string name="diag_waiting" formatted="false">In attesa dei servizi dell\'auto…</string>
     <string name="drive_hint" formatted="false">Con la guida a destra la home si specchia: auto e clima dal lato del guidatore.</string>
     <string name="log_saving" formatted="false">Salvataggio del log…</string>

@@ -63,7 +63,9 @@ public final class VehicleClient {
     private static final int CONFIG_FRONT_FOG = 60;   // getFrontFrogConfigData: 0 = fendinebbia anteriori presenti
     // assistenza alla guida, come l'app Impostazioni veicolo originale della SWI69 R45 (ICarConfigService)
     private static final int CONFIG_LKA = 20;         // getLkaConfigData: 0 = LKA presente, 1 assente
-    private static final int CONFIG_ONE_PEDAL = 43;   // getOnePedalConfig: 0 = One Pedal presente (H17A), 1 assente
+    private static final int CONFIG_ONE_PEDAL = 43;
+    /** getRvcAvmConfigData, come la home originale SWI69 R45: 0 = nessuna telecamera; 1, 2, 4 = EVS; 3 = AVM; 5 = AVM quadro. */
+    private static final int CONFIG_RVC_AVM = 11;   // getOnePedalConfig: 0 = One Pedal presente (H17A), 1 assente
     private static final String VS = "com.saicmotor.carapi.vs.ICarVehicleSettingService";
     // LKA (getLasMode/setLasMode): 0 nessuna richiesta, 1 spento, 2 LDW, 3 LDP, 4 LKA, 5 ELK
     private static final int VS_SET_LAS = 30, VS_GET_LAS = 31;
@@ -118,6 +120,8 @@ public final class VehicleClient {
         public float insideTemp = Float.NaN;
         public int rearFog = -1, frontFog = -1;           // 1 acceso, 0 spento, -1 non disponibile
         public boolean hasFrontFog;
+        /** Configurazione telecamere (getRvcAvmConfigData); Integer.MIN_VALUE finché non si sa. */
+        public int cameraConfig = Integer.MIN_VALUE;
         public int lka = -1;              // 1 acceso, 0 spento, -1 non disponibile
         public int lkaMode = -1;          // valore grezzo dell'auto (vedi VS_GET_LAS)
         public int opd = -1;              // One Pedal Drive: 1 acceso, 0 spento, -1 non disponibile
@@ -458,8 +462,33 @@ public final class VehicleClient {
         return !Float.isNaN(t) && t > -40 && t < 80 && t != 0f;
     }
 
+    private int rvcAvmConfig = Integer.MIN_VALUE;
+
+    /**
+     * Telecamere presenti secondo la configurazione dell'auto: true / false, null se non si sa ancora
+     * (in quel caso il pulsante 360° resta come prima). Stessi valori della home originale SWI69.
+     */
+    public static Boolean cameraPresent(int cfg) {
+        if (cfg < 0) return null;
+        return cfg >= 1 && cfg <= 5;
+    }
+
     private void readLamps(State s) {
         if (!s.connected) return;
+        try {
+            if (rvcAvmConfig < 0) {
+                IBinder cfg = sub(BIND_CONFIG);
+                if (cfg != null) {
+                    rvcAvmConfig = Rpc.callInt(cfg, CONFIG, CONFIG_RVC_AVM);
+                    Diag.put("telecamere.config", rvcAvmConfig + " (" + (rvcAvmConfig == 0 ? "nessuna telecamera"
+                            : rvcAvmConfig == 3 ? "360° AVM" : rvcAvmConfig == 5 ? "360° AVM quadro"
+                            : rvcAvmConfig >= 1 && rvcAvmConfig <= 5 ? "retrocamera / 360° EVS" : rvcAvmConfig < 0 ? "non ancora nota" : "sconosciuta: nessuna telecamera") + ")");
+                }
+            }
+        } catch (Exception e) {
+            Diag.error("telecamere.config", e.toString());
+        }
+        s.cameraConfig = rvcAvmConfig;
         try {
             if (frontFogConfig == Integer.MIN_VALUE) {
                 IBinder cfg = sub(BIND_CONFIG);

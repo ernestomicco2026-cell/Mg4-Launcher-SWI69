@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Installer</string>
     <string name="btn_open" formatted="false">Ouvrir</string>
     <string name="btn_save" formatted="false">Enregistrer</string>
+    <string name="uninstall_title" formatted="false">Désinstaller MG4 Launcher</string>
+    <string name="uninstall_sub" formatted="false">Rétablit l\'accueil MG d\'origine et supprime le launcher de la voiture</string>
+    <string name="btn_uninstall" formatted="false">Désinstaller</string>
+    <string name="uninstall_confirm" formatted="false">Le launcher sera supprimé et l\'accueil MG d\'origine reviendra. Pour le récupérer, il faudra le réinstaller.</string>
+    <string name="uninstall_failed">Échec de la désinstallation : %1$s</string>
     <string name="diag_waiting" formatted="false">En attente des services de la voiture…</string>
     <string name="drive_hint" formatted="false">En conduite à droite, l\'accueil est inversé : voiture et climatisation côté conducteur.</string>
     <string name="log_saving" formatted="false">Enregistrement du journal…</string>

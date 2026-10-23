@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Instalar</string>
     <string name="btn_open" formatted="false">Abrir</string>
     <string name="btn_save" formatted="false">Guardar</string>
+    <string name="uninstall_title" formatted="false">Desinstalar MG4 Launcher</string>
+    <string name="uninstall_sub" formatted="false">Repõe o ecrã inicial MG original e remove o launcher do carro</string>
+    <string name="btn_uninstall" formatted="false">Desinstalar</string>
+    <string name="uninstall_confirm" formatted="false">O launcher será removido e o ecrã inicial MG original volta. Para o ter de novo terá de o instalar outra vez.</string>
+    <string name="uninstall_failed">Falha ao desinstalar: %1$s</string>
     <string name="diag_waiting" formatted="false">À espera dos serviços do carro…</string>
     <string name="drive_hint" formatted="false">Com o volante à direita o início fica espelhado: carro e climatização do lado do condutor.</string>
     <string name="log_saving" formatted="false">A guardar registo…</string>

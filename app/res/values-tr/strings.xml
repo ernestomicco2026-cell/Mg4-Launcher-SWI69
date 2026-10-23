@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Yükle</string>
     <string name="btn_open" formatted="false">Aç</string>
     <string name="btn_save" formatted="false">Kaydet</string>
+    <string name="uninstall_title" formatted="false">MG4 Launcher\'ı kaldır</string>
+    <string name="uninstall_sub" formatted="false">Orijinal MG ana ekranını geri yükler ve launcher\'ı araçtan kaldırır</string>
+    <string name="btn_uninstall" formatted="false">Kaldır</string>
+    <string name="uninstall_confirm" formatted="false">Launcher kaldırılacak ve orijinal MG ana ekranı geri gelecek. Tekrar kullanmak için yeniden yüklemeniz gerekir.</string>
+    <string name="uninstall_failed">Kaldırılamadı: %1$s</string>
     <string name="diag_waiting" formatted="false">Araç servisleri bekleniyor…</string>
     <string name="drive_hint" formatted="false">Sağdan direksiyonda ana ekran ters çevrilir: araç ve klima sürücü tarafında.</string>
     <string name="log_saving" formatted="false">Günlük kaydediliyor…</string>

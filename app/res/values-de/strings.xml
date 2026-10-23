@@ -42,6 +42,11 @@
     <string name="btn_install" formatted="false">Installieren</string>
     <string name="btn_open" formatted="false">Öffnen</string>
     <string name="btn_save" formatted="false">Speichern</string>
+    <string name="uninstall_title" formatted="false">MG4 Launcher deinstallieren</string>
+    <string name="uninstall_sub" formatted="false">Stellt den originalen MG-Startbildschirm wieder her und entfernt den Launcher aus dem Auto</string>
+    <string name="btn_uninstall" formatted="false">Deinstallieren</string>
+    <string name="uninstall_confirm" formatted="false">Der Launcher wird entfernt und der originale MG-Startbildschirm kehrt zurück. Um ihn wieder zu nutzen, musst du ihn neu installieren.</string>
+    <string name="uninstall_failed">Deinstallation fehlgeschlagen: %1$s</string>
     <string name="diag_waiting" formatted="false">Warte auf die Fahrzeugdienste…</string>
     <string name="drive_hint" formatted="false">Bei Rechtslenkung wird die Startseite gespiegelt: Auto und Klima auf der Fahrerseite.</string>
     <string name="log_saving" formatted="false">Log wird gespeichert…</string>

@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.2](releases/MG4Launcher-SWI69-0.3.2.apk)**
+**Ultima versione / Latest version: [0.3.3](releases/MG4Launcher-SWI69-0.3.3.apk)**
 
 <a href="https://www.paypal.com/pool/9tv7fQ36nA?sr=wccr"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
@@ -22,6 +22,7 @@
 > The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
 
 ---
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.3 – temperatura e batteria più grandi (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.3.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.2 – gruppo Clima, LKA e OPD, loghi radio (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.2.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema notte" src="screenshots/MG4Launcher-SWI69-0.3.0-notte.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema giorno" src="screenshots/MG4Launcher-SWI69-0.3.0-giorno.png" />
@@ -168,7 +169,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.2.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.3.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -185,7 +186,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.2.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.3.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -218,7 +219,9 @@ Dal launcher: impostazioni → **Apri la home originale MG**. Per renderla di nu
 adb shell cmd package set-home-activity com.saicmotor.launcher/.view.MainActivity
 ```
 
-Per rimuovere del tutto il launcher: `adb uninstall com.mg4.launcher`. L'app originale non viene mai modificata.
+Per rimuovere del tutto il launcher, anche senza computer (dalla 0.3.3): impostazioni → **Disinstalla MG4 Launcher**.
+Rimette la home MG originale e toglie il launcher dall'auto. Da computer: `adb uninstall com.mg4.launcher`.
+L'app originale non viene mai modificata.
 
 ### Comandi utili
 
@@ -245,6 +248,17 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.3
+Correzioni dalle prove sulla SWI69 (firmware EH32 LL R45), fatte sui servizi originali di questa versione.
+- **Pulsante 360°/telecamere**: il launcher legge la configurazione telecamere dell'auto, come la home MG originale.
+  Se l'auto non ha telecamere il pulsante non compare; se le ha, apre la stessa app della home originale
+  (telecamera posteriore, AVM o vista 360°).
+- **Passaggio dalla radio al Bluetooth** corretto: il launcher chiede il cambio di sorgente all'app Media dell'auto con
+  lo stesso comando della home originale, invece di prendere l'audio da solo. Niente più play/pausa che si alternano.
+- **Disinstallazione dall'auto**: impostazioni → *Disinstalla MG4 Launcher*. Rimette la home MG originale come
+  predefinita e toglie il launcher, senza computer.
+- **Temperatura interna/esterna e percentuale della batteria più grandi** e più chiare, leggibili durante la guida.
 
 #### 0.3.2
 Stesse novità della versione SWI68 0.8.2 e 0.8.3, con i servizi della SWI69.
@@ -527,7 +541,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.2.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.3.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -543,7 +557,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.2.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.3.apk
    ```
 2. Make it the default home:
    ```bash
@@ -575,7 +589,9 @@ From the launcher: settings → **Apri la home originale MG**. To make it the de
 adb shell cmd package set-home-activity com.saicmotor.launcher/.view.MainActivity
 ```
 
-To remove the launcher completely: `adb uninstall com.mg4.launcher`. The original app is never modified.
+To remove the launcher completely, even without a computer (since 0.3.3): settings → **Uninstall MG4 Launcher**.
+It restores the original MG home and removes the launcher from the car. From a computer: `adb uninstall com.mg4.launcher`.
+The original app is never modified.
 
 ### Reporting a problem
 
@@ -584,6 +600,17 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.3
+Fixes from testing on the SWI69 (EH32 LL R45 firmware), made with this version's original services.
+- **360°/camera button**: the launcher reads the car's camera configuration, like the original MG home. If the car has
+  no cameras the button does not appear; if it has them, it opens the same app as the original home (rear camera, AVM
+  or 360° view).
+- **Switching from radio to Bluetooth** fixed: the launcher asks the car's Media app to change source with the same
+  command as the original home, instead of taking the audio itself. No more play/pause flipping.
+- **Uninstall from the car**: settings → *Uninstall MG4 Launcher*. It restores the original MG home as default and
+  removes the launcher, no computer needed.
+- **Bigger inside/outside temperature and battery percentage**, brighter and easy to read while driving.
 
 #### 0.3.2
 Same changes as the SWI68 versions 0.8.2 and 0.8.3, with the SWI69 services.

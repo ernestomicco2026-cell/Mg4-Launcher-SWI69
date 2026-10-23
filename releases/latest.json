@@ -1,6 +1,6 @@
 {
-  "version": "0.3.2",
-  "apk": "releases/MG4Launcher-SWI69-0.3.2.apk",
-  "size": 523997,
-  "notes": "Gruppo Clima, LKA e OPD, loghi radio per paese (FM e DAB), riavvio del dongle CarPlay/AA, launcher più leggero."
+  "version": "0.3.3",
+  "apk": "releases/MG4Launcher-SWI69-0.3.3.apk",
+  "size": 528093,
+  "notes": "Pulsante 360° solo se l'auto ha telecamere, passaggio radio→Bluetooth corretto, disinstallazione dall'auto, temperatura e batteria più grandi."
 }

@@ -252,7 +252,7 @@ public final class HomeView extends LinearLayout {
         battery = new Bars.Progress(c);
         battery.setColors(t.track, t.battery);
         batRow.addView(battery, Ui.lpWeight(0, dp(8), 1));
-        socTv = Ui.text(c, "—", 24, t.text, Ui.MEDIUM);
+        socTv = Ui.text(c, "—", 32, t.text, Ui.MEDIUM);   // 0.3.3: più grande (era 24)
         batRow.addView(socTv, Ui.margins(Ui.lp(-2, -2), dp(16), 0, 0, 0));
         p.addView(batRow, Ui.margins(new LayoutParams(-1, -2), 0, dp(10), 0, 0));
         updateClock();
@@ -263,16 +263,16 @@ public final class HomeView extends LinearLayout {
         statusTv = Ui.oneLine(Ui.text(c, L.s(R.string.connecting_vehicle), 20, t.sub, Ui.REGULAR));
         status.addView(statusTv, Ui.margins(Ui.lpWeight(0, -2, 1), dp(10), 0, 0, 0));
         // altezza fissa: a riposo la riga resta vuota senza spostare l'auto
-        status.setMinimumHeight(dp(prefs.showInsideTemp() && !prefs.insideTempMissing() ? 42 : 24));
+        status.setMinimumHeight(dp(prefs.showInsideTemp() && !prefs.insideTempMissing() ? 62 : 34));
         // temperatura esterna e, sotto, quella interna
-        outIcon = Ui.icon(c, R.drawable.ic_thermo, t.sub, 22);
+        outIcon = Ui.icon(c, R.drawable.ic_thermo, t.text, 26);
         outIcon.setVisibility(GONE);
         status.addView(outIcon);
         LinearLayout temps = Ui.column(c);
         temps.setGravity(Gravity.END);
-        outTv = Ui.text(c, "", 20, t.sub, Ui.REGULAR);
+        outTv = Ui.text(c, "", 26, t.text, Ui.REGULAR);   // 0.3.3: più grande e chiara (era 20, grigia)
         temps.addView(outTv);
-        inTv = Ui.text(c, "", 17, t.sub, Ui.REGULAR);
+        inTv = Ui.text(c, "", 24, t.text, Ui.REGULAR);    // 0.3.3: più grande e chiara (era 17, grigia)
         inTv.setVisibility(showInside() ? VISIBLE : GONE);
         temps.addView(inTv);
         status.addView(temps, Ui.margins(Ui.lp(-2, -2), dp(6), 0, 0, 0));
@@ -405,7 +405,14 @@ public final class HomeView extends LinearLayout {
 
     private final long createdAt = System.currentTimeMillis();
 
+    /** Pulsante 360°: nascosto quando la configurazione dell'auto dice che non ci sono telecamere. */
+    private View cameraBtn;
+
     public void onVehicle(VehicleClient.State s) {
+        if (cameraBtn != null) {
+            int vis = Boolean.FALSE.equals(VehicleClient.cameraPresent(s.cameraConfig)) ? GONE : VISIBLE;
+            if (cameraBtn.getVisibility() != vis) cameraBtn.setVisibility(vis);
+        }
         if (!s.connected) {
             boolean early = System.currentTimeMillis() - createdAt < 12000;
             statusTv.setText(L.s(early ? R.string.connecting_vehicle : R.string.vehicle_unavailable));
@@ -1543,7 +1550,9 @@ public final class HomeView extends LinearLayout {
         // scorciatoie; con la barra grande restano telefono e 360° (Radio è nel pannello Media, le Impostazioni tra le app)
         bar.addView(shortcut(c, R.drawable.ic_phone, L.s(R.string.app_phone), com.mg4.launcher.apps.MgApps.PHONE_PKG, com.mg4.launcher.apps.MgApps.PHONE_CLS));
         if (!big) bar.addView(shortcut(c, R.drawable.ic_radio, L.s(R.string.src_radio), com.mg4.launcher.apps.MgApps.RADIO_PKG, com.mg4.launcher.apps.MgApps.RADIO_CLS));
-        bar.addView(shortcut(c, 0, L.s(R.string.app_camera), "com.saicmotor.evs", null));
+        cameraBtn = shortcut(c, 0, L.s(R.string.app_camera), "com.saicmotor.evs", null);
+        if (Boolean.FALSE.equals(VehicleClient.cameraPresent(vehicle.last().cameraConfig))) cameraBtn.setVisibility(GONE);
+        bar.addView(cameraBtn);
         if (!big) bar.addView(shortcut(c, R.drawable.ic_gear, L.s(R.string.app_settings), com.mg4.launcher.apps.MgApps.SETTINGS_PKG, com.mg4.launcher.apps.MgApps.SETTINGS_CLS));
         // le app si aprono scorrendo la home verso sinistra: niente pulsante dedicato
         if (rhd) mirrorRow(bar);

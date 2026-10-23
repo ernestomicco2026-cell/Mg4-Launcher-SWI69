@@ -821,12 +821,18 @@ public final class MediaClient {
                 } else {
                     Browser b = browserFor(src);
                     MediaController.TransportControls tc = b == null ? null : b.controls();
-                    // Bluetooth: come l'app Media originale, prima si chiede all'auto la sorgente audio Bluetooth
-                    // (fuoco audio con key_car_source_type = 5), altrimenti l'auto resta sulla radio
-                    if (src == SRC_BT) requestBtSource();
-                    if (tc != null) tc.play();
-                    else Diag.put("media.avvio", sourceName(ctx, src) + ": sessione non collegata");
-                    if (src == SRC_BT) checkBtStarted(tc != null);
+                    if (src == SRC_BT) {
+                        // Bluetooth: come la home originale SWI69 R45 si chiede il cambio sorgente all'app Media, che
+                        // prende il fuoco audio, avvia l'audio A2DP e dà play. Il launcher non prende il fuoco da solo
+                        // (toglierlo all'app Media la faceva mettere in pausa: play/pausa a ripetizione).
+                        boolean sent = btSwitchCommand(com.saicmotor.common.CommandParcelable.SWITCH_SOURCE);
+                        if (!sent && tc != null) tc.play();
+                        checkBtStarted(sent || tc != null);
+                    } else if (tc != null) {
+                        tc.play();
+                    } else {
+                        Diag.put("media.avvio", sourceName(ctx, src) + ": sessione non collegata");
+                    }
                     if (src == SRC_ONLINE) {
                         // se dopo qualche secondo non è partita, la funzione non c'è: si torna alla radio e si nasconde
                         bg.postDelayed(() -> {
@@ -848,43 +854,28 @@ public final class MediaClient {
 
     // --- Bluetooth: sorgente audio dell'auto, come l'app Media originale (com.saicmotor.media) ------------
 
-    private android.media.AudioFocusRequest btFocus;
-
-    /** Fuoco audio con la sorgente Bluetooth (AudioAttributes con bundle key_car_source_type = 5). */
-    private void requestBtSource() {
+    /**
+     * Cambio sorgente alla musica Bluetooth come la home originale SWI69 R45 (ModeManager.sendCommand):
+     * startService a com.saicmotor.media/.service.MediaService con extra "command" = CommandParcelable
+     * (evento 32769 = cambia sorgente, 32773 = cambia e riproduci; tipo 2 = musica Bluetooth).
+     */
+    private boolean btSwitchCommand(int event) {
         try {
-            android.media.AudioManager am = (android.media.AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
-            android.os.Bundle b = new android.os.Bundle();
-            b.putInt("key_car_source_type", 5);
-            android.media.AudioAttributes.Builder ab = new android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA);
-            // addBundle è un'API di sistema (firma platform): si chiama per riflessione
-            ab.getClass().getMethod("addBundle", android.os.Bundle.class).invoke(ab, b);
-            if (btFocus != null) am.abandonAudioFocusRequest(btFocus);
-            btFocus = new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(ab.build())
-                    .setWillPauseWhenDucked(false)
-                    .setAcceptsDelayedFocusGain(true)
-                    .setOnAudioFocusChangeListener(fc -> {
-                        if (fc == android.media.AudioManager.AUDIOFOCUS_LOSS && btFocus != null) {
-                            try {
-                                am.abandonAudioFocusRequest(btFocus);
-                            } catch (Exception ignored) {
-                            }
-                            btFocus = null;
-                        }
-                    })
-                    .build();
-            int r = am.requestAudioFocus(btFocus);
-            Diag.put("media.bt.sorgente", "richiesta sorgente Bluetooth: " + (r == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "concessa"
-                    : r == android.media.AudioManager.AUDIOFOCUS_REQUEST_DELAYED ? "in attesa" : "rifiutata"));
-        } catch (Throwable e) {
-            Diag.put("media.bt.sorgente", "errore " + e.getClass().getSimpleName());
+            Intent i = new Intent().setComponent(new android.content.ComponentName("com.saicmotor.media",
+                    "com.saicmotor.media.service.MediaService")).setPackage("com.saicmotor.media");
+            i.putExtra("command", new com.saicmotor.common.CommandParcelable(event,
+                    com.saicmotor.common.CommandParcelable.TYPE_BT_MUSIC, "com.saicmotor.launcher"));
+            boolean ok = ctx.startService(i) != null;
+            Diag.put("media.bt.sorgente", "comando all'app Media (evento " + event + "): " + (ok ? "inviato" : "servizio non trovato"));
+            return ok;
+        } catch (Exception e) {
+            Diag.put("media.bt.sorgente", "comando all'app Media non riuscito: " + e.getClass().getSimpleName());
+            return false;
         }
     }
 
     /**
-     * Esito dopo 3 secondi: se il Bluetooth non è partito si ripiega sull'app Media originale (pagina Bluetooth),
+     * Esito dopo 4,5 secondi (l'app Media prima prende il fuoco audio e avvia l'A2DP): se il Bluetooth non è partito si ripiega sull'app Media originale (pagina Bluetooth),
      * che fa partire la musica come quando si sceglie la sorgente lì.
      */
     private void checkBtStarted(boolean sent) {
@@ -905,7 +896,7 @@ public final class MediaClient {
                 Diag.error("media.bt.app", e.toString());
             }
             poll();
-        }, 3000);
+        }, 4500);
     }
 
     /**
@@ -969,7 +960,8 @@ public final class MediaClient {
             Diag.put("media.ripresaAuto", what + " (fallita: sessione non collegata)");
             return;
         }
-        tc.play();   // stesso comando di selectSource(): a mano funziona
+        // Bluetooth: comando all'app Media come in selectSource(); le altre sorgenti: play sulla sessione
+        if (src != SRC_BT || !btSwitchCommand(com.saicmotor.common.CommandParcelable.SWITCH_SOURCE_PLAY)) tc.play();
         chosen = src;
         Diag.put("media.ripresaAuto", what + " (inviata)");
         bg.postDelayed(() -> {
@@ -1270,7 +1262,10 @@ public final class MediaClient {
                 } else {
                     Browser b = browserFor(s.source);
                     MediaController.TransportControls tc = b == null ? null : b.controls();
-                    if (tc != null) {
+                    if (s.source == SRC_BT && !s.playing
+                            && btSwitchCommand(com.saicmotor.common.CommandParcelable.SWITCH_SOURCE_PLAY)) {
+                        // ripresa del Bluetooth come la home originale: fuoco audio e A2DP li gestisce l'app Media
+                    } else if (tc != null) {
                         if (s.playing) tc.pause();
                         else tc.play();
                     }

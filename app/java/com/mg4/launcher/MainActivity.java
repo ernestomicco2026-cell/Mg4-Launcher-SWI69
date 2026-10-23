@@ -571,6 +571,20 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
      */
     @Override
     public boolean openCamera() {
+        // come la home originale SWI69 R45: configurazione 3 = AVM, 5 = AVM del quadro, gli altri = EVS
+        int cfg = vehicle != null ? vehicle.last().cameraConfig : Integer.MIN_VALUE;
+        if (cfg == 3 || cfg == 5) {
+            String pkg = cfg == 3 ? "com.saicmotor.avm" : "com.saicmotor.hmi.aroundview";
+            String cls = cfg == 3 ? "com.saicmotor.avm.service.SaicMotorAvmService" : "com.saicmotor.hmi.aroundview.AvmService";
+            try {
+                if (startService(new Intent("com.saicmotor.avm.START_ENTER").setComponent(new ComponentName(pkg, cls))) != null) {
+                    Diag.put("telecamere", "aperte (" + pkg + ")");
+                    return true;
+                }
+            } catch (Exception e) {
+                Diag.error("telecamere", e.toString());
+            }
+        }
         try {
             Intent i = new Intent().setComponent(new ComponentName("com.saicmotor.evs", "com.saicmotor.evs.service.EvsService")).putExtra("state", 1);
             if (startService(i) != null) {
@@ -585,6 +599,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     @Override
     public boolean canOpenCamera() {
+        // auto senza telecamere secondo la configurazione: niente 360° (come la home originale)
+        if (vehicle != null && Boolean.FALSE.equals(VehicleClient.cameraPresent(vehicle.last().cameraConfig))) return false;
         try {
             getPackageManager().getPackageInfo("com.saicmotor.evs", 0);
             return true;
