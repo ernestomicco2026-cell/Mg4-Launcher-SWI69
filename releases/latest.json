@@ -1,6 +1,6 @@
 {
-  "version": "0.3.4",
-  "apk": "releases/MG4Launcher-SWI69-0.3.4.apk",
+  "version": "0.3.5",
+  "apk": "releases/MG4Launcher-SWI69-0.3.5.apk",
   "size": 528093,
-  "notes": "Home che si apre da sola all'accensione anche quando la home MG arriva tardi, niente crash all'avvio, opzione percentuale batteria in grande."
+  "notes": "Il tasto del clima apre MG4 Clima, se installato (altrimenti il clima originale come prima)."
 }
