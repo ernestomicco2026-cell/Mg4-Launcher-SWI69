@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.5](releases/MG4Launcher-SWI69-0.3.5.apk)**
+**Ultima versione / Latest version: [0.3.6](releases/MG4Launcher-SWI69-0.3.6.apk)**
 
 > 🌡️ **Nuovo: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — la schermata del clima in stile Tesla, per SWI68, SWI69, SWI132 e SWI133. Con MG4 Clima installato il tasto del clima del launcher apre direttamente quella.
 >
@@ -175,7 +175,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.5.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.6.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +192,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.5.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.6.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -254,6 +254,18 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.6
+- **Cerchi a scelta** nelle impostazioni (Auto, sotto il colore): 16″ copricerchi neri, 17″ Aero bicolore (di serie),
+  18″ Luxury / Trophy e 18″ XPOWER. Si vedono sull'auto della home e nell'anteprima.
+- **Temperatura esterna più affidabile**: il launcher controlla il flag di validità del firmware, come il pannello
+  originale, e non mostra più valori non validi come -40°.
+- **Temperatura interna nascosta**: l'auto non la fornisce con le proprietà standard. Quella chiamata "ambient" è la
+  temperatura esterna, che prima con l'opzione accesa si vedeva come interna. Il launcher ora la cerca tra tutte le
+  proprietà dell'auto e scrive nei log i valori trovati, per poterla aggiungere in una prossima versione.
+- **Dongle CarPlay / Android Auto**: riconosciuti anche quelli che si presentano come un iPhone o un telefono Android
+  (es. SmartBox). Se dopo il ritardo non parte nessuna sessione, il dispositivo viene riavviato.
+- **Popup delle novità a ogni versione**, con le novità di quella versione.
 
 #### 0.3.5
 - **Tasto del clima**: se è installato [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4) apre
@@ -561,7 +573,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.5.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.6.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -577,7 +589,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.5.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.6.apk
    ```
 2. Make it the default home:
    ```bash
@@ -620,6 +632,18 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.6
+- **Choose your wheels** in the settings (Car, under the colour): 16″ black covers, 17″ Aero two-tone (standard),
+  18″ Luxury / Trophy and 18″ XPOWER. They show on the car in the home and in the preview.
+- **More reliable outside temperature**: the launcher checks the firmware validity flag, like the original panel, and
+  no longer shows invalid values such as -40°.
+- **Inside temperature hidden**: the car doesn't provide it through the standard properties. The one called "ambient"
+  is the outside temperature, which used to show as inside with the option on. The launcher now looks for it among all
+  the car properties and writes what it finds in the logs, so it can be added in a future version.
+- **CarPlay / Android Auto dongles**: those that show up as an iPhone or an Android phone (e.g. SmartBox) are now
+  recognised too. If no session starts after the delay, the device is restarted.
+- **What's new popup for every version**, with that version's news.
 
 #### 0.3.5
 - **Climate button**: if [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4) is installed it opens it
