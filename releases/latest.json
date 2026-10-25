@@ -1,6 +1,6 @@
 {
-  "version": "0.3.6",
-  "apk": "releases/MG4Launcher-SWI69-0.3.6.apk",
+  "version": "0.3.7",
+  "apk": "releases/MG4Launcher-SWI69-0.3.7.apk",
   "size": 577569,
-  "notes": "Cerchi a scelta nelle impostazioni (16″, 17″ Aero, 18″ Luxury/Trophy, 18″ XPOWER), temperatura esterna senza valori non validi, temperatura interna nascosta (mostrava l'esterna) con ricerca nei log, dongle CarPlay/AA che si presentano come iPhone riconosciuti e riavviati, popup delle novità a ogni versione."
+  "notes": "Ventola su OFF: ora spegne davvero il clima (prima tornava a 1)."
 }
