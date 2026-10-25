@@ -108,7 +108,7 @@ public final class StartGuard {
     private static final int LOOP_MAX = 3;
     private static final java.util.ArrayDeque<Long> mgSeen = new java.util.ArrayDeque<>();
     private static long pausedUntil = -1, homeCheckedAt = -1;
-    private static boolean ourHomeDefault;
+    private static boolean ourHomeDefault, mgHomeDefault;
     private static String prevPkg = "";
 
     /**
@@ -182,10 +182,15 @@ public final class StartGuard {
         }
         if (homeCheckedAt < 0 || now - homeCheckedAt > HOME_CHECK_MS) {
             homeCheckedAt = now;
-            ourHomeDefault = c.getPackageName().equals(resolvedHome(c));
+            String home = resolvedHome(c);
+            ourHomeDefault = c.getPackageName().equals(home);
+            mgHomeDefault = com.mg4.launcher.apps.MgApps.HOME_PKG.equals(home);
         }
-        if (!ourHomeDefault) {
-            Diag.putQuiet("home.tasto", "home MG lasciata (il launcher non è la home predefinita)");
+        // 0.3.8 / 0.2.5: nel firmware la home MG ha priorità 2 e Android la sceglie sempre, anche se il launcher è
+        // impostato come predefinito (succedeva su quasi tutte le auto). Si sostituisce lo stesso, come all'accensione;
+        // si lascia stare solo se la home predefinita è un'altra app ancora (un altro launcher scelto dall'utente).
+        if (!ourHomeDefault && !mgHomeDefault) {
+            Diag.putQuiet("home.tasto", "home MG lasciata (home predefinita: altra app)");
             return;
         }
         if (pausedUntil > now) return;

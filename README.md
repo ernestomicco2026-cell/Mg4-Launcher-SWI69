@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.7](releases/MG4Launcher-SWI69-0.3.7.apk)**
+**Ultima versione / Latest version: [0.3.8](releases/MG4Launcher-SWI69-0.3.8.apk)**
 
 > 🌡️ **Nuovo: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — la schermata del clima in stile Tesla, per SWI68, SWI69, SWI132 e SWI133. Con MG4 Clima installato il tasto del clima del launcher apre direttamente quella.
 >
@@ -27,6 +27,9 @@
 > The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
 
 ---
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – pulsante Guida nella barra (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8.png" />
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – gruppo Guida aperto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-guida.png" />
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – ricircolo su Auto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-ricircolo.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.4 – percentuale batteria in grande (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.4-percentuale.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.3 – temperatura e batteria più grandi (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.3.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.2 – gruppo Clima, LKA e OPD, loghi radio (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.2.png" />
@@ -107,8 +110,7 @@ Se lo provi su un'altra versione, le segnalazioni sono benvenute: con l'invio de
 - **Auto e batteria** (a sinistra): autonomia e **orologio** grandi, barra batteria con la percentuale accanto e la
   tacca del limite di ricarica, temperatura esterna; lo stato compare solo durante la ricarica o il V2L (tipo, potenza,
   tempo rimanente). Nelle impostazioni si attivano la **data** accanto all'ora, la percentuale con un decimale, la
-  pressione degli pneumatici (TPMS) con l'unità a scelta (come il quadro, bar, kPa o psi), la temperatura interna (se
-  l'auto la fornisce) e i **pulsanti di ricarica** (limite di ricarica, corrente AC e avvia/ferma ricarica o V2L, con
+  pressione degli pneumatici (TPMS) con l'unità a scelta (come il quadro, bar, kPa o psi) e i **pulsanti di ricarica** (limite di ricarica, corrente AC e avvia/ferma ricarica o V2L, con
   conferma). La tua MG4 ricolorabile con gli 8 colori della gamma, tetto nero opzionale.
   Tocca l'auto o V2L → app Energia. Tieni premuta l'auto → impostazioni del launcher.
 - **Mappa / Media / CarPlay** (a destra):
@@ -130,13 +132,13 @@ Se lo provi su un'altra versione, le segnalazioni sono benvenute: con l'invio de
     e **Wi-Fi** con 4 tacche di segnale (solo quando è collegato).
 - **Barra in basso**, con comandi grandi da usare guidando: temperatura ‹ › (LO, 16…30, HI) e ventola ‹ ›
   (OFF / 1…11 / A = automatico; tocca il numero = app Clima, tieni premuto = accendi/spegni), pulsanti **A/C** e
-  **AUTO** (acceso = colori invertiti), **ricircolo** (solo se l'auto lo supporta), mini-player compatto,
+  **AUTO** (acceso = colori invertiti), **ricircolo** a 3 stati (Interno / Esterno / Auto, solo se l'auto lo supporta), gruppo **Guida** (LKA, One Pedal, assistente Spento/ACC/TJA e pedale del freno, solo i comandi che l'auto ha), mini-player compatto,
   **retronebbia** (icona ambra da acceso; Automatico = nascosto se la barra di sistema mostra già la sua spia,
   oppure Mostra / Nascondi) e **fendinebbia anteriori** (verde, solo se l'auto li ha), Telefono, Radio, **360°**
   (telecamere), Impostazioni. Con la **barra grande** (opzione) i pulsanti del clima sono più grandi e il mini-player
   lascia il posto (la musica resta nel pannello Media).
 - **App**: scorri la home verso sinistra per le app dell'auto e quelle che installi tu,
-  con le icone tutte nello stesso stile; scorri verso destra per tornare. Con **Modifica** scegli quali app installate mostrare.
+  con le icone tutte nello stesso stile; scorri verso destra per tornare. Con **Modifica** scegli quali app mostrare, anche quelle dell'auto.
   In fondo alle app dell'auto ci sono anche **Impostazioni Android** e **File Android** (solo se presenti sull'auto).
 - **Dimensione comandi** (Normale / Grande / Molto grande): ingrandisce pulsanti, icone e testi dei pulsanti
   in proporzione, per usarli meglio guidando.
@@ -144,7 +146,7 @@ Se lo provi su un'altra versione, le segnalazioni sono benvenute: con l'invio de
   guida a destra la home si specchia, con auto e clima dal lato del guidatore. Sulle auto che mostrano sempre la
   spia luci del sistema in alto a sinistra, quell'angolo resta libero.
 - **Impostazioni** (tieni premuta l'auto), divise in sezioni con un menu laterale: **Auto** (colore, tetto nero),
-  **Home** (decimali, pressione pneumatici, temperatura interna), **Aspetto** (tema, dimensione comandi, lingua),
+  **Home** (decimali, pressione pneumatici), **Aspetto** (tema, dimensione comandi, lingua),
   **Guida** (posizione di guida, home MG originale), **Sistema** (aggiornamenti, invio e salvataggio log, diagnostica).
   In fondo al menu sono sempre visibili la versione e, quando c'è, la nuova versione con **Installa**.
   Si aprono anche dall'ingranaggio in alto a destra nella pagina App.
@@ -175,7 +177,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.7.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.8.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +194,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.7.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.8.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -254,6 +256,18 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.8
+- **Gruppo Guida** nella barra (icona dell'auto tra le linee della corsia): LKA, One Pedal, **assistente di guida**
+  (Spento / ACC / TJA) e **sensibilità del pedale del freno** (Comfort / Medium / Sport) in un unico riquadro, solo i
+  comandi che l'auto ha. Assistente e pedale si cambiano solo ad auto ferma.
+- **Ricircolo a 3 stati** come l'app clima originale: Interno → Esterno → Auto, con l'icona che cambia.
+- **Temperatura interna tolta**: l'auto non la manda allo schermo (il valore "ambient" era la temperatura esterna).
+  Nelle impostazioni c'è la spiegazione.
+- **Pagina App**: con **Modifica** si possono nascondere anche le app dell'auto, non solo quelle installate.
+- **Tasto Home**: ora riporta sempre al launcher. Nel firmware la home MG ha la precedenza e Android la sceglieva
+  sempre, anche con il launcher come home predefinita (succedeva su quasi tutte le auto).
+- **Temperatura esterna**: niente più 0° falso quando l'auto non ha ancora il dato.
 
 #### 0.3.7
 - **Ventola su OFF**: l'auto non accetta la ventola a 0 e dopo un attimo la rimetteva a 1. Come nell'app originale,
@@ -514,7 +528,7 @@ it should work on **every version with the Color Radio**. Reports from other ver
 - **Car and battery** (left): large range and **clock**, battery bar with the percentage next to it and a
   charge-limit mark, outside temperature; the status shows only while charging or using V2L (type, power, time left).
   The settings turn on the **date** next to the time, the percentage with one decimal, the tyre pressure (TPMS) with a
-  choice of unit (as on the cluster, bar, kPa or psi), the inside temperature (if the car provides it) and the
+  choice of unit (as on the cluster, bar, kPa or psi) and the
   **charging buttons** (charge limit, AC current and start/stop charging or V2L, with confirmation). Your MG4, recolourable with the 8 factory colours, optional black roof.
   Tap the car or V2L → Energy app. Long-press the car → launcher settings.
 - **Map / Media / CarPlay** (right):
@@ -535,12 +549,12 @@ it should work on **every version with the Color Radio**. Reports from other ver
     4 signal bars (only when connected).
 - **Bottom bar**, with large controls for use while driving: temperature ‹ › (LO, 16…30, HI) and fan ‹ ›
   (OFF / 1…11 / A = auto; tap the number = Climate app, long-press = climate on/off), **A/C** and **AUTO** buttons
-  (on = inverted colours), **recirculation** (only if the car supports it), compact mini player, **rear fog light**
+  (on = inverted colours), 3-state **recirculation** (Inside / Outside / Auto, only if the car supports it), **Driving** group (LKA, One Pedal, assistant Off/ACC/TJA and brake pedal, only the controls the car has), compact mini player, **rear fog light**
   (amber when on; Automatic = hidden if the system bar already shows its indicator, or Show / Hide) and **front fog
   lights** (green, only if fitted), Phone, Radio, **360°** (cameras), Settings. With the **large bar** (option) the
   climate buttons are bigger and the mini player makes room (music stays in the Media panel).
 - **Apps**: swipe the home screen left for the car's apps and the ones you install; swipe right to go back.
-  Use **Modifica** (Edit) to choose which installed apps to show. At the end of the car's apps there are also
+  Use **Modifica** (Edit) to choose which apps to show, car apps included. At the end of the car's apps there are also
   **Android settings** and **Android files** (only if present on the car).
 - **Control size** (Normal / Large / Extra large): scales buttons, icons and button labels proportionally,
   for easier use while driving.
@@ -548,7 +562,7 @@ it should work on **every version with the Color Radio**. Reports from other ver
   drive the home screen is mirrored, with car and climate on the driver's side. On cars that always show the
   system light indicator at the top left, that corner is kept free.
 - **Settings** (long-press the car), split into sections with a side menu: **Car** (colour, black roof),
-  **Home** (decimals, tyre pressure, inside temperature), **Appearance** (theme, control size, language),
+  **Home** (decimals, tyre pressure), **Appearance** (theme, control size, language),
   **Driving** (driving side, original MG home), **System** (updates, log upload and saving, diagnostics).
   The version, and a new version with **Install** when available, are always shown at the bottom of the menu. Also available from the gear at the top right of the Apps page.
 - **Full screen**: status bar and MG dock hidden (swipe from the edge to bring them back).
@@ -577,7 +591,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.7.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.8.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -593,7 +607,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.7.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.8.apk
    ```
 2. Make it the default home:
    ```bash
@@ -636,6 +650,18 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.8
+- **Driving group** in the bar (car icon between the lane lines): LKA, One Pedal, **driving assistant** (Off / ACC / TJA)
+  and **brake pedal feel** (Comfort / Medium / Sport) in a single panel, only the controls the car has. Assistant and
+  pedal can only be changed with the car stopped.
+- **3-state recirculation** like the original climate app: Inside → Outside → Auto, with a changing icon.
+- **Inside temperature removed**: the car does not send it to the screen (the "ambient" value was the outside
+  temperature). The settings explain why.
+- **Apps page**: with **Modifica** (Edit) you can now hide the car apps too, not only the installed ones.
+- **Home button**: now always brings back the launcher. In the firmware the MG home takes precedence and Android always
+  picked it, even with the launcher set as default home (it happened on almost every car).
+- **Outside temperature**: no more false 0° when the car does not have the reading yet.
 
 #### 0.3.7
 - **Fan set to OFF**: the car doesn't accept the fan at 0 and put it back to 1 after a moment. Like the original app,
