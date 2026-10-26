@@ -2,7 +2,7 @@
 
 🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
 
-**Ultima versione / Latest version: [0.3.8](releases/MG4Launcher-SWI69-0.3.8.apk)**
+**Ultima versione / Latest version: [0.3.9](releases/MG4Launcher-SWI69-0.3.9.apk)**
 
 > 🌡️ **Nuovo: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — la schermata del clima in stile Tesla, per SWI68, SWI69, SWI132 e SWI133. Con MG4 Clima installato il tasto del clima del launcher apre direttamente quella.
 >
@@ -27,6 +27,7 @@
 > The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
 
 ---
+<img width="1920" alt="Home MG4 Launcher SWI69 0.3.9 – icona CarPlay / Android Auto nella barra (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.9.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – pulsante Guida nella barra (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – gruppo Guida aperto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-guida.png" />
 <img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – ricircolo su Auto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-ricircolo.png" />
@@ -177,7 +178,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.8.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.3.9.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -194,7 +195,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.8.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.9.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -256,6 +257,18 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 
 
 ### Versioni
+
+#### 0.3.9
+- **Avvio sicuro**: il launcher diventa la home del sistema e parte sempre all'accensione e col tasto Home. Si disattiva
+  solo la schermata principale della home MG (il resto dell'app MG resta attivo), che torna da sola con l'officina,
+  l'interruttore spento, "Disinstalla", l'apertura apposta della home MG o se il launcher si chiude 3 volte in 3
+  minuti. Si spegne in Impostazioni › Sistema.
+- **Avvio più affidabile**: la home MG aperta apposta non blocca più l'accensione successiva; se la home MG non
+  compare il launcher si apre lo stesso; se un'altra app gli toglie l'accessibilità se la rimette; avviso se è
+  installato un altro launcher.
+- **Loghi radio**: Australia e Sud America (pacchetti scaricabili), e il paese si può scrivere a mano (pulsante Codice).
+- **CarPlay / Android Auto**: si apre con un solo tocco e ha la sua icona nella barra finché il telefono è collegato.
+- **Impostazioni**: tolto lo spazio vuoto tra Riquadro auto e Barra in basso.
 
 #### 0.3.8
 - **Gruppo Guida** nella barra (icona dell'auto tra le linee della corsia): LKA, One Pedal, **assistente di guida**
@@ -591,7 +604,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.8.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.3.9.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -607,7 +620,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.8.apk
+   adb install -r -f MG4Launcher-SWI69-0.3.9.apk
    ```
 2. Make it the default home:
    ```bash
@@ -650,6 +663,18 @@ Settings → **Diagnostica servizi auto** shows the raw values read from each ca
 that does not work.
 
 ### Changelog
+
+#### 0.3.9
+- **Reliable start**: the launcher becomes the system home and always starts when the car turns on and with the Home
+  button. Only the main screen of the MG home is turned off (the rest of the MG app keeps working); it comes back by
+  itself with workshop mode, the switch turned off, "Uninstall", opening the MG home on purpose, or if the launcher
+  closes 3 times in 3 minutes. It can be turned off in Settings › System.
+- **More reliable start**: opening the MG home on purpose no longer blocks the next start; if the MG home doesn't
+  show up the launcher opens anyway; if another app removes its accessibility service it puts it back; warning if
+  another launcher is installed.
+- **Radio logos**: Australia and South America (downloadable packs), and the country can be typed by hand (Code button).
+- **CarPlay / Android Auto**: opens with a single tap and has its own icon in the bar while the phone is connected.
+- **Settings**: removed the blank space between Car panel and Bottom bar.
 
 #### 0.3.8
 - **Driving group** in the bar (car icon between the lane lines): LKA, One Pedal, **driving assistant** (Off / ACC / TJA)
