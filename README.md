@@ -1,15 +1,22 @@
 # MG4 Launcher — SWI69 Color Radio
 
-🇮🇹 [Italiano](#italiano) · 🇬🇧 [English](#english)
+<p align="center"><img src="screenshots/home.png" alt="Home di MG4 Launcher SWI69 Color Radio (simulazione) · MG4 Launcher SWI69 Color Radio home (mock-up)" width="100%"></p>
 
-**Ultima versione / Latest version: [0.3.11](releases/MG4Launcher-SWI69-0.3.11.apk)**
+<p align="center">
+<b>Launcher in stile Tesla per l'infotainment MG4 SWI69 Color Radio</b><br>
+<i>Tesla-style launcher for the MG4 SWI69 Color Radio infotainment</i>
+</p>
 
-> 🌡️ **Nuovo: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — la schermata del clima in stile Tesla, per SWI68, SWI69, SWI132 e SWI133. Con MG4 Clima installato il tasto del clima del launcher apre direttamente quella.
->
-> 🌡️ **New: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — the Tesla-style climate screen, for SWI68, SWI69, SWI132 and SWI133. With MG4 Clima installed the launcher's climate button opens it directly.
+<p align="center">
+<a href="releases/MG4Launcher-SWI69-0.3.11.apk"><img alt="Scarica / Download 0.3.11" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.3.11-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
+</p>
 
-
-<a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
+<p align="center">
+🇮🇹 <a href="#italiano">Italiano</a> · 🇬🇧 <a href="#english">English</a> ·
+<a href="#quale-versione-installare--which-version-should-i-install">Quale versione? / Which version?</a> ·
+<a href="#versioni">Novità</a> / <a href="#changelog">What's new</a>
+</p>
 
 > ⚠️ **Compatibilità / Compatibility:** solo infotainment **SWI69 Color Radio** · only **SWI69 Color Radio** infotainment.
 > Garantita al momento su **MG4 standard MY23 R45**; usando i dati della FICM originale dovrebbe funzionare su tutte
@@ -20,56 +27,32 @@
 > **SWI132 (MG4 MY24)** → [Mg4-Launcher-SWI132](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI132) ·
 > **SWI133 (MG4 Luxury MY24)** → [Mg4-Launcher-SWI133](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI133)
 
-> Progetto amatoriale e **non ufficiale**: non è affiliato né approvato da MG Motor o SAIC Motor.
-> I nomi MG / MG4 servono solo a indicare l'auto compatibile (infotainment SWI69). Installalo e usalo a tuo rischio.
+---
+
+## Schermate / Screenshots
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/guida.png" alt="Gruppo Guida: corsia, One Pedal, assistente, pedale del freno" width="100%"><br>
+<sub>Gruppo <b>Guida</b>: corsia, One Pedal, assistente, pedale del freno · <i><b>Driving</b> group: lane, One Pedal, assistant, brake pedal</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/clima-rapido.png" alt="Gruppo Clima: A/C, automatico, ricircolo" width="100%"><br>
+<sub>Gruppo <b>Clima</b>: A/C, automatico, ricircolo · <i><b>Climate</b> group: A/C, auto, recirculation</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/impostazioni.png" alt="Impostazioni: colore, cerchi e tetto dell'auto" width="100%"><br>
+<sub><b>Impostazioni</b>: colore, cerchi e tetto dell'auto · <i><b>Settings</b>: car colour, wheels and roof</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/mg4clima.png" alt="MG4 Clima aperto dal tasto del clima" width="100%"><br>
+<sub><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> aperto dal tasto del clima · <i><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> opened from the climate button</i></sub></td>
+</tr>
+</table>
+
+<sub>Simulazioni della grafica: valori, stazioni e loghi sono di esempio · Design mock-ups: values, stations and logos are examples.</sub>
+
+> 🌡️ **Nuovo: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — la schermata del clima in stile Tesla, per SWI68, SWI69, SWI132 e SWI133. Con MG4 Clima installato il tasto del clima del launcher apre direttamente quella.
 >
-> Hobby project, **not official**: not affiliated with or endorsed by MG Motor or SAIC Motor.
-> The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
+> 🌡️ **New: [MG4 Clima](https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4)** — the Tesla-style climate screen, for SWI68, SWI69, SWI132 and SWI133. With MG4 Clima installed the launcher's climate button opens it directly.
 
 ---
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.9 – icona CarPlay / Android Auto nella barra (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.9.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – pulsante Guida nella barra (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – gruppo Guida aperto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-guida.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.8 – ricircolo su Auto (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.8-ricircolo.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.4 – percentuale batteria in grande (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.4-percentuale.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.3 – temperatura e batteria più grandi (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.3.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.2 – gruppo Clima, LKA e OPD, loghi radio (simulazione)" src="screenshots/MG4Launcher-SWI69-0.3.2.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema notte" src="screenshots/MG4Launcher-SWI69-0.3.0-notte.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – tema giorno" src="screenshots/MG4Launcher-SWI69-0.3.0-giorno.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – pulsanti di ricarica e data" src="screenshots/MG4Launcher-SWI69-0.3.0-pulsanti-ricarica.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – barra grande" src="screenshots/MG4Launcher-SWI69-0.3.0-barra-grande.png" />
-<img width="1920" alt="Home MG4 Launcher SWI69 0.3.0 – guida a destra" src="screenshots/MG4Launcher-SWI69-0.3.0-guida-a-destra.png" />
-<img width="1920" alt="App MG4 Launcher SWI69 – tema notte" src="screenshots/MG4Launcher-SWI69-0.2.7-app-notte.png" />
-<img width="1920" alt="Impostazioni MG4 Launcher SWI69 0.3.0 – tema notte" src="screenshots/MG4Launcher-SWI69-0.3.0-impostazioni-notte.png" />
-<img width="1920" alt="Impostazioni MG4 Launcher SWI69 0.3.0 – tema giorno" src="screenshots/MG4Launcher-SWI69-0.3.0-impostazioni-giorno.png" />
-
-<sub>Anteprima della grafica 0.3.0 (home di notte e di giorno, con pulsanti di ricarica e data, barra grande, guida a destra; pagina App; impostazioni): i valori, le stazioni e i loghi sono di esempio · Preview of the 0.3.0 design (home at night and by day, with charging buttons and date, large bar, right-hand drive; Apps page; settings): values, stations and logos are examples.</sub>
-
----
-
-## Video recensione / Video review
-
-<a href="https://youtu.be/JKZ0N3Lr7FI"><img width="640" alt="Video recensione di MG4 Launcher su YouTube · MG4 Launcher video review on YouTube" src="https://img.youtube.com/vi/JKZ0N3Lr7FI/hqdefault.jpg" /></a>
-
-Guarda la [video recensione su YouTube](https://youtu.be/JKZ0N3Lr7FI) · Watch the [video review on YouTube](https://youtu.be/JKZ0N3Lr7FI).
-
----
-
-## Sostieni il progetto / Support the project
-
-MG4 Launcher è gratuito e lo resterà. Se ti è utile e ti va di contribuire alle ore passate a svilupparlo e a provarlo
-in auto, puoi lasciare un'offerta. È del tutto **volontaria** e **non c'è un importo minimo**: puoi donare quello che
-vuoi. Grazie anche solo per usarlo e per le segnalazioni.
-
-MG4 Launcher is free and will stay free. If you find it useful and would like to support the hours spent building and
-testing it in the car, you can leave a donation. It is entirely **voluntary** and **there is no minimum amount**: you
-can give whatever you like. Thank you just for using it and reporting issues.
-
-Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provare in auto le nuove versioni.
-
-Even just **€2** is a great help to keep developing and testing new versions in the car.
-
-<a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20il%20progetto-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 
 ## Quale versione installare? / Which version should I install?
 
@@ -96,6 +79,14 @@ use the matching repository above.
 
 ---
 
+## Video recensione / Video review
+
+<a href="https://youtu.be/JKZ0N3Lr7FI"><img width="640" alt="Video recensione di MG4 Launcher su YouTube · MG4 Launcher video review on YouTube" src="https://img.youtube.com/vi/JKZ0N3Lr7FI/hqdefault.jpg" /></a>
+
+Guarda la [video recensione su YouTube](https://youtu.be/JKZ0N3Lr7FI) · Watch the [video review on YouTube](https://youtu.be/JKZ0N3Lr7FI).
+
+---
+
 ## Italiano
 
 Launcher in stile Tesla per l'infotainment della **MG4** con software **SWI69 Color Radio**
@@ -109,6 +100,8 @@ Sostituisce la schermata home originale mantenendone le funzioni, con la stessa 
 (`SWI69-29958-1100R45`), dove il launcher è stato provato. Dato che usa gli stessi dati e servizi della **FICM**
 originale (l'unità dell'infotainment), dovrebbe funzionare su **tutte le versioni con la radio Color Radio**.
 Se lo provi su un'altra versione, le segnalazioni sono benvenute: con l'invio dei log attivo arrivano da sole.
+
+**Indice:** [Cosa fa](#cosa-fa) · [Installazione](#installazione) · [Aggiornamenti](#aggiornamenti) · [Tornare alla home MG originale](#tornare-alla-home-mg-originale) · [Comandi utili](#comandi-utili) · [Segnalare un problema](#segnalare-un-problema) · [Sostieni il progetto](#sostieni-il-progetto) · [Versioni](#versioni)
 
 ### Cosa fa
 
@@ -259,6 +252,15 @@ Con **Salva log** (in alto nella colonna Diagnostica) il launcher scrive un log 
 recenti e logcat del launcher — in `Android/data/com.mg4.launcher/files/mg4-launcher-log-….txt`.
 Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartella.
 
+### Sostieni il progetto
+
+MG4 Launcher è e resterà **gratuito**. Se ti è utile e ti va di contribuire alle ore passate a svilupparlo e provarlo
+in auto, puoi lasciare un'offerta: è del tutto **volontaria** e **non c'è un importo minimo**, puoi donare quello che
+vuoi. Anche una stella al repository o una segnalazione di un problema sono un aiuto prezioso. Grazie!
+
+Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provare in auto le nuove versioni.
+
+[![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
 
@@ -291,6 +293,9 @@ Se è inserita una chiavetta USB il file finisce anche lì, nella stessa cartell
 - **Loghi radio**: Australia e Sud America (pacchetti scaricabili), e il paese si può scrivere a mano (pulsante Codice).
 - **CarPlay / Android Auto**: si apre con un solo tocco e ha la sua icona nella barra finché il telefono è collegato.
 - **Impostazioni**: tolto lo spazio vuoto tra Riquadro auto e Barra in basso.
+
+<details>
+<summary><b>Versioni precedenti</b></summary>
 
 #### 0.3.8
 - **Gruppo Guida** nella barra (icona dell'auto tra le linee della corsia): LKA, One Pedal, **assistente di guida**
@@ -368,7 +373,6 @@ Stesse novità della versione SWI68 0.8.2 e 0.8.3, con i servizi della SWI69.
   più leggere (identiche), i loghi non sono più dentro l'app.
 
 #### 0.3.1
-
 **Correzioni**
 - **CarPlay / Android Auto**: indietro, play/pausa e avanti (pannello Media e mini-player) ora funzionano anche con gli
   adattatori CarPlay wireless (es. AutoKit). Come la home originale, il launcher manda sempre i tasti del servizio
@@ -379,7 +383,6 @@ Stesse novità della versione SWI68 0.8.2 e 0.8.3, con i servizi della SWI69.
 - Diagnostica: ogni tasto mandato con la risposta del servizio e lo stato di riproduzione di CarPlay.
 
 #### 0.3.0
-
 Nuova generazione: stessa grafica e stesse funzioni della versione SWI68 0.8.0, con i servizi della SWI69.
 
 **Novità**
@@ -523,13 +526,18 @@ Nuova generazione: stessa grafica e stesse funzioni della versione SWI68 0.8.0, 
 - Pulsante "MG" del navigatore solo se l'auto ha un navigatore MG.
 - Aggiornamenti solo da questo repository.
 
-### Compilare
+</details>
+
+<details>
+<summary><b>Per sviluppatori: compilare, come comunica con l'auto, note</b></summary>
+
+#### Compilare
 
 Il launcher si compila con lo script `build.sh` incluso, senza Gradle; alcuni strumenti Android necessari non sono
 nel repository e vanno aggiunti in `tools/`. La versione è in `version.properties`, i testi delle 7 lingue in
 `tools/strings.py`. Gli APK pubblicati sono nella cartella `releases/`.
 
-### Come comunica con l'auto
+#### Come comunica con l'auto
 
 Il launcher usa gli stessi servizi di sistema della home originale **SWI69 Color Radio**: veicolo e batteria, clima,
 luci, media, radio e CarPlay / Android Auto. Legge i dati e invia all'auto solo i comandi che tocchi tu (clima,
@@ -538,10 +546,12 @@ fendinebbia, sorgenti e brani); non modifica nulla del sistema.
 La mappa di CarPlay / Android Auto non può essere mostrata dentro il launcher:
 il pannello Mappa mostra le indicazioni del telefono e apre CarPlay / Android Auto a schermo intero.
 
-### Note
+#### Note
 
 - L'immagine dell'auto deriva da una foto ufficiale MG; marchi e immagini appartengono ai rispettivi proprietari.
 - I loghi delle stazioni FM vengono da [radio-browser.info](https://www.radio-browser.info), database pubblico e gratuito.
+
+</details>
 
 ---
 
@@ -557,6 +567,8 @@ It replaces the original home screen, keeping its features, with the same design
 **Car versions:** compatibility is currently **verified on the MG4 standard MY23 with R45 software**
 (`SWI69-29958-1100R45`). Since it uses the same data and services as the original **FICM** (the infotainment unit),
 it should work on **every version with the Color Radio**. Reports from other versions are welcome.
+
+**Contents:** [Features](#features) · [Installation](#installation) · [Updates](#updates) · [Going back to the original MG home](#going-back-to-the-original-mg-home) · [Useful commands](#useful-commands) · [Reporting a problem](#reporting-a-problem) · [Support the project](#support-the-project) · [Changelog](#changelog)
 
 ### Features
 
@@ -678,11 +690,35 @@ To remove the launcher completely, even without a computer (since 0.3.3): settin
 It restores the original MG home and removes the launcher from the car. From a computer: `adb uninstall com.mg4.launcher`.
 The original app is never modified.
 
+### Useful commands
+
+```bash
+# restart the launcher without switching the car off
+adb shell am force-stop com.mg4.launcher
+adb shell am start -n com.mg4.launcher/.MainActivity
+
+# watch the values read from the car (Ctrl+C to stop)
+adb logcat -s MG4L MG4L.Link
+
+# download the diagnostics saved by the launcher (refreshed every 15 s)
+adb pull /sdcard/Android/data/com.mg4.launcher/files/diagnostica.txt
+```
+
 ### Reporting a problem
 
 Settings → **Diagnostica servizi auto** shows the raw values read from each car service and recent errors;
 **Salva log** writes a full log to `Android/data/com.mg4.launcher/files/`: it is the quickest way to fix anything
 that does not work.
+
+### Support the project
+
+MG4 Launcher is and will stay **free**. If you find it useful and would like to contribute to the hours spent
+developing it and testing it in the car, you can leave a donation: it's completely **voluntary** and **there is no
+minimum amount**, you can give whatever you like. A star on the repository or a bug report help a lot too. Thank you!
+
+Even just **€2** is a great help to keep developing and testing new versions in the car.
+
+[![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
 
@@ -715,6 +751,9 @@ that does not work.
 - **Radio logos**: Australia and South America (downloadable packs), and the country can be typed by hand (Code button).
 - **CarPlay / Android Auto**: opens with a single tap and has its own icon in the bar while the phone is connected.
 - **Settings**: removed the blank space between Car panel and Bottom bar.
+
+<details>
+<summary><b>Older versions</b></summary>
 
 #### 0.3.8
 - **Driving group** in the bar (car icon between the lane lines): LKA, One Pedal, **driving assistant** (Off / ACC / TJA)
@@ -791,7 +830,6 @@ Same changes as the SWI68 versions 0.8.2 and 0.8.3, with the SWI69 services.
   logos no longer inside the app.
 
 #### 0.3.1
-
 **Fixes**
 - **CarPlay / Android Auto**: previous, play/pause and next (Media panel and mini player) now work with wireless
   CarPlay adapters too (e.g. AutoKit). Like the original home, the launcher always sends the CarPlay/Android Auto
@@ -802,7 +840,6 @@ Same changes as the SWI68 versions 0.8.2 and 0.8.3, with the SWI69 services.
 - Diagnostics: every key sent with the service's answer, and the CarPlay playback state.
 
 #### 0.3.0
-
 New generation: same design and features as the SWI68 version 0.8.0, with the SWI69 services.
 
 **New**
@@ -939,3 +976,38 @@ New generation: same design and features as the SWI68 version 0.8.0, with the SW
 - Car services rewritten for SWI69 (`caradapter` hub, CarService `bms` properties, standard Android media sessions).
 - Climate range **16–30 °C**; radio favourites kept by the launcher; V2L and the car open the Energy app;
   Cameras button like the original SWI69 home; MG navigator button only when present; updates only from this repository.
+
+</details>
+
+<details>
+<summary><b>For developers: building, how it talks to the car, notes</b></summary>
+
+#### Building
+
+The launcher is built with the included `build.sh` script, without Gradle; some required Android tools are not in
+the repository and must be added to `tools/`. The version is in `version.properties`, the texts of the 7 languages in
+`tools/strings.py`. The published APKs are in the `releases/` folder.
+
+#### How it talks to the car
+
+The launcher uses the same system services as the original **SWI69 Color Radio** home: vehicle and battery, climate,
+lights, media, radio and CarPlay / Android Auto. It reads the data and sends the car only the commands you touch
+(climate, fog lights, sources and tracks); it doesn't change anything in the system.
+
+The CarPlay / Android Auto map can't be shown inside the launcher:
+the Map panel shows the phone's directions and opens CarPlay / Android Auto full screen.
+
+#### Notes
+
+- The car image is derived from an official MG photo; trademarks and images belong to their respective owners.
+- FM station logos come from [radio-browser.info](https://www.radio-browser.info), a free public database.
+
+</details>
+
+---
+
+> Progetto amatoriale e **non ufficiale**: non è affiliato né approvato da MG Motor o SAIC Motor.
+> I nomi MG / MG4 servono solo a indicare l'auto compatibile (infotainment SWI69). Installalo e usalo a tuo rischio.
+>
+> Hobby project, **not official**: not affiliated with or endorsed by MG Motor or SAIC Motor.
+> The MG / MG4 names only identify the compatible car (SWI69 infotainment). Install and use it at your own risk.
