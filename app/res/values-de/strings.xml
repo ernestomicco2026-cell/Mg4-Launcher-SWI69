@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Andere App</string>
     <string name="cam360_hidden" formatted="false">Ausgeblendet</string>
     <string name="cam360_pick_app" formatted="false">Wähle die App</string>
+    <string name="news_v041_1" formatted="false">Ladesteckdose entsperren: nur wenn sie verriegelt ist; ist sie schon entriegelt, wird das angezeigt</string>
+    <string name="news_v041_2" formatted="false">Diagnose der System-Nebelschlussleuchten-Taste korrigiert</string>
     <string name="news_v040_1" formatted="false">Distanzeinheit in Meilen: Reichweite und Distanzen in km oder Meilen, oder automatisch wie das Kombiinstrument</string>
     <string name="news_v040_2" formatted="false">Die physische Home-Taste schließt jetzt alle offenen Popups im Launcher</string>
     <string name="news_v040_3" formatted="false">Neue Klimasymbole (ISO-Stil) in der Leiste und in den Klima-/Komfort-Popups, mit dem echten Umluft-Status</string>

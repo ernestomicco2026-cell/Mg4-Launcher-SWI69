@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Başka bir uygulama</string>
     <string name="cam360_hidden" formatted="false">Gizli</string>
     <string name="cam360_pick_app" formatted="false">Uygulamayı seç</string>
+    <string name="news_v041_1" formatted="false">Şarj soketi kilidini aç: yalnızca soket kilitliyse gönderilir; zaten açıksa bunu belirtir</string>
+    <string name="news_v041_2" formatted="false">Sistem sis farı düğmesinin tanılaması düzeltildi</string>
     <string name="news_v040_1" formatted="false">Mil cinsinden mesafe birimi: menzil ve mesafeler km veya mil olarak, veya gösterge paneli gibi otomatik</string>
     <string name="news_v040_2" formatted="false">Fiziksel Home tuşu artık başlatıcıda açık tüm popup\'ları kapatıyor</string>
     <string name="news_v040_3" formatted="false">Çubukta ve Klima/Konfor popuplarında yeni iklim simgeleri (ISO stili), gerçek sirkülasyon durumuyla</string>

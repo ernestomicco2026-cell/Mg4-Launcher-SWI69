@@ -345,6 +345,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Novità di ogni versione (testi in tutte le lingue in strings.xml). */
     private static int[] newsFor(String ver) {
         switch (ver) {
+            case "0.4.1":
+                return new int[]{R.string.news_v041_1, R.string.news_v041_2};
             case "0.4.0":
                 return new int[]{R.string.news_v040_1, R.string.news_v040_2, R.string.news_v040_3, R.string.news_v040_4};
             case "0.3.11":

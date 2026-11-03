@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Une autre application</string>
     <string name="cam360_hidden" formatted="false">Masqué</string>
     <string name="cam360_pick_app" formatted="false">Choisis l\'application</string>
+    <string name="news_v041_1" formatted="false">Déverrouiller la prise de recharge : seulement si elle est verrouillée ; si elle est déjà déverrouillée, c\'est indiqué</string>
+    <string name="news_v041_2" formatted="false">Diagnostic du bouton système du antibrouillard corrigé</string>
     <string name="news_v040_1" formatted="false">Unité de distance en miles : autonomie et distances en km ou en miles, ou automatique comme le combiné</string>
     <string name="news_v040_2" formatted="false">Le bouton Home physique ferme maintenant tous les popups ouverts sur le launcher</string>
     <string name="news_v040_3" formatted="false">Nouvelles icônes de climatisation (style ISO) dans la barre et les popups Climat/Confort, avec l\'état réel du recyclage</string>

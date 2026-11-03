@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Outra app</string>
     <string name="cam360_hidden" formatted="false">Oculto</string>
     <string name="cam360_pick_app" formatted="false">Escolhe a app</string>
+    <string name="news_v041_1" formatted="false">Desbloquear tomada de carregamento: só se a tomada estiver bloqueada; se já estiver desbloqueada, avisa</string>
+    <string name="news_v041_2" formatted="false">Corrigido o diagnóstico do botão de sistema do nevoeiro</string>
     <string name="news_v040_1" formatted="false">Unidade de distância em milhas: autonomia e distâncias em km ou milhas, ou automática como o quadro</string>
     <string name="news_v040_2" formatted="false">O botão Home físico fecha agora todos os popups abertos no launcher</string>
     <string name="news_v040_3" formatted="false">Novos ícones de clima (estilo ISO) na barra e nos popups Clima/Confort, com o estado real da recirculação</string>

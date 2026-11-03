@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.0.apk"><img alt="Scarica / Download 0.4.0" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.0-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.1.apk"><img alt="Scarica / Download 0.4.1" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.1-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -175,7 +175,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.0.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.1.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +192,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.0.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.1.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -263,6 +263,11 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.1
+- **Sblocca presa di ricarica**: come l'app originale, lo sblocco parte solo se la presa è bloccata; se è già sbloccata
+  il pulsante lo dice e non invia niente.
+- **Diagnostica**: corretta la riga del pulsante di sistema del fendinebbia.
 
 #### 0.4.0
 - **Sblocca presa di ricarica**: nuovo pulsante sempre visibile nella barra di ricarica (con conferma; mostra lo stato
@@ -662,7 +667,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.0.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.1.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -678,7 +683,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.0.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.1.apk
    ```
 2. Make it the default home:
    ```bash
@@ -745,6 +750,11 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.1
+- **Unlock charging socket**: like the original app, the unlock is only sent when the socket is locked; if it is already
+  unlocked the button says so and sends nothing.
+- **Diagnostics**: fixed the line about the system fog-light button.
 
 #### 0.4.0
 - **Unlock charging socket**: new always-visible button in the charging bar (with confirmation; shows

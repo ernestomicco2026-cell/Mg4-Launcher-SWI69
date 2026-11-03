@@ -221,6 +221,8 @@ PL = {
     "cb_unlock_wait": 'Samochód jeszcze nie przesłał stanu gniazda: spróbuj ponownie za chwilę.',
     "cb_unlock_locked": 'Zablokowane',
     "cb_unlock_unlocked": 'Odblokowane',
+    "news_v041_1": "Odblokuj gniazdo ładowania: wysyłane tylko gdy gniazdo jest zablokowane; jeśli już odblokowane, aplikacja to zgłasza",
+    "news_v041_2": "Poprawiono diagnostykę systemowego przycisku przeciwmgielnego",
     "cb_charge": "Ładowanie",
     "cb_v2l": "V2L (gniazdo zewnętrzne)",
     "cb_start": "Start",

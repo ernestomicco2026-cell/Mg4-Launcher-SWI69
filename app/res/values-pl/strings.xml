@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Inna aplikacja</string>
     <string name="cam360_hidden" formatted="false">Skryty</string>
     <string name="cam360_pick_app" formatted="false">Wybierz aplikację</string>
+    <string name="news_v041_1" formatted="false">Odblokuj gniazdo ładowania: wysyłane tylko gdy gniazdo jest zablokowane; jeśli już odblokowane, aplikacja to zgłasza</string>
+    <string name="news_v041_2" formatted="false">Poprawiono diagnostykę systemowego przycisku przeciwmgielnego</string>
     <string name="news_v040_1" formatted="false">Jednostka odległości w milach: zasięg i odległości w km lub milach, albo automatycznie jak w desce rozdzielczej</string>
     <string name="news_v040_2" formatted="false">Fizyczny przycisk Home zamyka teraz wszystkie otwarte wyskakujące okna w launcherze</string>
     <string name="news_v040_3" formatted="false">Nowe ikony klimatyzacji (styl ISO) na pasku i w wyskakujących oknach Klimatyzacja/Komfort, z rzeczywistym stanem recyrkulacji</string>

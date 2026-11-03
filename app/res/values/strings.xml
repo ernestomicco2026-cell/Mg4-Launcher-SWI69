@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Another app</string>
     <string name="cam360_hidden" formatted="false">Hidden</string>
     <string name="cam360_pick_app" formatted="false">Choose the app</string>
+    <string name="news_v041_1" formatted="false">Unlock charging socket: only sent if the socket is locked; if already unlocked it says so</string>
+    <string name="news_v041_2" formatted="false">Fixed the diagnostics of the system fog-light button</string>
     <string name="news_v040_1" formatted="false">Distance unit in miles: range and distances in km or miles, or automatic like the instrument cluster</string>
     <string name="news_v040_2" formatted="false">The physical Home button now closes every popup open on the launcher</string>
     <string name="news_v040_3" formatted="false">New climate icons (ISO style) in the bar and in the Climate/Comfort popups, with the real recirculation state</string>

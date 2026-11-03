@@ -423,6 +423,8 @@ S = {
     'cam360_pick_app': ("Scegli l'app", 'Choose the app', 'Elige la app', 'Wähle die App', 'Escolhe a app', "Choisis l'application", 'Uygulamayı seç'),
 
     # novità 0.4.0
+    'news_v041_1': ("Sblocca presa di ricarica: parte solo se la presa è bloccata; se è già sbloccata lo dice", "Unlock charging socket: only sent if the socket is locked; if already unlocked it says so", "Desbloquear toma de carga: solo se la toma está bloqueada; si ya está desbloqueada lo indica", "Ladesteckdose entsperren: nur wenn sie verriegelt ist; ist sie schon entriegelt, wird das angezeigt", "Desbloquear tomada de carregamento: só se a tomada estiver bloqueada; se já estiver desbloqueada, avisa", "Déverrouiller la prise de recharge : seulement si elle est verrouillée ; si elle est déjà déverrouillée, c'est indiqué", "Şarj soketi kilidini aç: yalnızca soket kilitliyse gönderilir; zaten açıksa bunu belirtir"),
+    'news_v041_2': ("Diagnostica del pulsante di sistema del fendinebbia corretta", "Fixed the diagnostics of the system fog-light button", "Corregido el diagnóstico del botón de sistema del antiniebla", "Diagnose der System-Nebelschlussleuchten-Taste korrigiert", "Corrigido o diagnóstico do botão de sistema do nevoeiro", "Diagnostic du bouton système du antibrouillard corrigé", "Sistem sis farı düğmesinin tanılaması düzeltildi"),
     'news_v040_1': ('Unità distanza in miglia: autonomia e distanze in km o miglia, oppure automatica come il quadro',
                      'Distance unit in miles: range and distances in km or miles, or automatic like the instrument cluster',
                      'Unidad de distancia en millas: autonomía y distancias en km o millas, o automática como el cuadro',

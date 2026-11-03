@@ -386,6 +386,8 @@
     <string name="cam360_app" formatted="false">Un\'altra app</string>
     <string name="cam360_hidden" formatted="false">Nascosto</string>
     <string name="cam360_pick_app" formatted="false">Scegli l\'app</string>
+    <string name="news_v041_1" formatted="false">Sblocca presa di ricarica: parte solo se la presa è bloccata; se è già sbloccata lo dice</string>
+    <string name="news_v041_2" formatted="false">Diagnostica del pulsante di sistema del fendinebbia corretta</string>
     <string name="news_v040_1" formatted="false">Unità distanza in miglia: autonomia e distanze in km o miglia, oppure automatica come il quadro</string>
     <string name="news_v040_2" formatted="false">Il tasto Home fisico chiude ora tutti i popup aperti sul launcher</string>
     <string name="news_v040_3" formatted="false">Nuove icone del clima (stile ISO) nella barra e nei popup Clima/Comfort, con stato del ricircolo reale</string>
