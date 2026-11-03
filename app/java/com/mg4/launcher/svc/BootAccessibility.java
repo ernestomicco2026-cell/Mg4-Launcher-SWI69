@@ -197,15 +197,91 @@ public final class BootAccessibility extends AccessibilityService {
         h.postDelayed(() -> StartGuard.lateCheck(this), 20000);
     }
 
+    // ---- 0.4.0 (punto 1): tasto Home touch del quadro di sistema -------------------------------
+    // Con l'avvio sicuro la home MG (com.saicmotor.launcher) è disabilitata: il quadro di sistema prova comunque a
+    // risolvere la sua activity per aprirla e, non trovandola, non fa nulla (nessun intent implicito, nessun
+    // broadcast da intercettare). Soluzione: intercettare il tocco sull'icona Home del quadro di sistema
+    // (com.android.systemui, id bt_home/iv_home) e premere Home al posto suo con performGlobalAction, SENZA
+    // riattivare la home MG. Si legge solo l'id della vista toccata, non il resto del contenuto della finestra.
+    private static final java.util.Set<String> SYSTEM_HOME_IDS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "bt_home", "iv_home"));
+
+    private void onSystemHomeTouch() {
+        String top = StartGuard.topPackage(this);
+        if (getPackageName().equals(top)) return;   // già davanti: non serve fare nulla
+        boolean ok = performGlobalAction(GLOBAL_ACTION_HOME);
+        Diag.put("home.tastoTouch", (top == null ? "sconosciuto" : top) + " · performGlobalAction(HOME) · "
+                + (ok ? "riuscito" : "non riuscito"));
+    }
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
-        if (e == null || e.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || e.getPackageName() == null) return;
+        if (e == null || e.getPackageName() == null) return;
         if (!started || !StartGuard.a11yConnected) return;   // firmware sbagliato o utente non ancora sbloccato
         String pkg = e.getPackageName().toString();
+
+        if (e.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            if (!"com.android.systemui".equals(pkg)) return;
+            android.view.accessibility.AccessibilityNodeInfo src = e.getSource();
+            if (src == null) return;
+            try {
+                String vid = src.getViewIdResourceName();   // es. "com.android.systemui:id/bt_home"
+                if (vid != null) {
+                    int sep = vid.indexOf(':');
+                    String name = sep >= 0 && vid.length() > sep + 4 ? vid.substring(sep + 4) : vid;   // dopo ":id/"
+                    if (SYSTEM_HOME_IDS.contains(name)) onSystemHomeTouch();
+                }
+            } finally {
+                src.recycle();
+            }
+            return;
+        }
+
+        if (e.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
         StartGuard.onForeground(this, pkg, e.getClassName() == null ? null : e.getClassName().toString(), true);
+        if (getPackageName().equals(pkg)) probeSystemButton();
         // il nostro launcher deve restare in primo piano 5 s: si ricontrolla senza aspettare un altro evento
         if (getPackageName().equals(pkg) && StartGuard.windowOpen()) {
             h.postDelayed(() -> StartGuard.onForeground(this, StartGuard.topPackage(this)), 5200);
+        }
+    }
+
+    private long lastProbe;
+
+    /**
+     * 0.4.0 (punto 12, SOLO verifica): registra nella diagnostica se la finestra di SystemUI (barra con i
+     * tasti di sistema e il fendinebbia posteriore) è presente e visibile mentre il launcher è in primo piano.
+     * Non nasconde né modifica nulla.
+     */
+    private void probeSystemButton() {
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now - lastProbe < 30_000L) return;
+        lastProbe = now;
+        try {
+            java.util.List<android.view.accessibility.AccessibilityWindowInfo> ws = getWindows();
+            StringBuilder sb = new StringBuilder("launcher in primo piano · finestre: ").append(ws == null ? 0 : ws.size());
+            int sys = 0;
+            if (ws != null) {
+                for (android.view.accessibility.AccessibilityWindowInfo w : ws) {
+                    android.view.accessibility.AccessibilityNodeInfo r = w.getRoot();
+                    if (r == null) continue;
+                    try {
+                        if (!"com.android.systemui".contentEquals(r.getPackageName() == null ? "" : r.getPackageName())) continue;
+                        sys++;
+                        android.graphics.Rect b = new android.graphics.Rect();
+                        w.getBoundsInScreen(b);
+                        boolean fog = !r.findAccessibilityNodeInfosByViewId("com.android.systemui:id/iv_rear_fog").isEmpty();
+                        sb.append(" | systemui tipo ").append(w.getType()).append(" layer ").append(w.getLayer())
+                                .append(" ").append(b.toShortString()).append(fog ? " · contiene iv_rear_fog" : "");
+                    } finally {
+                        r.recycle();
+                    }
+                }
+            }
+            sb.append(sys == 0 ? " | nessuna finestra SystemUI visibile" : "");
+            Diag.put("luci.pulsanteSistema", sb.toString());
+        } catch (Throwable t) {
+            Diag.error("luci.pulsanteSistema", t.toString());
         }
     }
 

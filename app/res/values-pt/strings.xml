@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Envio de registos desativado</string>
     <string name="log_upload_nokey" formatted="false">Envio de registos indisponível nesta versão</string>
     <string name="sec_car" formatted="false">Carro</string>
-    <string name="sec_car_sub" formatted="false">Cor, jantes, tejadilho</string>
+    <string name="sec_car_sub" formatted="false">Cor, jantes, tejadilho, lado de condução</string>
     <string name="sec_home" formatted="false">Início</string>
-    <string name="sec_home_sub" formatted="false">Bateria, pneus, temperaturas</string>
+    <string name="sec_home_sub" formatted="false">Data, bateria, distância, pneus</string>
+    <string name="sec_bar" formatted="false">Barra e botões</string>
+    <string name="sec_bar_sub" formatted="false">Barra, botões agrupados, botão 360</string>
+    <string name="sec_logos" formatted="false">Rádio e logótipos</string>
+    <string name="sec_logos_sub" formatted="false">País dos logótipos, pacotes</string>
     <string name="sec_look" formatted="false">Aspeto</string>
     <string name="sec_look_sub" formatted="false">Tema, tamanho, idioma</string>
-    <string name="sec_drive" formatted="false">Condução</string>
-    <string name="sec_drive_sub" formatted="false">Posição de condução, início MG</string>
+    <string name="sec_launch" formatted="false">Início e apps</string>
+    <string name="sec_launch_sub" formatted="false">Início seguro, apps originais, dongle</string>
     <string name="sec_system" formatted="false">Sistema</string>
     <string name="sec_system_sub" formatted="false">Atualizações, registos, diagnóstico</string>
     <string name="btn_back" formatted="false">Voltar</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Iniciar</string>
     <string name="cb_stop" formatted="false">Parar</string>
     <string name="cb_preparing" formatted="false">A preparar…</string>
+    <string name="cb_unlock" formatted="false">Desbloquear tomada</string>
+    <string name="cb_unlock_title" formatted="false">Desbloquear a tomada de carregamento?</string>
+    <string name="cb_unlock_msg" formatted="false">O comando vai para o carro como a partir do botão da página Gestão de carregamento.</string>
+    <string name="cb_unlock_wait" formatted="false">O carro ainda não enviou o estado da tomada: tenta novamente dentro de pouco.</string>
+    <string name="cb_unlock_locked" formatted="false">Bloqueada</string>
+    <string name="cb_unlock_unlocked" formatted="false">Desbloqueada</string>
     <string name="cb_unplugged" formatted="false">Não ligado</string>
     <string name="cb_limit_title" formatted="false">Limite de carga</string>
     <string name="cb_limit_msg" formatted="false">O carregamento para nesta percentagem. 100% só para viagens longas.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Definições: removido o espaço vazio entre Painel do carro e Barra inferior</string>
     <string name="newsh_7" formatted="false">Com o MG4 Clima aberto, o painel de clima do sistema fecha-se sozinho com o comando do sistema</string>
     <string name="set_apps_size" formatted="false">TAMANHO DAS APPS</string>
-    <string name="news_v0310_1" formatted="false">Tamanho próprio para o ecrã das apps: escolhe nas definições (ícones e texto maiores)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: o registo indica agora se o dongle reaparece após a reposição</string>
-    <string name="news_v0310_3" formatted="false">Certificados de segurança Sectigo/USERTrust adicionados</string>
     <string name="news_v098_1" formatted="false">Reinício do dongle: os telemóveis ligados por cabo (iPhone, Android Auto) já não são reiniciados, só os dongles sem fios verdadeiros</string>
     <string name="news_v098_2" formatted="false">Permissão da velocidade concedida automaticamente e novos certificados raiz Sectigo/USERTrust para logótipos, atualizações e registos</string>
     <string name="news_v098_3" formatted="false">Configuração inicial do Android reconhecida como início (não é o início MG); sem registos a partir de telemóveis e emuladores</string>
+    <string name="news_v0310_1" formatted="false">Tamanho próprio para o ecrã das apps: escolhe nas definições (ícones e texto maiores)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: o registo indica agora se o dongle reaparece após a reposição</string>
+    <string name="news_v0310_3" formatted="false">Certificados de segurança Sectigo/USERTrust adicionados</string>
+    <string name="tap_to_open" formatted="false">Toca para abrir</string>
+    <string name="set_dist_unit" formatted="false">Unidade de distância</string>
+    <string name="set_dist_unit_sub" formatted="false">Como mostrar a autonomia e as distâncias: automática (como o quadro), km ou milhas</string>
+    <string name="set_cam360" formatted="false">O botão 360 abre</string>
+    <string name="set_cam360_sub" formatted="false">O que acontece ao tocar no botão da câmara 360 na barra</string>
+    <string name="cam360_original" formatted="false">360 original</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Outra app</string>
+    <string name="cam360_hidden" formatted="false">Oculto</string>
+    <string name="cam360_pick_app" formatted="false">Escolhe a app</string>
+    <string name="news_v040_1" formatted="false">Unidade de distância em milhas: autonomia e distâncias em km ou milhas, ou automática como o quadro</string>
+    <string name="news_v040_2" formatted="false">O botão Home físico fecha agora todos os popups abertos no launcher</string>
+    <string name="news_v040_3" formatted="false">Novos ícones de clima (estilo ISO) na barra e nos popups Clima/Confort, com o estado real da recirculação</string>
+    <string name="news_v040_4" formatted="false">Definições reorganizadas em mais secções; botão 360 configurável (original, MG4 360, outra app ou oculto); botão Abrir do Android Auto/CarPlay maior</string>
 </resources>

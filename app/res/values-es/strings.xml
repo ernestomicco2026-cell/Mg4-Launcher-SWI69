@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Envío de registros desactivado</string>
     <string name="log_upload_nokey" formatted="false">Envío de registros no disponible en esta versión</string>
     <string name="sec_car" formatted="false">Coche</string>
-    <string name="sec_car_sub" formatted="false">Color, llantas, techo</string>
+    <string name="sec_car_sub" formatted="false">Color, llantas, techo, lado de conducción</string>
     <string name="sec_home" formatted="false">Inicio</string>
-    <string name="sec_home_sub" formatted="false">Batería, neumáticos, temperaturas</string>
+    <string name="sec_home_sub" formatted="false">Fecha, batería, distancia, neumáticos</string>
+    <string name="sec_bar" formatted="false">Barra y botones</string>
+    <string name="sec_bar_sub" formatted="false">Barra, botones agrupados, botón 360</string>
+    <string name="sec_logos" formatted="false">Radio y logotipos</string>
+    <string name="sec_logos_sub" formatted="false">País de los logotipos, paquetes</string>
     <string name="sec_look" formatted="false">Apariencia</string>
     <string name="sec_look_sub" formatted="false">Tema, tamaño, idioma</string>
-    <string name="sec_drive" formatted="false">Conducción</string>
-    <string name="sec_drive_sub" formatted="false">Posición de conducción, inicio MG</string>
+    <string name="sec_launch" formatted="false">Inicio y apps</string>
+    <string name="sec_launch_sub" formatted="false">Inicio seguro, apps originales, dongle</string>
     <string name="sec_system" formatted="false">Sistema</string>
     <string name="sec_system_sub" formatted="false">Actualizaciones, registros, diagnóstico</string>
     <string name="btn_back" formatted="false">Atrás</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Iniciar</string>
     <string name="cb_stop" formatted="false">Detener</string>
     <string name="cb_preparing" formatted="false">Preparando…</string>
+    <string name="cb_unlock" formatted="false">Desbloquear toma</string>
+    <string name="cb_unlock_title" formatted="false">¿Desbloquear la toma de carga?</string>
+    <string name="cb_unlock_msg" formatted="false">El comando se envía al coche como desde el botón de la página Gestión de carga.</string>
+    <string name="cb_unlock_wait" formatted="false">El coche todavía no ha enviado el estado de la toma: vuelve a intentarlo en breve.</string>
+    <string name="cb_unlock_locked" formatted="false">Bloqueada</string>
+    <string name="cb_unlock_unlocked" formatted="false">Desbloqueada</string>
     <string name="cb_unplugged" formatted="false">No conectado</string>
     <string name="cb_limit_title" formatted="false">Límite de carga</string>
     <string name="cb_limit_msg" formatted="false">La carga se detiene en este porcentaje. 100% solo para viajes largos.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Ajustes: eliminado el espacio vacío entre Panel del coche y Barra inferior</string>
     <string name="newsh_7" formatted="false">Con MG4 Clima abierto, el panel de clima del sistema se cierra solo con el comando del sistema</string>
     <string name="set_apps_size" formatted="false">TAMAÑO DE APPS</string>
-    <string name="news_v0310_1" formatted="false">Tamaño propio para la pantalla de apps: elígelo en ajustes (iconos y texto más grandes)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: el registro indica ahora si el dongle vuelve a aparecer tras el reinicio</string>
-    <string name="news_v0310_3" formatted="false">Añadidos los certificados de seguridad Sectigo/USERTrust</string>
     <string name="news_v098_1" formatted="false">Reinicio del dongle: los teléfonos conectados por cable (iPhone, Android Auto) ya no se reinician, solo los dongles inalámbricos reales</string>
     <string name="news_v098_2" formatted="false">Permiso de velocidad concedido automáticamente y nuevos certificados raíz Sectigo/USERTrust para logos, actualizaciones y registros</string>
     <string name="news_v098_3" formatted="false">Reconocida como inicio la configuración inicial de Android (no es el inicio MG); sin registros desde teléfonos y emuladores</string>
+    <string name="news_v0310_1" formatted="false">Tamaño propio para la pantalla de apps: elígelo en ajustes (iconos y texto más grandes)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: el registro indica ahora si el dongle vuelve a aparecer tras el reinicio</string>
+    <string name="news_v0310_3" formatted="false">Añadidos los certificados de seguridad Sectigo/USERTrust</string>
+    <string name="tap_to_open" formatted="false">Toca para abrir</string>
+    <string name="set_dist_unit" formatted="false">Unidad de distancia</string>
+    <string name="set_dist_unit_sub" formatted="false">Cómo mostrar la autonomía y las distancias: automática (como el cuadro), km o millas</string>
+    <string name="set_cam360" formatted="false">El botón 360 abre</string>
+    <string name="set_cam360_sub" formatted="false">Qué ocurre al tocar el botón de la cámara 360 en la barra</string>
+    <string name="cam360_original" formatted="false">360 original</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Otra app</string>
+    <string name="cam360_hidden" formatted="false">Oculto</string>
+    <string name="cam360_pick_app" formatted="false">Elige la app</string>
+    <string name="news_v040_1" formatted="false">Unidad de distancia en millas: autonomía y distancias en km o millas, o automática como el cuadro</string>
+    <string name="news_v040_2" formatted="false">El botón Home físico ahora cierra todos los popups abiertos en el launcher</string>
+    <string name="news_v040_3" formatted="false">Nuevos iconos de clima (estilo ISO) en la barra y en los popups Clima/Confort, con el estado real de recirculación</string>
+    <string name="news_v040_4" formatted="false">Ajustes reorganizados en más secciones; botón 360 configurable (original, MG4 360, otra app u oculto); botón Abrir de Android Auto/CarPlay más grande</string>
 </resources>

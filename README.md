@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.3.11.apk"><img alt="Scarica / Download 0.3.11" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.3.11-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.0.apk"><img alt="Scarica / Download 0.4.0" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.0-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -175,7 +175,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.3.11.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.0.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +192,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.11.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.0.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -263,6 +263,30 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.0
+- **Sblocca presa di ricarica**: nuovo pulsante sempre visibile nella barra di ricarica (con conferma; mostra lo stato
+  Bloccata/Sbloccata e, se l'auto non l'ha ancora comunicato, spiega il motivo).
+- **Tasto Home dell'auto (da verificare in auto)**: il tasto Home toccato dalle impostazioni dell'auto riporta alla home.
+- **Unità di distanza**: nuova opzione "Unità distanza" (Automatica/km/miglia); con l'auto in miglia, autonomia e
+  distanze si convertono automaticamente.
+- **Tasto Home**: con il launcher in primo piano chiude ora tutti i popup aperti (Clima, Comfort, app, impostazioni...).
+- **Tema giorno/notte**: il cambio automatico segue il segnale dell'auto; se avviene mentre il launcher non è in
+  primo piano, viene recuperato al ritorno.
+- **Loghi radio (RDS/DAB)**: nuovo ordine di scelta: RDS/DAB → lingua e regione d'accordo → fuso orario → regione
+  da sola (poi lingua, poi IT); la scelta manuale resta sempre prioritaria.
+- **Android Auto/CarPlay**: pulsante "Apri" molto più grande, e tutto il riquadro è ora toccabile per avviare la
+  proiezione.
+- **Tasto 360**: nuova opzione nelle impostazioni per scegliere cosa apre il tasto della telecamera 360 (originale,
+  MG4 360 se installata, un'altra app a scelta, oppure nascosto se l'auto non ha il 360).
+- **Senza internet**: pausa crescente tra i tentativi (loghi, aggiornamenti, invio log) con un'unica riga di
+  diagnostica "offline"; meno scritture ripetute nel log quando la home risulta la prima configurazione di Android.
+- **Icone del clima**: nuove icone in stile ISO nella barra e nei popup Clima/Comfort (icona del ricircolo con lo
+  stato reale: interno/automatico/esterno), stato riconoscibile a colpo d'occhio, misure aggiornate per barra
+  normale e grande, giorno e notte.
+- **Impostazioni**: riorganizzate in più sezioni (come nella versione SWI68): Auto, Casa, Barra e pulsanti, Loghi,
+  Aspetto, Avvio e app, Sistema. Le impostazioni già salvate non vengono perse; le voci non disponibili su questa
+  auto si nascondono da sole.
 
 #### 0.3.11
 - **Riavvio del dongle CarPlay/AA**: non resetta più i telefoni collegati col cavo (iPhone, Android Auto). Interviene
@@ -638,7 +662,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.3.11.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.0.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -654,7 +678,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.3.11.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.0.apk
    ```
 2. Make it the default home:
    ```bash
@@ -721,6 +745,30 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.0
+- **Unlock charging socket**: new always-visible button in the charging bar (with confirmation; shows
+  Locked/Unlocked and explains why if the car hasn't reported the state yet).
+- **Car Home button (to verify in the car)**: the Home button touched from the car's settings returns to the home.
+- **Distance unit**: new "Distance unit" option (Automatic/km/miles); with the car set to miles, range and
+  distances are converted automatically.
+- **Home button**: with the launcher in the foreground it now closes every open popup (Climate, Comfort, apps,
+  settings...).
+- **Day/night theme**: the automatic switch follows the car's own signal; if it happens while the launcher isn't in
+  the foreground, it's picked up again on return.
+- **Radio logos (RDS/DAB)**: new choice order: RDS/DAB → language and region in agreement → timezone → region
+  alone (then language, then IT); a manual choice always stays on top.
+- **Android Auto/CarPlay**: much bigger "Open" button, and the whole card is now touchable to start the
+  projection.
+- **360 button**: new setting to choose what the 360-camera button opens (original, MG4 360 if installed, another
+  chosen app, or hidden if the car has no 360 camera).
+- **Offline**: a growing pause between retries (logos, updates, log upload) with a single "offline" diagnostic
+  line; fewer repeated log entries when the home resolves to Android's first-time setup.
+- **Climate icons**: new ISO-style icons in the bar and in the Climate/Comfort popups (recirculation icon with the
+  real state: internal/automatic/external), status recognizable at a glance, measurements updated for the normal
+  and big bar, day and night.
+- **Settings**: reorganized into more sections (as in the SWI68 version): Car, Home, Bar and buttons, Logos, Look,
+  Launch and apps, System. Saved settings are not lost; items unavailable on this car hide themselves.
 
 #### 0.3.11
 - **CarPlay/AA dongle restart**: phones connected with a cable (iPhone, Android Auto) are no longer reset. It only acts

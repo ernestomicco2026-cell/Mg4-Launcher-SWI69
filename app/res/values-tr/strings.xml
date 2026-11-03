@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Günlük gönderimi kapalı</string>
     <string name="log_upload_nokey" formatted="false">Bu sürümde günlük gönderimi yok</string>
     <string name="sec_car" formatted="false">Araç</string>
-    <string name="sec_car_sub" formatted="false">Renk, jantlar, tavan</string>
+    <string name="sec_car_sub" formatted="false">Renk, jantlar, tavan, sürüş yönü</string>
     <string name="sec_home" formatted="false">Ana ekran</string>
-    <string name="sec_home_sub" formatted="false">Batarya, lastikler, sıcaklıklar</string>
+    <string name="sec_home_sub" formatted="false">Tarih, batarya, mesafe, lastikler</string>
+    <string name="sec_bar" formatted="false">Çubuk ve düğmeler</string>
+    <string name="sec_bar_sub" formatted="false">Çubuk, gruplu düğmeler, 360 düğmesi</string>
+    <string name="sec_logos" formatted="false">Radyo ve logolar</string>
+    <string name="sec_logos_sub" formatted="false">Logo ülkesi, paketler</string>
     <string name="sec_look" formatted="false">Görünüm</string>
     <string name="sec_look_sub" formatted="false">Tema, boyut, dil</string>
-    <string name="sec_drive" formatted="false">Sürüş</string>
-    <string name="sec_drive_sub" formatted="false">Direksiyon konumu, MG ana ekranı</string>
+    <string name="sec_launch" formatted="false">Başlangıç ve uygulamalar</string>
+    <string name="sec_launch_sub" formatted="false">Güvenli başlangıç, orijinal uygulamalar, dongle</string>
     <string name="sec_system" formatted="false">Sistem</string>
     <string name="sec_system_sub" formatted="false">Güncellemeler, günlükler, tanılama</string>
     <string name="btn_back" formatted="false">Geri</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Başlat</string>
     <string name="cb_stop" formatted="false">Durdur</string>
     <string name="cb_preparing" formatted="false">Hazırlanıyor…</string>
+    <string name="cb_unlock" formatted="false">Soketi kilidini aç</string>
+    <string name="cb_unlock_title" formatted="false">Şarj soketinin kilidi açılsın mı?</string>
+    <string name="cb_unlock_msg" formatted="false">Komut, Şarj yönetimi sayfasındaki düğme gibi araca gönderilir.</string>
+    <string name="cb_unlock_wait" formatted="false">Araç henüz soket durumunu göndermedi: kısa süre sonra tekrar dene.</string>
+    <string name="cb_unlock_locked" formatted="false">Kilitli</string>
+    <string name="cb_unlock_unlocked" formatted="false">Kilidi açık</string>
     <string name="cb_unplugged" formatted="false">Takılı değil</string>
     <string name="cb_limit_title" formatted="false">Şarj sınırı</string>
     <string name="cb_limit_msg" formatted="false">Şarj bu yüzdede durur. %100 yalnızca uzun yolculuklar için.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Ayarlar: Araç paneli ile Alt çubuk arasındaki boşluk kaldırıldı</string>
     <string name="newsh_7" formatted="false">MG4 Clima açıkken sistem klima paneli sistemin kendi komutuyla kendiliğinden kapanır</string>
     <string name="set_apps_size" formatted="false">UYGULAMA BOYUTU</string>
-    <string name="news_v0310_1" formatted="false">Uygulama ekranı için ayrı boyut: ayarlardan seçilir (daha büyük simge ve metin)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: günlük artık sıfırlamadan sonra dongle\'ın tekrar görünüp görünmediğini kaydeder</string>
-    <string name="news_v0310_3" formatted="false">Sectigo/USERTrust güvenlik sertifikaları eklendi</string>
     <string name="news_v098_1" formatted="false">Dongle yeniden başlatma: kabloyla bağlı telefonlar (iPhone, Android Auto) artık sıfırlanmaz, yalnızca gerçek kablosuz dongle\'lar</string>
     <string name="news_v098_2" formatted="false">Hız izni otomatik olarak verilir; logolar, güncellemeler ve günlükler için yeni Sectigo/USERTrust kök sertifikaları</string>
     <string name="news_v098_3" formatted="false">Android ilk kurulumu ana ekran olarak tanınır (MG ana ekranı değildir); telefonlardan ve emülatörlerden günlük gönderilmez</string>
+    <string name="news_v0310_1" formatted="false">Uygulama ekranı için ayrı boyut: ayarlardan seçilir (daha büyük simge ve metin)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: günlük artık sıfırlamadan sonra dongle\'ın tekrar görünüp görünmediğini kaydeder</string>
+    <string name="news_v0310_3" formatted="false">Sectigo/USERTrust güvenlik sertifikaları eklendi</string>
+    <string name="tap_to_open" formatted="false">Açmak için dokun</string>
+    <string name="set_dist_unit" formatted="false">Mesafe birimi</string>
+    <string name="set_dist_unit_sub" formatted="false">Menzil ve mesafelerin nasıl gösterileceği: otomatik (gösterge paneli gibi), km veya mil</string>
+    <string name="set_cam360" formatted="false">360 düğmesi şunu açar</string>
+    <string name="set_cam360_sub" formatted="false">Çubuktaki 360 kamera düğmesine dokunulduğunda ne olur</string>
+    <string name="cam360_original" formatted="false">Orijinal 360</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Başka bir uygulama</string>
+    <string name="cam360_hidden" formatted="false">Gizli</string>
+    <string name="cam360_pick_app" formatted="false">Uygulamayı seç</string>
+    <string name="news_v040_1" formatted="false">Mil cinsinden mesafe birimi: menzil ve mesafeler km veya mil olarak, veya gösterge paneli gibi otomatik</string>
+    <string name="news_v040_2" formatted="false">Fiziksel Home tuşu artık başlatıcıda açık tüm popup\'ları kapatıyor</string>
+    <string name="news_v040_3" formatted="false">Çubukta ve Klima/Konfor popuplarında yeni iklim simgeleri (ISO stili), gerçek sirkülasyon durumuyla</string>
+    <string name="news_v040_4" formatted="false">Ayarlar daha fazla bölüme yeniden düzenlendi; yapılandırılabilir 360 düğmesi (orijinal, MG4 360, başka bir uygulama veya gizli); daha büyük Android Auto/CarPlay Aç düğmesi</string>
 </resources>

@@ -24,6 +24,7 @@ public final class CarBms {
     public static final int PACK_VOL = 560002054;           // float, V
     public static final int PACK_CRNT = 560002055;          // float, A
     public static final int ESTD_ELEC_RNG = 557904918;      // int, km
+    public static final int CHRG_LOCK = 557904915;          // int, blocco presa: 1 bloccata, 2 sbloccata (comando: 2)
     public static final int CHRG_STS = 557904905;           // int, stato ricarica BMS
 
     private final Context ctx;

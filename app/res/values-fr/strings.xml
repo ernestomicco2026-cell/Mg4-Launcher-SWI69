@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Envoi des journaux désactivé</string>
     <string name="log_upload_nokey" formatted="false">Envoi des journaux indisponible dans cette version</string>
     <string name="sec_car" formatted="false">Voiture</string>
-    <string name="sec_car_sub" formatted="false">Couleur, jantes, toit</string>
+    <string name="sec_car_sub" formatted="false">Couleur, jantes, toit, côté de conduite</string>
     <string name="sec_home" formatted="false">Accueil</string>
-    <string name="sec_home_sub" formatted="false">Batterie, pneus, températures</string>
+    <string name="sec_home_sub" formatted="false">Date, batterie, distance, pneus</string>
+    <string name="sec_bar" formatted="false">Barre et boutons</string>
+    <string name="sec_bar_sub" formatted="false">Barre, boutons groupés, bouton 360</string>
+    <string name="sec_logos" formatted="false">Radio et logos</string>
+    <string name="sec_logos_sub" formatted="false">Pays des logos, paquets</string>
     <string name="sec_look" formatted="false">Apparence</string>
     <string name="sec_look_sub" formatted="false">Thème, taille, langue</string>
-    <string name="sec_drive" formatted="false">Conduite</string>
-    <string name="sec_drive_sub" formatted="false">Position de conduite, accueil MG</string>
+    <string name="sec_launch" formatted="false">Démarrage et applis</string>
+    <string name="sec_launch_sub" formatted="false">Démarrage sécurisé, applis d\'origine, dongle</string>
     <string name="sec_system" formatted="false">Système</string>
     <string name="sec_system_sub" formatted="false">Mises à jour, journaux, diagnostic</string>
     <string name="btn_back" formatted="false">Retour</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Démarrer</string>
     <string name="cb_stop" formatted="false">Arrêter</string>
     <string name="cb_preparing" formatted="false">En préparation…</string>
+    <string name="cb_unlock" formatted="false">Déverrouiller la prise</string>
+    <string name="cb_unlock_title" formatted="false">Déverrouiller la prise de recharge ?</string>
+    <string name="cb_unlock_msg" formatted="false">La commande est envoyée à la voiture comme depuis le bouton de la page Gestion de la recharge.</string>
+    <string name="cb_unlock_wait" formatted="false">La voiture n\'a pas encore envoyé l\'état de la prise : réessaie dans un instant.</string>
+    <string name="cb_unlock_locked" formatted="false">Verrouillée</string>
+    <string name="cb_unlock_unlocked" formatted="false">Déverrouillée</string>
     <string name="cb_unplugged" formatted="false">Non branchée</string>
     <string name="cb_limit_title" formatted="false">Limite de charge</string>
     <string name="cb_limit_msg" formatted="false">La charge s\'arrête à ce pourcentage. 100 % seulement pour les longs trajets.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Réglages : supprimé l\'espace vide entre Panneau véhicule et Barre du bas</string>
     <string name="newsh_7" formatted="false">Avec MG4 Clima ouvert, le panneau climat du système se ferme tout seul avec la commande du système</string>
     <string name="set_apps_size" formatted="false">TAILLE DES APPS</string>
-    <string name="news_v0310_1" formatted="false">Taille séparée pour l\'écran des applis : à régler dans les réglages (icônes et texte plus grands)</string>
-    <string name="news_v0310_2" formatted="false">Dongle : le journal indique maintenant si le dongle réapparaît après la réinitialisation</string>
-    <string name="news_v0310_3" formatted="false">Certificats de sécurité Sectigo/USERTrust ajoutés</string>
     <string name="news_v098_1" formatted="false">Redémarrage du dongle : les téléphones branchés par câble (iPhone, Android Auto) ne sont plus réinitialisés, seulement les vrais dongles sans fil</string>
     <string name="news_v098_2" formatted="false">Autorisation de vitesse accordée automatiquement et nouveaux certificats racine Sectigo/USERTrust pour logos, mises à jour et journaux</string>
     <string name="news_v098_3" formatted="false">Configuration initiale d\'Android reconnue comme accueil (ce n\'est pas l\'accueil MG) ; aucun journal depuis les téléphones et émulateurs</string>
+    <string name="news_v0310_1" formatted="false">Taille séparée pour l\'écran des applis : à régler dans les réglages (icônes et texte plus grands)</string>
+    <string name="news_v0310_2" formatted="false">Dongle : le journal indique maintenant si le dongle réapparaît après la réinitialisation</string>
+    <string name="news_v0310_3" formatted="false">Certificats de sécurité Sectigo/USERTrust ajoutés</string>
+    <string name="tap_to_open" formatted="false">Touchez pour ouvrir</string>
+    <string name="set_dist_unit" formatted="false">Unité de distance</string>
+    <string name="set_dist_unit_sub" formatted="false">Comment afficher l\'autonomie et les distances : automatique (comme le combiné), km ou miles</string>
+    <string name="set_cam360" formatted="false">Le bouton 360 ouvre</string>
+    <string name="set_cam360_sub" formatted="false">Ce qui se passe en touchant le bouton caméra 360 dans la barre</string>
+    <string name="cam360_original" formatted="false">360 d\'origine</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Une autre application</string>
+    <string name="cam360_hidden" formatted="false">Masqué</string>
+    <string name="cam360_pick_app" formatted="false">Choisis l\'application</string>
+    <string name="news_v040_1" formatted="false">Unité de distance en miles : autonomie et distances en km ou en miles, ou automatique comme le combiné</string>
+    <string name="news_v040_2" formatted="false">Le bouton Home physique ferme maintenant tous les popups ouverts sur le launcher</string>
+    <string name="news_v040_3" formatted="false">Nouvelles icônes de climatisation (style ISO) dans la barre et les popups Climat/Confort, avec l\'état réel du recyclage</string>
+    <string name="news_v040_4" formatted="false">Réglages réorganisés en davantage de sections ; bouton 360 configurable (d\'origine, MG4 360, une autre appli ou masqué) ; bouton Ouvrir d\'Android Auto/CarPlay plus grand</string>
 </resources>

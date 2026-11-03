@@ -44,17 +44,21 @@ public final class SettingsView extends FrameLayout {
 
         /** La lingua è cambiata: ricostruire tutta l'interfaccia. */
         void languageChanged();
+
+        /** Elenco delle app installate (escluso noi), per scegliere "un'altra app" per il tasto 360. */
+        java.util.List<com.mg4.launcher.apps.AppCatalog.App> allLaunchableApps();
     }
 
-    public static final int SEC_CAR = 0, SEC_HOME = 1, SEC_LOOK = 2, SEC_DRIVE = 3, SEC_SYSTEM = 4;
+    // 0.4.0 (punto 11): impostazioni riorganizzate come nella SWI68 - stesse 7 sezioni, ordine e testi
+    public static final int SEC_CAR = 0, SEC_HOME = 1, SEC_BAR = 2, SEC_LOGOS = 3, SEC_LOOK = 4, SEC_LAUNCH = 5, SEC_SYSTEM = 6;
 
     /** Sezione da mostrare alla prossima apertura (es. Sistema dal popup degli aggiornamenti). */
     public static void openAt(int s) {
         section = s;
     }
-    private static final int[] SEC_ICON = {R.drawable.ic_car, R.drawable.ic_home, R.drawable.ic_palette, R.drawable.ic_steering, R.drawable.ic_gear};
-    private static final int[] SEC_NAME = {R.string.sec_car, R.string.sec_home, R.string.sec_look, R.string.sec_drive, R.string.sec_system};
-    private static final int[] SEC_SUB = {R.string.sec_car_sub, R.string.sec_home_sub, R.string.sec_look_sub, R.string.sec_drive_sub, R.string.sec_system_sub};
+    private static final int[] SEC_ICON = {R.drawable.ic_car, R.drawable.ic_home, R.drawable.ic_buttons, R.drawable.ic_radio, R.drawable.ic_palette, R.drawable.ic_play, R.drawable.ic_gear};
+    private static final int[] SEC_NAME = {R.string.sec_car, R.string.sec_home, R.string.sec_bar, R.string.sec_logos, R.string.sec_look, R.string.sec_launch, R.string.sec_system};
+    private static final int[] SEC_SUB = {R.string.sec_car_sub, R.string.sec_home_sub, R.string.sec_bar_sub, R.string.sec_logos_sub, R.string.sec_look_sub, R.string.sec_launch_sub, R.string.sec_system_sub};
     /** Spazio in alto a sinistra per la spia luci del sistema (come nella home). */
     private static final int SYSTEM_LIGHT_INSET = 64;
     private static final long QUIET_CHECK_MS = 30 * 60_000L;
@@ -109,9 +113,14 @@ public final class SettingsView extends FrameLayout {
         TextView title = Ui.text(c, L.s(R.string.set_menu_title), 32, t.text, Ui.MEDIUM);
         title.setPadding(dp(12) + (sysIndicator && !rhd ? dp(SYSTEM_LIGHT_INSET) : 0), 0, dp(12), dp(26));
         menu.addView(title);
+        // 0.4.0 (7 sezioni): il menu va in ScrollView, altrimenti su schermi/sezioni numerose Sistema e il
+        // riquadro aggiornamenti finiscono fuori schermo (bug della SWI68 1.0.0, corretto nella 1.0.1).
+        ScrollView menuScroll = new ScrollView(c);
+        menuScroll.setVerticalScrollBarEnabled(false);
+        menuScroll.setOverScrollMode(OVER_SCROLL_NEVER);
         menuItems = Ui.column(c);
-        menu.addView(menuItems);
-        menu.addView(new View(c), Ui.lpWeight(-1, 0, 1));
+        menuScroll.addView(menuItems, new FrameLayout.LayoutParams(-1, -2));
+        menu.addView(menuScroll, Ui.lpWeight(-1, 0, 1));
         footer = new FrameLayout(c);
         menu.addView(footer, new LinearLayout.LayoutParams(-1, -2));
 
@@ -190,7 +199,7 @@ public final class SettingsView extends FrameLayout {
             r.addView(tx, Ui.margins(Ui.lpWeight(0, -2, 1), dp(18), 0, 0, 0));
             item.addView(r, new LayoutParams(-1, -1));
             item.setContentDescription(L.s(SEC_NAME[i]));
-            menuItems.addView(item, Ui.margins(new LinearLayout.LayoutParams(-1, dp(92)), 0, 0, 0, dp(8)));
+            menuItems.addView(item, Ui.margins(new LinearLayout.LayoutParams(-1, dp(76)), 0, 0, 0, dp(8)));
         }
     }
 
@@ -291,8 +300,10 @@ public final class SettingsView extends FrameLayout {
         switch (s) {
             case SEC_CAR: buildCar(c, col); break;
             case SEC_HOME: buildHome(c, col); break;
+            case SEC_BAR: buildBar(c, col); break;
+            case SEC_LOGOS: buildLogos(c, col); break;
             case SEC_LOOK: buildLook(c, col); break;
-            case SEC_DRIVE: buildDrive(c, col); break;
+            case SEC_LAUNCH: buildLaunch(c, col); break;
             default: buildSystem(c, col); break;
         }
         refreshTick.run();
@@ -345,6 +356,24 @@ public final class SettingsView extends FrameLayout {
         lp.gravity = rhd ? Gravity.LEFT : Gravity.RIGHT;
         lp.topMargin = dp(10);
         col.addView(car, lp);
+
+        // 0.4.0 (punto 11): lato guida, spostato qui da "Avvio e app"
+        col.addView(label(c, L.s(R.string.set_drive_side)), top(30));
+        boolean carRight2 = CarFeatures.isRightHandDrive(c);
+        String[][] sides = {
+                {Prefs.DRIVE_AUTO, L.s(R.string.drive_auto) + " · " + L.s(carRight2 ? R.string.drive_right : R.string.drive_left)},
+                {Prefs.DRIVE_LEFT, L.s(R.string.drive_left)},
+                {Prefs.DRIVE_RIGHT, L.s(R.string.drive_right)}};
+        Flow fd = new Flow(c);
+        for (String[] m : sides) {
+            fd.addView(choice(c, m[1], m[0].equals(prefs.driveSide()), v -> {
+                if (m[0].equals(prefs.driveSide())) return;
+                prefs.setDriveSide(m[0]);
+                host.settingsChanged(true);   // ricostruisce la home (e le impostazioni) nella nuova disposizione
+            }));
+        }
+        col.addView(fd, topFull(14));
+        col.addView(Ui.text(c, L.s(R.string.drive_hint), 17, t.sub, Ui.REGULAR), top(14));
     }
 
     private void buildHome(Context c, LinearLayout col) {
@@ -365,6 +394,16 @@ public final class SettingsView extends FrameLayout {
                     prefs.setSocBig(on);
                     host.settingsChanged(true);
                 }), false));
+        // 0.4.0 (punto 2): unità distanza (autonomia e distanze)
+        String[] distVals = {Prefs.DIST_AUTO, Prefs.DIST_KM, Prefs.DIST_MI};
+        String[] distNames = {L.s(R.string.unit_auto), "km", "mi"};
+        int distSel = java.util.Arrays.asList(distVals).indexOf(prefs.distUnit());
+        card.addView(row(c, L.s(R.string.set_dist_unit), L.s(R.string.set_dist_unit_sub),
+                choices(c, distNames, distSel, i -> {
+                    prefs.setDistUnit(distVals[i]);
+                    host.settingsChanged(true);
+                    showSection(SEC_HOME);
+                }), false));
         card.addView(row(c, L.s(R.string.set_tpms_title), L.s(R.string.set_tpms_sub),
                 toggle(c, prefs.showTpms(), on -> {
                     prefs.setShowTpms(on);
@@ -383,16 +422,13 @@ public final class SettingsView extends FrameLayout {
                     }), false));
         }
         // temperatura interna (tolta nella 0.9.5): l'auto non la manda allo schermo, si spiega perché
-        card.addView(row(c, L.s(R.string.set_show_inside_temp), L.s(R.string.set_inside_none), spacer0(c), false));
-        card.addView(row(c, L.s(R.string.set_charge_buttons), L.s(R.string.set_charge_buttons_sub),
-                toggle(c, prefs.chargeButtons(), on -> {
-                    prefs.setChargeButtons(on);
-                    host.settingsChanged(true);
-                }), true));
+        card.addView(row(c, L.s(R.string.set_show_inside_temp), L.s(R.string.set_inside_none), spacer0(c), true));
         col.addView(card, topFull(14));
+    }
 
-        col.addView(label(c, L.s(R.string.set_bar_card)), top(30));
-        card = card(c);
+    private void buildBar(Context c, LinearLayout col) {
+        col.addView(label(c, L.s(R.string.set_bar_card)));
+        LinearLayout card = card(c);
         card.addView(row(c, L.s(R.string.set_big_bar), L.s(R.string.set_big_bar_sub),
                 toggle(c, prefs.bigBar(), on -> {
                     prefs.setBigBar(on);
@@ -405,7 +441,7 @@ public final class SettingsView extends FrameLayout {
                 choices(c, fogNames, java.util.Arrays.asList(fogModes).indexOf(prefs.rearFogMode()), i -> {
                     prefs.setRearFogMode(fogModes[i]);
                     host.settingsChanged(true);
-                    showSection(SEC_HOME);
+                    showSection(SEC_BAR);
                 }), false));
         card.addView(row(c, L.s(R.string.set_grouped), L.s(R.string.set_grouped_sub),
                 toggle(c, prefs.groupedButtons(), on -> {
@@ -416,16 +452,59 @@ public final class SettingsView extends FrameLayout {
                 toggle(c, prefs.showAssist(), on -> {
                     prefs.setShowAssist(on);
                     host.settingsChanged(true);
-                }), true));
+                }), false));
+        card.addView(row(c, L.s(R.string.set_charge_buttons), L.s(R.string.set_charge_buttons_sub),
+                toggle(c, prefs.chargeButtons(), on -> {
+                    prefs.setChargeButtons(on);
+                    host.settingsChanged(true);
+                }), false));
+        // 0.4.0 (punto 8): cosa apre il tasto 360
+        String cam = prefs.cam360();
+        boolean camApp = cam.startsWith(Prefs.CAM_APP);
+        String appLabel = camApp ? com.mg4.launcher.ui.Cam360.label(c, cam.substring(Prefs.CAM_APP.length())) : L.s(R.string.cam360_app);
+        String[] camNames = {L.s(R.string.cam360_original), L.s(R.string.cam360_mg4), appLabel, L.s(R.string.cam360_hidden)};
+        int camSel = Prefs.CAM_ORIGINAL.equals(cam) ? 0 : Prefs.CAM_MG4.equals(cam) ? 1 : camApp ? 2 : cam.isEmpty() ? 0 : 3;
+        LinearLayout camRow = Ui.row(c);
+        for (int i = 0; i < camNames.length; i++) {
+            final int idx = i;
+            boolean on = i == camSel;
+            TextView ch = choice(c, camNames[i], on, v -> {
+                if (idx == 2) { pickCam360App(c); return; }   // sempre apre l'elenco, anche se già selezionato
+                if (idx == camSel) return;
+                prefs.setCam360(idx == 0 ? Prefs.CAM_ORIGINAL : idx == 1 ? Prefs.CAM_MG4 : Prefs.CAM_HIDDEN);
+                host.settingsChanged(false);
+                showSection(SEC_BAR);
+            });
+            ch.setPadding(tp(20), 0, tp(20), 0);
+            if (!on) ch.setBackground(Ui.pressable(c, t.panel, 16 * Ui.K, t));
+            camRow.addView(ch, Ui.margins(new LinearLayout.LayoutParams(-2, tp(60)), i == 0 ? 0 : dp(8), 0, 0, 0));
+        }
+        card.addView(row(c, L.s(R.string.set_cam360), L.s(R.string.set_cam360_sub), camRow, true));
         col.addView(card, topFull(14));
+    }
 
-        buildLogos(c, col);
+    /** Elenco delle app installate (escluso noi) per scegliere "un'altra app" per il tasto 360. */
+    private void pickCam360App(Context c) {
+        java.util.List<com.mg4.launcher.apps.AppCatalog.App> apps = host.allLaunchableApps();
+        String[] names = new String[apps.size()];
+        for (int i = 0; i < apps.size(); i++) names[i] = apps.get(i).label;
+        String cur = prefs.cam360();
+        int sel = -1;
+        if (cur.startsWith(Prefs.CAM_APP)) {
+            String pkg = cur.substring(Prefs.CAM_APP.length());
+            for (int i = 0; i < apps.size(); i++) if (apps.get(i).packageName.equals(pkg)) sel = i;
+        }
+        Confirm.pick(this, t, L.s(R.string.cam360_pick_app), "", names, sel, L.s(R.string.btn_cancel), i -> {
+            prefs.setCam360(Prefs.CAM_APP + apps.get(i).packageName);
+            host.settingsChanged(false);
+            showSection(SEC_BAR);
+        });
     }
 
     // ---- loghi radio -----------------------------------------------------------------------
 
     private final com.mg4.launcher.svc.LogoPacks.Listener logoListener = () -> {
-        if (section == SEC_HOME && !diagOpen && isAttachedToWindow()) showSection(SEC_HOME);
+        if (section == SEC_LOGOS && !diagOpen && isAttachedToWindow()) showSection(SEC_LOGOS);
     };
 
     private void buildLogos(Context c, LinearLayout col) {
@@ -604,35 +683,10 @@ public final class SettingsView extends FrameLayout {
         host.languageChanged();   // riapplica la lingua e ricostruisce l'interfaccia
     }
 
-    private void buildDrive(Context c, LinearLayout col) {
-        col.addView(label(c, L.s(R.string.set_drive_side)));
-        boolean carRight = CarFeatures.isRightHandDrive(c);
-        String[][] sides = {
-                {Prefs.DRIVE_AUTO, L.s(R.string.drive_auto) + " · " + L.s(carRight ? R.string.drive_right : R.string.drive_left)},
-                {Prefs.DRIVE_LEFT, L.s(R.string.drive_left)},
-                {Prefs.DRIVE_RIGHT, L.s(R.string.drive_right)}};
-        Flow f = new Flow(c);
-        for (String[] m : sides) {
-            f.addView(choice(c, m[1], m[0].equals(prefs.driveSide()), v -> {
-                if (m[0].equals(prefs.driveSide())) return;
-                prefs.setDriveSide(m[0]);
-                host.settingsChanged(true);   // ricostruisce la home (e le impostazioni) nella nuova disposizione
-            }));
-        }
-        col.addView(f, topFull(14));
-        col.addView(Ui.text(c, L.s(R.string.drive_hint), 17, t.sub, Ui.REGULAR), top(14));
-
-        col.addView(label(c, L.s(R.string.set_original_label)), top(30));
-        LinearLayout card = card(c);
-        card.addView(row(c, L.s(R.string.set_open_original), L.s(R.string.set_original_sub),
-                button(c, L.s(R.string.btn_open), v -> host.openOriginalHome()), true));
-        col.addView(card, topFull(14));
-    }
-
     private static int officinaDays = 3;
 
-    private void buildSystem(Context c, LinearLayout col) {
-        Updater up = host.updater();
+    /** 0.4.0 (punto 11): "Avvio e app" - avvio sicuro, premi Home da solo, altri launcher, app originali, dongle. */
+    private void buildLaunch(Context c, LinearLayout col) {
         // home predefinita e modalità officina
         Context app = c.getApplicationContext();
         boolean officina = com.mg4.launcher.svc.HomeMode.officina(app);
@@ -643,11 +697,11 @@ public final class SettingsView extends FrameLayout {
         hc.addView(row(c, L.s(R.string.home_default_title), homeSub, toggle(c, com.mg4.launcher.svc.HomeMode.enabled(app), on -> {
             if (on) {
                 com.mg4.launcher.svc.HomeMode.setEnabled(app, true);
-                showSection(SEC_SYSTEM);
+                showSection(SEC_LAUNCH);
             } else {
                 Confirm.show(this, t, L.s(R.string.confirm_home_off_title), L.s(R.string.confirm_home_off_msg),
                         L.s(R.string.btn_cancel), L.s(R.string.btn_turn_off), () -> com.mg4.launcher.svc.HomeMode.setEnabled(app, false));
-                showSection(SEC_SYSTEM);   // finché non si conferma l'interruttore resta acceso
+                showSection(SEC_LAUNCH);   // finché non si conferma l'interruttore resta acceso
             }
         }), false));
         // 0.9.6: avvio sicuro (la schermata della home MG si disattiva, come fa MG4Dash) e avviso altri launcher
@@ -657,7 +711,7 @@ public final class SettingsView extends FrameLayout {
             hc.addView(row(c, L.s(R.string.set_safe_start), safeSub, toggle(c, com.mg4.launcher.svc.HomeLock.option(app), on -> {
                 if (on) com.mg4.launcher.svc.CrashGuard.reset(app);
                 com.mg4.launcher.svc.HomeLock.setOption(app, on);
-                postDelayed(() -> showSection(SEC_SYSTEM), 400);
+                postDelayed(() -> showSection(SEC_LAUNCH), 400);
             }), false));
         }
         java.util.List<String> others = com.mg4.launcher.svc.HomeLock.otherLaunchers(app);
@@ -670,7 +724,7 @@ public final class SettingsView extends FrameLayout {
         if (officina) {
             oc.addView(button(c, L.s(R.string.btn_deactivate), v -> {
                 com.mg4.launcher.svc.HomeMode.end(app, "annullata");
-                showSection(SEC_SYSTEM);
+                showSection(SEC_LAUNCH);
             }));
         } else {
             int[] days = {1, 3, 7};
@@ -679,7 +733,7 @@ public final class SettingsView extends FrameLayout {
                 final int d = days[i];
                 TextView ch = choice(c, L.s(names[i]), officinaDays == d, v -> {
                     officinaDays = d;
-                    showSection(SEC_SYSTEM);
+                    showSection(SEC_LAUNCH);
                 });
                 // sulla scheda (sfondo chip) le scelte non selezionate hanno lo sfondo del pannello
                 if (officinaDays != d) ch.setBackground(Ui.pressable(c, t.panel, 16 * Ui.K, t));
@@ -711,7 +765,7 @@ public final class SettingsView extends FrameLayout {
         ah.addView(Ui.text(c, L.s(R.string.set_auto_home_sub), 17, t.sub, Ui.REGULAR), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(6), 0, 0));
         ah.addView(choices(c, secNames, secSel, i -> {
             prefs.setAutoHomeSeconds(secs[i]);
-            showSection(SEC_SYSTEM);
+            showSection(SEC_LAUNCH);
         }), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(14), 0, 0));
         hc.addView(ah);
         col.addView(hc, topFull(14));
@@ -724,7 +778,7 @@ public final class SettingsView extends FrameLayout {
             pc.addView(row(c, L.s(R.string.set_dongle), L.s(R.string.set_dongle_sub),
                     toggle(c, dw.enabled(), on -> {
                         dw.setEnabled(on);
-                        showSection(SEC_SYSTEM);
+                        showSection(SEC_LAUNCH);
                     }), false));
             if (dw.enabled()) {
                 int[] ds = {15, 20, 30, 45};
@@ -736,7 +790,7 @@ public final class SettingsView extends FrameLayout {
                 }
                 pc.addView(row(c, L.s(R.string.set_dongle_delay), L.s(R.string.set_dongle_delay_sub), choices(c, dn, dsel, i -> {
                     dw.setDelaySeconds(ds[i]);
-                    showSection(SEC_SYSTEM);
+                    showSection(SEC_LAUNCH);
                 }), false));
             }
             pc.addView(row(c, L.s(R.string.set_dongle_now), L.s(R.string.set_dongle_now_sub), button(c, L.s(R.string.btn_restart), v -> {
@@ -750,7 +804,17 @@ public final class SettingsView extends FrameLayout {
             col.addView(pc, topFull(14));
         }
 
-        col.addView(label(c, L.s(R.string.set_updates)), top(30));
+        // app originali (apri la home MG per verifiche/officina)
+        col.addView(label(c, L.s(R.string.set_original_label)), top(30));
+        LinearLayout oac = card(c);
+        oac.addView(row(c, L.s(R.string.set_open_original), L.s(R.string.set_original_sub),
+                button(c, L.s(R.string.btn_open), v -> host.openOriginalHome()), true));
+        col.addView(oac, topFull(14));
+    }
+
+    private void buildSystem(Context c, LinearLayout col) {
+        Updater up = host.updater();
+        col.addView(label(c, L.s(R.string.set_updates)));
         LinearLayout card = card(c);
         LinearLayout btns = Ui.row(c);
         updInstallBtn = button(c, L.s(R.string.btn_install), v -> {

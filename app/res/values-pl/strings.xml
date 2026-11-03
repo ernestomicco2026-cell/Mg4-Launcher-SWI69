@@ -31,10 +31,14 @@
     <string name="sec_car_sub" formatted="false">Kolor, felgi, dach</string>
     <string name="sec_home" formatted="false">Ekran główny</string>
     <string name="sec_home_sub" formatted="false">Bateria, opony, temperatury</string>
+    <string name="sec_bar" formatted="false">Pasek i przyciski</string>
+    <string name="sec_bar_sub" formatted="false">Pasek, pogrupowane przyciski, przycisk 360</string>
+    <string name="sec_logos" formatted="false">Radio i logo</string>
+    <string name="sec_logos_sub" formatted="false">Kraj logo, pakiety</string>
     <string name="sec_look" formatted="false">Wygląd</string>
     <string name="sec_look_sub" formatted="false">Motyw, rozmiar, język</string>
-    <string name="sec_drive" formatted="false">Jazda</string>
-    <string name="sec_drive_sub" formatted="false">Strona kierownicy, ekran MG</string>
+    <string name="sec_launch" formatted="false">Uruchamianie i aplikacje</string>
+    <string name="sec_launch_sub" formatted="false">Bezpieczny start, oryginalne aplikacje, dongle</string>
     <string name="sec_system" formatted="false">System</string>
     <string name="sec_system_sub" formatted="false">Aktualizacje, logi, diagnostyka</string>
     <string name="btn_back" formatted="false">Wstecz</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Start</string>
     <string name="cb_stop" formatted="false">Stop</string>
     <string name="cb_preparing" formatted="false">Przygotowanie…</string>
+    <string name="cb_unlock" formatted="false">Odblokuj gniazdo</string>
+    <string name="cb_unlock_title" formatted="false">Odblokować gniazdo ładowania?</string>
+    <string name="cb_unlock_msg" formatted="false">Komenda trafia do samochodu jak z przycisku na stronie Zarządzanie ładowaniem.</string>
+    <string name="cb_unlock_wait" formatted="false">Samochód jeszcze nie przesłał stanu gniazda: spróbuj ponownie za chwilę.</string>
+    <string name="cb_unlock_locked" formatted="false">Zablokowane</string>
+    <string name="cb_unlock_unlocked" formatted="false">Odblokowane</string>
     <string name="cb_unplugged" formatted="false">Niepodłączony</string>
     <string name="cb_limit_title" formatted="false">Limit ładowania</string>
     <string name="cb_limit_msg" formatted="false">Ładowanie zatrzyma się na tym poziomie. 100% tylko na długie trasy.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Ustawienia: usunięto puste miejsce między Panelem auta a Dolnym paskiem</string>
     <string name="newsh_7" formatted="false">Przy otwartym MG4 Clima systemowy panel klimatyzacji zamyka się sam poleceniem systemu</string>
     <string name="set_apps_size" formatted="false">ROZMIAR APLIKACJI</string>
-    <string name="news_v0310_1" formatted="false">Osobny rozmiar ekranu aplikacji: ustawiasz go w ustawieniach (większe ikony i tekst)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: dziennik zapisuje teraz, czy dongle pojawia się ponownie po resecie</string>
-    <string name="news_v0310_3" formatted="false">Dodano certyfikaty bezpieczeństwa Sectigo/USERTrust</string>
     <string name="news_v098_1" formatted="false">Restart dongla: telefony podłączone kablem (iPhone, Android Auto) nie są już resetowane, tylko prawdziwe dongle bezprzewodowe</string>
     <string name="news_v098_2" formatted="false">Uprawnienie do prędkości nadawane automatycznie i nowe certyfikaty główne Sectigo/USERTrust dla logo, aktualizacji i dzienników</string>
     <string name="news_v098_3" formatted="false">Pierwsza konfiguracja Androida rozpoznana jako ekran główny (to nie ekran MG); brak dzienników z telefonów i emulatorów</string>
+    <string name="news_v0310_1" formatted="false">Osobny rozmiar ekranu aplikacji: ustawiasz go w ustawieniach (większe ikony i tekst)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: dziennik zapisuje teraz, czy dongle pojawia się ponownie po resecie</string>
+    <string name="news_v0310_3" formatted="false">Dodano certyfikaty bezpieczeństwa Sectigo/USERTrust</string>
+    <string name="tap_to_open" formatted="false">Dotknij, aby otworzyć</string>
+    <string name="set_dist_unit" formatted="false">Jednostka odległości</string>
+    <string name="set_dist_unit_sub" formatted="false">Jak pokazywać zasięg i odległości: automatycznie (jak zestaw wskaźników), km lub mile</string>
+    <string name="set_cam360" formatted="false">Przycisk 360 otwiera</string>
+    <string name="set_cam360_sub" formatted="false">Co się dzieje po dotknięciu przycisku kamery 360 na pasku</string>
+    <string name="cam360_original" formatted="false">Oryginalny 360</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Inna aplikacja</string>
+    <string name="cam360_hidden" formatted="false">Skryty</string>
+    <string name="cam360_pick_app" formatted="false">Wybierz aplikację</string>
+    <string name="news_v040_1" formatted="false">Jednostka odległości w milach: zasięg i odległości w km lub milach, albo automatycznie jak w desce rozdzielczej</string>
+    <string name="news_v040_2" formatted="false">Fizyczny przycisk Home zamyka teraz wszystkie otwarte wyskakujące okna w launcherze</string>
+    <string name="news_v040_3" formatted="false">Nowe ikony klimatyzacji (styl ISO) na pasku i w wyskakujących oknach Klimatyzacja/Komfort, z rzeczywistym stanem recyrkulacji</string>
+    <string name="news_v040_4" formatted="false">Ustawienia podzielone na więcej sekcji; konfigurowalny przycisk 360 (oryginalny, MG4 360, inna aplikacja lub skryty); większy przycisk Otwórz dla Android Auto/CarPlay</string>
 </resources>

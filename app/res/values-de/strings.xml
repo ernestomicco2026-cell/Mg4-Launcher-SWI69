@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Log-Upload ausgeschaltet</string>
     <string name="log_upload_nokey" formatted="false">Log-Upload in dieser Version nicht verfügbar</string>
     <string name="sec_car" formatted="false">Fahrzeug</string>
-    <string name="sec_car_sub" formatted="false">Farbe, Felgen, Dach</string>
+    <string name="sec_car_sub" formatted="false">Farbe, Felgen, Dach, Lenkradseite</string>
     <string name="sec_home" formatted="false">Startseite</string>
-    <string name="sec_home_sub" formatted="false">Batterie, Reifen, Temperaturen</string>
+    <string name="sec_home_sub" formatted="false">Datum, Batterie, Distanz, Reifen</string>
+    <string name="sec_bar" formatted="false">Leiste und Tasten</string>
+    <string name="sec_bar_sub" formatted="false">Leiste, gruppierte Tasten, 360-Taste</string>
+    <string name="sec_logos" formatted="false">Radio und Logos</string>
+    <string name="sec_logos_sub" formatted="false">Logo-Land, Pakete</string>
     <string name="sec_look" formatted="false">Darstellung</string>
     <string name="sec_look_sub" formatted="false">Design, Größe, Sprache</string>
-    <string name="sec_drive" formatted="false">Fahren</string>
-    <string name="sec_drive_sub" formatted="false">Lenkradposition, MG-Startseite</string>
+    <string name="sec_launch" formatted="false">Start und Apps</string>
+    <string name="sec_launch_sub" formatted="false">Sicherer Start, Original-Apps, Dongle</string>
     <string name="sec_system" formatted="false">System</string>
     <string name="sec_system_sub" formatted="false">Updates, Logs, Diagnose</string>
     <string name="btn_back" formatted="false">Zurück</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Starten</string>
     <string name="cb_stop" formatted="false">Stoppen</string>
     <string name="cb_preparing" formatted="false">Wird vorbereitet…</string>
+    <string name="cb_unlock" formatted="false">Steckdose entsperren</string>
+    <string name="cb_unlock_title" formatted="false">Ladesteckdose entsperren?</string>
+    <string name="cb_unlock_msg" formatted="false">Der Befehl geht an das Auto wie über die Taste der Seite Ladeverwaltung.</string>
+    <string name="cb_unlock_wait" formatted="false">Das Auto hat den Steckdosenstatus noch nicht gesendet: versuche es gleich noch einmal.</string>
+    <string name="cb_unlock_locked" formatted="false">Verriegelt</string>
+    <string name="cb_unlock_unlocked" formatted="false">Entriegelt</string>
     <string name="cb_unplugged" formatted="false">Nicht angeschlossen</string>
     <string name="cb_limit_title" formatted="false">Ladelimit</string>
     <string name="cb_limit_msg" formatted="false">Das Laden stoppt bei diesem Prozentsatz. 100 % nur für lange Fahrten.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Einstellungen: Leerraum zwischen Fahrzeugbereich und unterer Leiste entfernt</string>
     <string name="newsh_7" formatted="false">Bei geöffnetem MG4 Clima schließt sich das System-Klimafeld jetzt selbst mit dem Systembefehl</string>
     <string name="set_apps_size" formatted="false">APP-GRÖSSE</string>
-    <string name="news_v0310_1" formatted="false">Eigene Größe für den App-Bildschirm: einstellbar in den Einstellungen (größere Symbole und Text)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: Das Protokoll zeigt jetzt, ob der Dongle nach dem Zurücksetzen wieder erscheint</string>
-    <string name="news_v0310_3" formatted="false">Sicherheitszertifikate Sectigo/USERTrust hinzugefügt</string>
     <string name="news_v098_1" formatted="false">Dongle-Neustart: per Kabel verbundene Telefone (iPhone, Android Auto) werden nicht mehr zurückgesetzt, nur echte kabellose Dongles</string>
     <string name="news_v098_2" formatted="false">Geschwindigkeitsberechtigung automatisch erteilt und neue Sectigo/USERTrust-Stammzertifikate für Logos, Updates und Protokolle</string>
     <string name="news_v098_3" formatted="false">Android-Ersteinrichtung als Startbildschirm erkannt (nicht der MG-Startbildschirm); keine Protokolle von Telefonen und Emulatoren</string>
+    <string name="news_v0310_1" formatted="false">Eigene Größe für den App-Bildschirm: einstellbar in den Einstellungen (größere Symbole und Text)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: Das Protokoll zeigt jetzt, ob der Dongle nach dem Zurücksetzen wieder erscheint</string>
+    <string name="news_v0310_3" formatted="false">Sicherheitszertifikate Sectigo/USERTrust hinzugefügt</string>
+    <string name="tap_to_open" formatted="false">Zum Öffnen tippen</string>
+    <string name="set_dist_unit" formatted="false">Distanzeinheit</string>
+    <string name="set_dist_unit_sub" formatted="false">Wie Reichweite und Distanzen angezeigt werden: automatisch (wie das Kombiinstrument), km oder Meilen</string>
+    <string name="set_cam360" formatted="false">Die 360-Taste öffnet</string>
+    <string name="set_cam360_sub" formatted="false">Was passiert, wenn man die 360-Kamera-Taste in der Leiste berührt</string>
+    <string name="cam360_original" formatted="false">Original 360</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Andere App</string>
+    <string name="cam360_hidden" formatted="false">Ausgeblendet</string>
+    <string name="cam360_pick_app" formatted="false">Wähle die App</string>
+    <string name="news_v040_1" formatted="false">Distanzeinheit in Meilen: Reichweite und Distanzen in km oder Meilen, oder automatisch wie das Kombiinstrument</string>
+    <string name="news_v040_2" formatted="false">Die physische Home-Taste schließt jetzt alle offenen Popups im Launcher</string>
+    <string name="news_v040_3" formatted="false">Neue Klimasymbole (ISO-Stil) in der Leiste und in den Klima-/Komfort-Popups, mit dem echten Umluft-Status</string>
+    <string name="news_v040_4" formatted="false">Einstellungen in mehr Abschnitte neu geordnet; konfigurierbare 360-Taste (Original, MG4 360, andere App oder ausgeblendet); größere Öffnen-Taste für Android Auto/CarPlay</string>
 </resources>

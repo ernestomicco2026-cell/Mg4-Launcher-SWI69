@@ -105,6 +105,7 @@ public final class VehicleClient {
         public int chargeLimit = -1;      // % (convertito dal codice SAIC)
         public int chargeLimitCode = -1;  // 1..7
         public int currentLimit = -1;     // 1..4 (6 A, 8 A, 16 A, Max), 0 = non disponibile
+        public int chargeLock = -1;       // 0.4.0 (punto 6): 1 bloccata, 2 sbloccata, -1 non letta
         public int chargeControl = -1;    // 1 in carica, 2 fermo, 3 in preparazione
         public int dischargeControl = -1; // idem per il V2L
         public int dischargeLimit = -1;   // % sotto cui il V2L si ferma
@@ -394,6 +395,9 @@ public final class VehicleClient {
         s.chargeControl = held(CarBms.CHRG_CTRL, ctl == Integer.MIN_VALUE ? -1 : ctl, now);
         int v2x = bms.getInt(CarBms.V2X);
         s.dischargeControl = held(CarBms.V2X, v2x == Integer.MIN_VALUE ? -1 : v2x, now);
+        int lk = bms.getInt(CarBms.CHRG_LOCK);
+        s.chargeLock = held(CarBms.CHRG_LOCK, lk == 1 || lk == 2 ? lk : -1, now);
+        Diag.putQuiet("ricarica.bloccoPresa", s.chargeLock > 0 ? (s.chargeLock == 1 ? "bloccata" : "sbloccata") : "non letto");
         int dl = bms.getInt(CarBms.V2X_SP_SOC);
         s.dischargeLimit = dl >= 0 && dl <= 7 ? (dl + 1) * 10 : -1;
         float amps = bms.getFloat(CarBms.PACK_CRNT);
@@ -913,6 +917,18 @@ public final class VehicleClient {
         bg.post(() -> {
             boolean sent = bms.setInt(prop, value);
             Diag.put("ricarica.ultimoComando", what + (sent ? " · inviato" : " · non inviato (gestore batteria non pronto)"));
+            poll();
+        });
+    }
+
+    /** 0.4.0 (punto 6): sblocca la presa di ricarica (stesso comando della Gestione ricarica: blocco presa = 2). */
+    public void unlockChargingSocket() {
+        if (bg == null) return;
+        hold(CarBms.CHRG_LOCK, 2);
+        bg.post(() -> {
+            boolean sent = bms.setInt(CarBms.CHRG_LOCK, 2);
+            String ora = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT).format(new java.util.Date());
+            Diag.put("ricarica.sbloccaPresa", (sent ? "inviato alle " : "NON inviato (gestore batteria non pronto) alle ") + ora);
             poll();
         });
     }

@@ -1,6 +1,6 @@
 {
-  "version": "0.3.11",
-  "apk": "releases/MG4Launcher-SWI69-0.3.11.apk",
-  "size": 635655,
-  "notes": "Il riavvio del dongle CarPlay/AA non resetta più i telefoni col cavo, solo i dongle wireless veri. Permesso della velocità, nuovi certificati Sectigo/USERTrust, prima configurazione di Android riconosciuta, niente log da telefoni ed emulatori."
+  "version": "0.4.0",
+  "apk": "releases/MG4Launcher-SWI69-0.4.0.apk",
+  "size": 677904,
+  "notes": "Nuovo pulsante Sblocca presa di ricarica, unità di distanza in miglia, tasto Home che chiude i popup e funziona anche dalle impostazioni dell'auto, nuove icone del clima, impostazioni riorganizzate, pulsante 360 configurabile e Apri più grande per Android Auto/CarPlay."
 }

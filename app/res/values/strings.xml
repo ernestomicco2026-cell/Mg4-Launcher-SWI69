@@ -28,13 +28,17 @@
     <string name="log_upload_off" formatted="false">Log upload turned off</string>
     <string name="log_upload_nokey" formatted="false">Log upload not available in this version</string>
     <string name="sec_car" formatted="false">Car</string>
-    <string name="sec_car_sub" formatted="false">Colour, wheels, roof</string>
+    <string name="sec_car_sub" formatted="false">Colour, wheels, roof, driving side</string>
     <string name="sec_home" formatted="false">Home</string>
-    <string name="sec_home_sub" formatted="false">Battery, tyres, temperatures</string>
+    <string name="sec_home_sub" formatted="false">Date, battery, distance, tyres</string>
+    <string name="sec_bar" formatted="false">Bar and buttons</string>
+    <string name="sec_bar_sub" formatted="false">Bar, grouped buttons, 360 button</string>
+    <string name="sec_logos" formatted="false">Radio and logos</string>
+    <string name="sec_logos_sub" formatted="false">Logo country, packs</string>
     <string name="sec_look" formatted="false">Appearance</string>
     <string name="sec_look_sub" formatted="false">Theme, size, language</string>
-    <string name="sec_drive" formatted="false">Driving</string>
-    <string name="sec_drive_sub" formatted="false">Driving side, MG home</string>
+    <string name="sec_launch" formatted="false">Startup and apps</string>
+    <string name="sec_launch_sub" formatted="false">Safe start, original apps, dongle</string>
     <string name="sec_system" formatted="false">System</string>
     <string name="sec_system_sub" formatted="false">Updates, logs, diagnostics</string>
     <string name="btn_back" formatted="false">Back</string>
@@ -214,6 +218,12 @@
     <string name="cb_start" formatted="false">Start</string>
     <string name="cb_stop" formatted="false">Stop</string>
     <string name="cb_preparing" formatted="false">Preparing…</string>
+    <string name="cb_unlock" formatted="false">Unlock socket</string>
+    <string name="cb_unlock_title" formatted="false">Unlock the charging socket?</string>
+    <string name="cb_unlock_msg" formatted="false">The command goes to the car as from the button on the Charge management page.</string>
+    <string name="cb_unlock_wait" formatted="false">The car hasn\'t sent the socket status yet: try again shortly.</string>
+    <string name="cb_unlock_locked" formatted="false">Locked</string>
+    <string name="cb_unlock_unlocked" formatted="false">Unlocked</string>
     <string name="cb_unplugged" formatted="false">Not plugged in</string>
     <string name="cb_limit_title" formatted="false">Charge limit</string>
     <string name="cb_limit_msg" formatted="false">Charging stops at this percentage. 100% only for long trips.</string>
@@ -360,10 +370,24 @@
     <string name="newsh_6" formatted="false">Settings: removed the blank space between Car panel and Bottom bar</string>
     <string name="newsh_7" formatted="false">With MG4 Clima open, the system climate panel now closes by itself with the system\'s own command</string>
     <string name="set_apps_size" formatted="false">APP SIZE</string>
-    <string name="news_v0310_1" formatted="false">Separate size for the App screen: choose it in settings (larger icons and text)</string>
-    <string name="news_v0310_2" formatted="false">Dongle: the log now records whether the dongle reappears after the reset</string>
-    <string name="news_v0310_3" formatted="false">Sectigo/USERTrust security certificates added</string>
     <string name="news_v098_1" formatted="false">Dongle restart: phones connected with a cable (iPhone, Android Auto) are no longer reset, only real wireless dongles</string>
     <string name="news_v098_2" formatted="false">Speed permission granted automatically, and new Sectigo/USERTrust root certificates for logos, updates and logs</string>
     <string name="news_v098_3" formatted="false">Android first-time setup recognized as home (not the MG home); no logs sent from phones and emulators</string>
+    <string name="news_v0310_1" formatted="false">Separate size for the App screen: choose it in settings (larger icons and text)</string>
+    <string name="news_v0310_2" formatted="false">Dongle: the log now records whether the dongle reappears after the reset</string>
+    <string name="news_v0310_3" formatted="false">Sectigo/USERTrust security certificates added</string>
+    <string name="tap_to_open" formatted="false">Tap to open</string>
+    <string name="set_dist_unit" formatted="false">Distance unit</string>
+    <string name="set_dist_unit_sub" formatted="false">How to show range and distances: automatic (like the instrument cluster), km or miles</string>
+    <string name="set_cam360" formatted="false">The 360 button opens</string>
+    <string name="set_cam360_sub" formatted="false">What happens when you tap the 360 camera button in the bar</string>
+    <string name="cam360_original" formatted="false">Original 360</string>
+    <string name="cam360_mg4" formatted="false">MG4 360</string>
+    <string name="cam360_app" formatted="false">Another app</string>
+    <string name="cam360_hidden" formatted="false">Hidden</string>
+    <string name="cam360_pick_app" formatted="false">Choose the app</string>
+    <string name="news_v040_1" formatted="false">Distance unit in miles: range and distances in km or miles, or automatic like the instrument cluster</string>
+    <string name="news_v040_2" formatted="false">The physical Home button now closes every popup open on the launcher</string>
+    <string name="news_v040_3" formatted="false">New climate icons (ISO style) in the bar and in the Climate/Comfort popups, with the real recirculation state</string>
+    <string name="news_v040_4" formatted="false">Settings reorganized into more sections; configurable 360 button (original, MG4 360, another app or hidden); bigger Android Auto/CarPlay Open button</string>
 </resources>
