@@ -379,6 +379,11 @@ public final class HomeView extends LinearLayout {
             Confirm.notice(host.overlay(), t, L.s(R.string.cb_unlock_title), "", new String[]{L.s(R.string.cb_unlock_wait)}, L.s(R.string.btn_ok), null);
             return;
         }
+        if (s.chargeLock == 2) {   // come l'originale: lo sblocco parte solo se la presa è bloccata
+            Diag.put("ricarica.sbloccaPresa", "non inviato: la presa è già sbloccata");
+            Confirm.notice(host.overlay(), t, L.s(R.string.cb_unlock_title), "", new String[]{L.s(R.string.cb_unlock_unlocked)}, L.s(R.string.btn_ok), null);
+            return;
+        }
         Confirm.show(host.overlay(), t, L.s(R.string.cb_unlock_title), L.s(R.string.cb_unlock_msg),
                 L.s(R.string.btn_cancel), L.s(R.string.cb_unlock), () -> vehicle.unlockChargingSocket());
     }

@@ -270,9 +270,9 @@ public final class BootAccessibility extends AccessibilityService {
                         sys++;
                         android.graphics.Rect b = new android.graphics.Rect();
                         w.getBoundsInScreen(b);
-                        boolean fog = !r.findAccessibilityNodeInfosByViewId("com.android.systemui:id/iv_rear_fog").isEmpty();
+                        boolean fog = !r.findAccessibilityNodeInfosByViewId("com.android.systemui:id/iv_car_lamp").isEmpty();   // vista mIvRearFog di StatusBarView
                         sb.append(" | systemui tipo ").append(w.getType()).append(" layer ").append(w.getLayer())
-                                .append(" ").append(b.toShortString()).append(fog ? " · contiene iv_rear_fog" : "");
+                                .append(" ").append(b.toShortString()).append(fog ? " · contiene il tasto fendinebbia (iv_car_lamp)" : "");
                     } finally {
                         r.recycle();
                     }
