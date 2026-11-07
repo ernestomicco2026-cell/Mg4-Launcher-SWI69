@@ -2,7 +2,10 @@ build/
 *.class
 tools/android.jar
 tools/d8.jar
+tools/apksig.jar
 keys/platform.key.pem
 art/preview_*
 __pycache__/
 tools/log-token.txt
+.env
+tools/*token*
