@@ -45,6 +45,12 @@
     <uses-permission android:name="android.car.permission.CAR_POWER" />
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
     <uses-permission android:name="android.car.permission.CAR_RADIO" />
+    <!-- 0.4.2: misura della finestra della spia luci della SystemUI (dumpsys window, sola lettura; firma platform) -->
+    <uses-permission android:name="android.permission.DUMP" />
+    <!-- 0.4.2: alba e tramonto per il tema automatico (ultima posizione nota, nessun GPS acceso dal launcher) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
     <!-- telecamere: EvsService della home originale -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 

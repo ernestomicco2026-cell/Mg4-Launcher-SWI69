@@ -60,7 +60,7 @@ public final class SettingsView extends FrameLayout {
     private static final int[] SEC_NAME = {R.string.sec_car, R.string.sec_home, R.string.sec_bar, R.string.sec_logos, R.string.sec_look, R.string.sec_launch, R.string.sec_system};
     private static final int[] SEC_SUB = {R.string.sec_car_sub, R.string.sec_home_sub, R.string.sec_bar_sub, R.string.sec_logos_sub, R.string.sec_look_sub, R.string.sec_launch_sub, R.string.sec_system_sub};
     /** Spazio in alto a sinistra per la spia luci del sistema (come nella home). */
-    private static final int SYSTEM_LIGHT_INSET = 64;
+    private final int SYSTEM_LIGHT_INSET;
     private static final long QUIET_CHECK_MS = 30 * 60_000L;
 
     /** Sezione aperta: resta la stessa quando la schermata si ricostruisce (tema, lingua, dimensione…). */
@@ -94,6 +94,7 @@ public final class SettingsView extends FrameLayout {
         String side = prefs.driveSide();
         rhd = Prefs.DRIVE_RIGHT.equals(side) || (Prefs.DRIVE_AUTO.equals(side) && carRhd);
         sysIndicator = CarFeatures.hasSystemLightIndicator(c) || carRhd;
+        SYSTEM_LIGHT_INSET = CarFeatures.systemLightInset(c);
 
         setBackgroundColor(t.bg);
         setClickable(true);
@@ -421,8 +422,22 @@ public final class SettingsView extends FrameLayout {
                         showSection(SEC_HOME);
                     }), false));
         }
-        // temperatura interna (tolta nella 0.9.5): l'auto non la manda allo schermo, si spiega perché
-        card.addView(row(c, L.s(R.string.set_show_inside_temp), L.s(R.string.set_inside_none), spacer0(c), true));
+        // 0.4.2 (punto 3): temperatura interna come opzione; "--" se nessuna fonte è valida
+        card.addView(row(c, L.s(R.string.set_show_inside_temp), L.s(R.string.set_inside_sub),
+                toggle(c, prefs.showInsideTemp(), on -> {
+                    prefs.setShowInsideTemp(on);
+                    host.settingsChanged(true);
+                    showSection(SEC_HOME);
+                }), false));
+        // 0.4.2 (punto 7d): limite di ricarica Automatico / Mostra / Nascondi
+        String[] triVals = {Prefs.SHOW_AUTO, Prefs.SHOW_ON, Prefs.SHOW_OFF};
+        String[] triNames = {L.s(R.string.fog_auto), L.s(R.string.fog_show), L.s(R.string.fog_hide)};
+        card.addView(row(c, L.s(R.string.set_charge_limit), L.s(R.string.set_charge_limit_sub),
+                choices(c, triNames, java.util.Arrays.asList(triVals).indexOf(prefs.chargeLimitMode()), i -> {
+                    prefs.setChargeLimitMode(triVals[i]);
+                    host.settingsChanged(false);
+                    showSection(SEC_HOME);
+                }), true));
         col.addView(card, topFull(14));
     }
 
@@ -479,8 +494,43 @@ public final class SettingsView extends FrameLayout {
             if (!on) ch.setBackground(Ui.pressable(c, t.panel, 16 * Ui.K, t));
             camRow.addView(ch, Ui.margins(new LinearLayout.LayoutParams(-2, tp(60)), i == 0 ? 0 : dp(8), 0, 0, 0));
         }
-        card.addView(row(c, L.s(R.string.set_cam360), L.s(R.string.set_cam360_sub), camRow, true));
+        card.addView(row(c, L.s(R.string.set_cam360), L.s(R.string.set_cam360_sub), camRow, false));
+        // 0.4.2 (punto 9): riscaldamento sedili e volante Automatico / Mostra / Nascondi
+        String[] triVals = {Prefs.SHOW_AUTO, Prefs.SHOW_ON, Prefs.SHOW_OFF};
+        String[] triNames = {L.s(R.string.fog_auto), L.s(R.string.fog_show), L.s(R.string.fog_hide)};
+        card.addView(row(c, L.s(R.string.set_heat), L.s(R.string.set_heat_sub),
+                choices(c, triNames, java.util.Arrays.asList(triVals).indexOf(prefs.heatMode()), i -> {
+                    prefs.setHeatMode(triVals[i]);
+                    host.settingsChanged(false);
+                    showSection(SEC_BAR);
+                }), false));
+        // 0.4.2 (punto 8b): pulsante in alto a destra: CarPlay/Android Auto, un'app a scelta o nessuno
+        String q = prefs.quickButton();
+        boolean qApp = q.startsWith(Prefs.QUICK_APP);
+        String qLabel = qApp ? Cam360.label(c, q.substring(Prefs.QUICK_APP.length())) : L.s(R.string.quick_app);
+        String[] qNames = {L.s(R.string.quick_proj), qLabel, L.s(R.string.quick_none)};
+        int qSel = qApp ? 1 : Prefs.QUICK_NONE.equals(q) ? 2 : 0;
+        card.addView(row(c, L.s(R.string.set_quick), L.s(R.string.set_quick_sub),
+                choices(c, qNames, qSel, i -> {
+                    if (i == 1) {
+                        pickQuickApp();
+                        return;
+                    }
+                    prefs.setQuickButton(i == 0 ? Prefs.QUICK_PROJ : Prefs.QUICK_NONE);
+                    host.settingsChanged(true);
+                }), true));
         col.addView(card, topFull(14));
+    }
+
+    /** Elenco delle app per il pulsante in alto a destra. */
+    private void pickQuickApp() {
+        java.util.List<com.mg4.launcher.apps.AppCatalog.App> apps = host.allLaunchableApps();
+        String[] names = new String[apps.size()];
+        for (int i = 0; i < apps.size(); i++) names[i] = apps.get(i).label;
+        Confirm.list(this, t, L.s(R.string.quick_pick), names, L.s(R.string.btn_cancel), i -> {
+            prefs.setQuickButton(Prefs.QUICK_APP + apps.get(i).packageName);
+            host.settingsChanged(true);
+        });
     }
 
     /** Elenco delle app installate (escluso noi) per scegliere "un'altra app" per il tasto 360. */
@@ -769,6 +819,15 @@ public final class SettingsView extends FrameLayout {
         }), Ui.margins(new LinearLayout.LayoutParams(-2, -2), 0, dp(14), 0, 0));
         hc.addView(ah);
         col.addView(hc, topFull(14));
+
+        // 0.4.2 (punto 6): ritorno all'app di prima dopo la retromarcia (attivo di default)
+        LinearLayout rc = card(c);
+        rc.addView(row(c, L.s(R.string.set_retro), L.s(R.string.set_retro_sub),
+                toggle(c, prefs.retroReturn(), on -> {
+                    prefs.setRetroReturn(on);
+                    showSection(SEC_LAUNCH);
+                }), true));
+        col.addView(rc, topFull(14));
 
         // CarPlay / Android Auto: riavvio del dongle wireless che non si collega
         com.mg4.launcher.svc.DongleWatch dw = com.mg4.launcher.svc.DongleWatch.peek();

@@ -63,7 +63,7 @@
     <string name="set_diag_sub" formatted="false">Values read from the car and recent errors</string>
     <string name="set_diag_title" formatted="false">Car services diagnostics</string>
     <string name="set_home_card" formatted="false">CAR PANEL</string>
-    <string name="set_inside_sub" formatted="false">Below the outside one · «— °» if the car does not provide it</string>
+    <string name="set_inside_sub" formatted="false">Below the outside one; “--” if the car doesn\'t provide it</string>
     <string name="set_language" formatted="false">LANGUAGE</string>
     <string name="set_menu_title" formatted="false">Settings</string>
     <string name="set_open_original" formatted="false">Open the original MG home</string>
@@ -392,4 +392,30 @@
     <string name="news_v040_2" formatted="false">The physical Home button now closes every popup open on the launcher</string>
     <string name="news_v040_3" formatted="false">New climate icons (ISO style) in the bar and in the Climate/Comfort popups, with the real recirculation state</string>
     <string name="news_v040_4" formatted="false">Settings reorganized into more sections; configurable 360 button (original, MG4 360, another app or hidden); bigger Android Auto/CarPlay Open button</string>
+    <string name="set_charge_limit" formatted="false">Charge limit</string>
+    <string name="set_charge_limit_sub" formatted="false">Automatic: shown only if the car supports the command</string>
+    <string name="set_heat" formatted="false">Heated seats and steering wheel</string>
+    <string name="set_heat_sub" formatted="false">Automatic: according to the car\'s equipment. If you have it and it doesn\'t appear, choose Show</string>
+    <string name="set_retro" formatted="false">After reversing, go back to the previous app</string>
+    <string name="set_retro_sub" formatted="false">CarPlay, Android Auto (also via box), navigation or the app that was open</string>
+    <string name="set_quick" formatted="false">Top-right button</string>
+    <string name="set_quick_sub" formatted="false">Without the button, media sources always show their name</string>
+    <string name="quick_proj" formatted="false">CarPlay / Android Auto</string>
+    <string name="quick_app" formatted="false">An app…</string>
+    <string name="quick_none" formatted="false">None</string>
+    <string name="quick_pick" formatted="false">Choose the button\'s app</string>
+    <string name="notice_title" formatted="false">Notice</string>
+    <string name="news_v042_1" formatted="false">Automatic day/night theme on the SWI69 too: follows the car, the headlights or sunrise and sunset, with a 60 s delay for tunnels</string>
+    <string name="news_v042_2" formatted="false">After reversing you go back automatically to CarPlay, Android Auto or the previous app</string>
+    <string name="news_v042_3" formatted="false">At start-up the last audio source resumes; radio and Bluetooth start reliably, with the phone\'s cover art and controls</string>
+    <string name="news_v042_4" formatted="false">Graphics: headlights on the car, bigger tyre pressure, FM/DAB under Radio, clearer 360° icons, compact outside temperature</string>
+    <string name="news_v042_5" formatted="false">New settings: heated seats and wheel, charge limit, top-right button; updates and notices checked automatically</string>
+    <string name="cb_sched" formatted="false">Scheduled</string>
+    <string name="cb_sched_title" formatted="false">Scheduled charging</string>
+    <string name="cb_sched_msg" formatted="false">With the cable plugged in, charging starts at the start time. “Up to the limit” keeps going after the end time until the charge limit.</string>
+    <string name="sched_off" formatted="false">Off</string>
+    <string name="sched_to_limit" formatted="false">Up to the limit</string>
+    <string name="sched_time" formatted="false">Times…</string>
+    <string name="sched_start" formatted="false">Charging start</string>
+    <string name="sched_end" formatted="false">Charging end</string>
 </resources>

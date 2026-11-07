@@ -126,6 +126,36 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         nav.setListener(s -> {
             if (home != null) home.onNav(s);
         });
+        // 0.4.2 (punto 1): tema automatico dalla catena di fonti (cambio dopo 60 s stabili)
+        com.mg4.launcher.svc.DayNight.setListener(day -> {
+            if (Prefs.THEME_AUTO.equals(prefs.themeMode()) && theme != null && theme.day != day && !isFinishing()) {
+                IconStyler.clearCache();
+                boolean wasSettings = settings != null;
+                build();
+                if (wasSettings) openSettings();
+            }
+        });
+        // 0.4.2 (punto 6): dopo la retromarcia si riapre l'app di prima come la aprono i pulsanti del launcher
+        com.mg4.launcher.svc.RetroReturn.setOpener(new com.mg4.launcher.svc.RetroReturn.Opener() {
+            @Override
+            public boolean available(String pkg) {
+                if (pkg.startsWith("com.allgo.")) return media.last().deviceType != 0;
+                return getPackageManager().getLaunchIntentForPackage(pkg) != null;
+            }
+
+            @Override
+            public boolean reopen(String pkg) {
+                if (pkg.startsWith("com.allgo.")) return media.openProjection();
+                Intent li = getPackageManager().getLaunchIntentForPackage(pkg);
+                if (li == null) return false;
+                try {
+                    startActivity(li.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        });
         // collegamento ai servizi dopo il primo disegno: la home compare subito, già nelle dimensioni finali
         root.post(() -> {
             vehicle.start();
@@ -135,7 +165,11 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
             logs.start();
             com.mg4.launcher.svc.DongleWatch.get(this, media).start();
             com.mg4.launcher.svc.EmbedCheck.log(this);
+            // 0.4.2 (punto 11a): all'accensione dell'auto si riprende l'ultima sorgente audio usata davvero
+            if (android.os.SystemClock.elapsedRealtime() < 5 * 60_000L) media.resumeLastSource("accensione");
         });
+        // 0.4.2 (punto 2): misura della finestra della spia luci della SystemUI (se cambia lo spazio, si ridisegna la home)
+        root.postDelayed(probeLight, 12_000);
         // avvio all'accensione: servizio di accessibilità, scadenza officina, riconferma della home predefinita
         com.mg4.launcher.svc.StartGuard.markProcess();
         com.mg4.launcher.svc.HomeMode.checkExpiry(getApplicationContext());
@@ -166,8 +200,11 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         tf.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         registerReceiver(clockTick, tf);
         root.postDelayed(saveDiag, 15000);
-        // primo controllo aggiornamenti dopo l'avvio, quando la radio ha finito di caricare
-        root.postDelayed(autoCheck, 90_000);
+        // 0.4.2 (punto 12): primo controllo aggiornamenti e avvisi 2 minuti dopo l'avvio (sistema stabile), poi ogni 6 ore
+        root.postDelayed(autoCheck, 120_000);
+        IntentFilter sf = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        sf.addAction(Intent.ACTION_SCREEN_ON);
+        registerReceiver(screen, sf);
         root.postDelayed(this::logoPacksTick, 20_000);
     }
 
@@ -200,17 +237,121 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     private static final long POPUP_SHOW = 20_000;                  // poi si nasconde da solo
     private View updPopup;
 
+    private boolean firstAutoCheck = true;
+
     private final Runnable autoCheck = new Runnable() {
         @Override
         public void run() {
-            if (prefs.updatePopup() && !com.mg4.launcher.svc.HomeMode.officina(getApplicationContext())) updater.checkQuiet(prefs.updateRepo(), prefs.githubToken(), r -> showUpdatePopup(r));
+            if (!com.mg4.launcher.svc.HomeMode.officina(getApplicationContext())) {
+                final boolean first = firstAutoCheck;
+                firstAutoCheck = false;
+                updater.autoCheck(L.resolve(prefs.language()), new Updater.Auto() {
+                    @Override
+                    public void onNewVersion(Updater.Release r) {
+                        showUpdatePopup(r);
+                    }
+
+                    @Override
+                    public void onNotices(java.util.List<Updater.Notice> list) {
+                        showNotices(list, first);
+                    }
+                });
+            }
             root.postDelayed(this, CHECK_EVERY);
         }
     };
 
+    // ---- 0.4.2 (punto 12c): avvisi da remoto ----------------------------------------------------------------
+
+    private final java.util.ArrayDeque<Updater.Notice> noticeQueue = new java.util.ArrayDeque<>();
+    private boolean noticeOpen;
+    private Updater.Release lastFound;
+
+    private void showNotices(java.util.List<Updater.Notice> list, boolean startup) {
+        android.content.SharedPreferences sp = prefs.raw();
+        java.util.Set<String> seen = new java.util.HashSet<>(sp.getStringSet("avvisi.visti", new java.util.HashSet<>()));
+        java.util.Set<String> ok = sp.getStringSet("avvisi.confermati", new java.util.HashSet<>());
+        for (Updater.Notice n : list) {
+            boolean show = n.important ? !ok.contains(n.id) && (startup || !seen.contains(n.id)) : !seen.contains(n.id);
+            if (show) noticeQueue.add(n);
+        }
+        nextNotice();
+    }
+
+    private void nextNotice() {
+        if (noticeOpen || root == null || theme == null) return;
+        Updater.Notice n = noticeQueue.poll();
+        if (n == null) return;
+        noticeOpen = true;
+        android.content.SharedPreferences sp = prefs.raw();
+        java.util.Set<String> seen = new java.util.HashSet<>(sp.getStringSet("avvisi.visti", new java.util.HashSet<>()));
+        seen.add(n.id);
+        sp.edit().putStringSet("avvisi.visti", seen).apply();
+        Runnable confirm = () -> {
+            java.util.Set<String> ok = new java.util.HashSet<>(prefs.raw().getStringSet("avvisi.confermati", new java.util.HashSet<>()));
+            ok.add(n.id);
+            prefs.raw().edit().putStringSet("avvisi.confermati", ok).apply();
+            noticeDiag();
+            noticeOpen = false;
+            root.post(this::nextNotice);
+        };
+        String text = n.text(L.resolve(prefs.language()));
+        if (n.updateButton) {
+            com.mg4.launcher.ui.Confirm.show(root, theme, L.s(R.string.notice_title), text, L.s(R.string.btn_ok), L.s(R.string.upd_now), () -> {
+                confirm.run();
+                updateNow(lastFound);
+            }, confirm);
+        } else {
+            com.mg4.launcher.ui.Confirm.notice(root, theme, L.s(R.string.notice_title), "", new String[]{text}, L.s(R.string.btn_ok), confirm);
+        }
+        noticeDiag();
+    }
+
+    private void noticeDiag() {
+        android.content.SharedPreferences sp = prefs.raw();
+        updater.noticeShown = "mostrati " + sp.getStringSet("avvisi.visti", new java.util.HashSet<>())
+                + " · confermati " + sp.getStringSet("avvisi.confermati", new java.util.HashSet<>());
+        Diag.put("avvisi.stato", "letti " + updater.noticeIds + " · " + updater.noticeShown);
+    }
+
+    /** Pulsante Aggiorna fuori dalle impostazioni: apre la sezione Sistema e installa (o controlla, se non c'è ancora la versione). */
+    private void updateNow(Updater.Release r) {
+        SettingsView.openAt(SettingsView.SEC_SYSTEM);
+        closeSettings();
+        openSettings();
+        if (r != null) updater.install(r, prefs.githubToken());
+        else updater.check(prefs.updateRepo(), prefs.githubToken());
+    }
+
+    /** Spegnimento/risveglio dello schermo: dopo più di 5 minuti spento si riprende l'ultima sorgente (punto 11a). */
+    private long screenOffAt = -1;
+    private final BroadcastReceiver screen = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            if (Intent.ACTION_SCREEN_OFF.equals(i.getAction())) {
+                screenOffAt = android.os.SystemClock.elapsedRealtime();
+            } else if (screenOffAt > 0 && android.os.SystemClock.elapsedRealtime() - screenOffAt > 5 * 60_000L) {
+                screenOffAt = -1;
+                if (media != null) media.resumeLastSource("risveglio dopo lo spegnimento");
+            }
+        }
+    };
+
+    private final Runnable probeLight = () -> new Thread(() -> {
+        if (com.mg4.launcher.svc.CarFeatures.probeSystemLight(getApplicationContext())) {
+            root.post(() -> {
+                if (isFinishing()) return;
+                boolean wasSettings = settings != null;
+                build();
+                if (wasSettings) openSettings();
+            });
+        }
+    }, "mg4-spia").start();
+
     private final Runnable hidePopup = () -> hideUpdatePopup();
 
     private void showUpdatePopup(Updater.Release r) {
+        if (r != null) lastFound = r;
         if (r == null || updPopup != null || !prefs.updatePopup()) return;
         if (r.tag.equals(prefs.dismissedUpdate()) || updater.isBusy()) return;
         Theme t = theme;
@@ -234,10 +375,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         }), Ui.margins(Ui.lp(-2, dp(48)), 0, 0, dp(10), 0));
         card.addView(popupButton(L.s(R.string.upd_now), t.accent, t.onAccent, v -> {
             hideUpdatePopup();
-            SettingsView.openAt(SettingsView.SEC_SYSTEM);
-            closeSettings();
-            openSettings();
-            updater.install(r, prefs.githubToken());
+            updateNow(r);
         }), Ui.lp(-2, dp(48)));
 
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
@@ -345,6 +483,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Novità di ogni versione (testi in tutte le lingue in strings.xml). */
     private static int[] newsFor(String ver) {
         switch (ver) {
+            case "0.4.2":
+                return new int[]{R.string.news_v042_1, R.string.news_v042_2, R.string.news_v042_3, R.string.news_v042_4, R.string.news_v042_5};
             case "0.4.1":
                 return new int[]{R.string.news_v041_1, R.string.news_v041_2};
             case "0.4.0":
@@ -406,6 +546,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     protected void onPause() {
         inFront = false;
+        com.mg4.launcher.svc.DayNight.setVisible(false);
         super.onPause();
     }
 
@@ -425,6 +566,11 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         }, "mg4-homelock").start();
         askOfficina();
         goFullscreen();
+        com.mg4.launcher.svc.RetroReturn.noteBroughtBy("launcher ripreso (MainActivity.onResume)");
+        // 0.4.2: il launcher era dietro: il tema si aggiorna subito (nessuno l'ha visto cambiare), poi con l'attesa di 60 s
+        com.mg4.launcher.svc.DayNight.setVisible(false);
+        com.mg4.launcher.svc.DayNight.tick(this, prefs.themeMode());
+        com.mg4.launcher.svc.DayNight.setVisible(true);
         // 0.4.0: se giorno/notte è cambiato mentre il launcher era dietro e l'avviso non è arrivato, si ricostruisce qui
         if (theme != null && root != null && com.mg4.launcher.ui.Theme.wouldBeDay(this, prefs) != theme.day) {
             com.mg4.launcher.svc.Diag.put("tema.ripreso", "cambio recuperato al ritorno nel launcher");
@@ -494,6 +640,13 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         if (wrongFirmware) return;
         root.removeCallbacks(autoCheck);
         root.removeCallbacks(hidePopup);
+        root.removeCallbacks(probeLight);
+        com.mg4.launcher.svc.DayNight.setListener(null);
+        com.mg4.launcher.svc.RetroReturn.setOpener(null);
+        try {
+            unregisterReceiver(screen);
+        } catch (Exception ignored) {
+        }
         vehicle.stop();
         conn.stop();
         try {
@@ -515,6 +668,10 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         // 0.4.0 (punto 3): con il launcher già davanti chiude anche ogni popup aperto (Clima, Comfort, Guida,
         // conferme, elenchi, avvisi)
         if (inFront) closePopups("tasto Home");
+        // 0.4.2 (punto 6): tasto Home dell'utente (non l'apertura automatica): niente ritorno all'app dopo la retromarcia
+        if (intent == null || !intent.getBooleanExtra(com.mg4.launcher.svc.HomeMode.EXTRA_AUTO, false)) {
+            com.mg4.launcher.svc.RetroReturn.noteHomePressed();
+        }
         closeSettings();
         closeApps();
     }
@@ -557,10 +714,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         }
         if (cfg.uiMode != lastUiMode) {
             lastUiMode = cfg.uiMode;
-            if (Prefs.THEME_AUTO.equals(prefs.themeMode())) {
-                IconStyler.clearCache();
-                build();
-            }
+            // 0.4.2: uiMode è una delle fonti del tema automatico; il cambio passa dalla catena (attesa di 60 s)
+            com.mg4.launcher.svc.DayNight.tick(this, prefs.themeMode());
         }
     }
 

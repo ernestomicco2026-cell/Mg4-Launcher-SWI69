@@ -63,7 +63,7 @@
     <string name="set_diag_sub" formatted="false">Wartości odczytane z samochodu i ostatnie błędy</string>
     <string name="set_diag_title" formatted="false">Diagnostyka usług samochodu</string>
     <string name="set_home_card" formatted="false">PANEL SAMOCHODU</string>
-    <string name="set_inside_sub" formatted="false">Pod zewnętrzną · «— °», jeśli samochód jej nie podaje</string>
+    <string name="set_inside_sub" formatted="false">Pod zewnętrzną; „--”, jeśli samochód jej nie podaje</string>
     <string name="set_language" formatted="false">JĘZYK</string>
     <string name="set_menu_title" formatted="false">Ustawienia</string>
     <string name="set_open_original" formatted="false">Otwórz oryginalny ekran MG</string>
@@ -392,4 +392,30 @@
     <string name="news_v040_2" formatted="false">Fizyczny przycisk Home zamyka teraz wszystkie otwarte wyskakujące okna w launcherze</string>
     <string name="news_v040_3" formatted="false">Nowe ikony klimatyzacji (styl ISO) na pasku i w wyskakujących oknach Klimatyzacja/Komfort, z rzeczywistym stanem recyrkulacji</string>
     <string name="news_v040_4" formatted="false">Ustawienia podzielone na więcej sekcji; konfigurowalny przycisk 360 (oryginalny, MG4 360, inna aplikacja lub skryty); większy przycisk Otwórz dla Android Auto/CarPlay</string>
+    <string name="set_charge_limit" formatted="false">Limit ładowania</string>
+    <string name="set_charge_limit_sub" formatted="false">Automatycznie: widoczny tylko, gdy samochód obsługuje to polecenie</string>
+    <string name="set_heat" formatted="false">Podgrzewanie foteli i kierownicy</string>
+    <string name="set_heat_sub" formatted="false">Automatycznie: według wyposażenia. Jeśli je masz, a nie widać, wybierz Pokaż</string>
+    <string name="set_retro" formatted="false">Po cofaniu wróć do poprzedniej aplikacji</string>
+    <string name="set_retro_sub" formatted="false">CarPlay, Android Auto (także przez box), nawigacja lub otwarta wcześniej aplikacja</string>
+    <string name="set_quick" formatted="false">Przycisk w prawym górnym rogu</string>
+    <string name="set_quick_sub" formatted="false">Bez przycisku źródła zawsze pokazują nazwę</string>
+    <string name="quick_proj" formatted="false">CarPlay / Android Auto</string>
+    <string name="quick_app" formatted="false">Aplikacja…</string>
+    <string name="quick_none" formatted="false">Brak</string>
+    <string name="quick_pick" formatted="false">Wybierz aplikację przycisku</string>
+    <string name="notice_title" formatted="false">Komunikat</string>
+    <string name="news_v042_1" formatted="false">Automatyczny motyw dzień/noc także w SWI69: według samochodu, świateł lub wschodu i zachodu słońca, z 60 s opóźnienia na tunele</string>
+    <string name="news_v042_2" formatted="false">Po cofaniu automatyczny powrót do CarPlay, Android Auto lub poprzedniej aplikacji</string>
+    <string name="news_v042_3" formatted="false">Po uruchomieniu wraca ostatnie źródło dźwięku; radio i Bluetooth startują niezawodnie, z okładką i sterowaniem telefonu</string>
+    <string name="news_v042_4" formatted="false">Grafika: światła na samochodzie, większe ciśnienie opon, FM/DAB pod Radiem, czytelniejsze ikony 360°, zwarta temperatura zewnętrzna</string>
+    <string name="news_v042_5" formatted="false">Nowe ustawienia: podgrzewanie foteli i kierownicy, limit ładowania, przycisk w prawym górnym rogu; aktualizacje i komunikaty sprawdzane automatycznie</string>
+    <string name="cb_sched" formatted="false">Zaplanowane</string>
+    <string name="cb_sched_title" formatted="false">Ładowanie zaplanowane</string>
+    <string name="cb_sched_msg" formatted="false">Z podłączonym kablem ładowanie rusza o godzinie początku. „Do limitu” trwa po godzinie końca aż do limitu ładowania.</string>
+    <string name="sched_off" formatted="false">Wyłączone</string>
+    <string name="sched_to_limit" formatted="false">Do limitu</string>
+    <string name="sched_time" formatted="false">Godziny…</string>
+    <string name="sched_start" formatted="false">Początek ładowania</string>
+    <string name="sched_end" formatted="false">Koniec ładowania</string>
 </resources>

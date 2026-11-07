@@ -26,6 +26,10 @@ public final class CarBms {
     public static final int ESTD_ELEC_RNG = 557904918;      // int, km
     public static final int CHRG_LOCK = 557904915;          // int, blocco presa: 1 bloccata, 2 sbloccata (comando: 2)
     public static final int CHRG_STS = 557904905;           // int, stato ricarica BMS
+    /** 0.4.2 (punto 7d): ricarica programmata, come la Gestione ricarica EH32 dell'app Energia (CarBMSManager.ID_RESER_*):
+     *  RESER_CTRL 1 = attiva (orario di inizio e fine), 2 = spenta, 3 = attiva e continua fino al limite dopo l'orario di fine. */
+    public static final int RESER_CTRL = 557904909, RESER_ST_HOUR = 557904910, RESER_ST_MIN = 557904911,
+            RESER_SP_HOUR = 557904912, RESER_SP_MIN = 557904913;
 
     private final Context ctx;
     private final Handler main = new Handler(Looper.getMainLooper());

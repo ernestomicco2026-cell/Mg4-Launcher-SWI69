@@ -85,6 +85,97 @@ public final class CarFeatures {
         return on;
     }
 
+    // ---- 0.4.2 (punto 2): pulsante fendinebbia della SystemUI ---------------------------------------------------
+    // Verificato nella SystemUI R45 (StatusBarView + CarLampController.addBallView): dopo il primo disegno della barra
+    // di stato la SystemUI nasconde l'icona iv_car_lamp e mette al suo posto una finestra a sé (FloatBallView) di tipo
+    // 2021 (TYPE_BOOT_PROGRESS), larga 56 px (+61 px con i fendinebbia anteriori), a x = 20 px dal bordo sinistro.
+    //  a) i flag della barra di stato / modalità immersiva nascondono solo la barra (tipo 2000), non quella finestra;
+    //     un'altra app non può nascondere o togliere finestre della SystemUI: non si può fare in modo pulito.
+    //  b) una finestra di tipo 2017/2010 (come MG4 Control) in Android 9 sta SOTTO il tipo 2021 (strato 19/26 contro 32):
+    //     non la copre. Coprirla con un'altra finestra 2021 dipende dall'ordine di aggiunta (la SystemUI la ricrea e torna
+    //     sopra) e resterebbe sopra le altre app se il launcher si chiude male: non è sicuro.
+    //  c) soluzione applicata: la home lascia libero l'angolo, misurato quando possibile dalla finestra vera.
+
+    private static final String PREF_INSET = "spiaLarghezza";
+
+    /** Larghezza (dp) da lasciare libera in alto a sinistra: misura salvata o stima dalla configurazione. */
+    public static int systemLightInset(Context c) {
+        int saved = c.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getInt(PREF_INSET, -1);
+        if (saved > 0) return saved;
+        boolean front = "1".equals(feature(c, "systemui_state_frontfog__"));
+        return front ? 150 : 88;   // 20 margine + 56 icona (+ 5 + 56 anteriore) + aria
+    }
+
+    private static long probedAt;
+
+    /**
+     * Misura la finestra della spia (dumpsys window, permesso DUMP dalla firma platform) e scrive luci.pulsanteSistema.
+     * true se la larghezza da lasciare libera è cambiata (la home va ricostruita). Va chiamata da un thread in background.
+     */
+    public static synchronized boolean probeSystemLight(Context c) {
+        long t = android.os.SystemClock.elapsedRealtime();
+        if (probedAt > 0 && t - probedAt < 120_000L) return false;
+        probedAt = t;
+        String dump = dumpWindows(c);
+        StringBuilder sb = new StringBuilder("soluzione: angolo lasciato libero (la finestra della SystemUI non si nasconde né si copre in modo sicuro)");
+        int need = -1;
+        if (dump == null) {
+            sb.append(" · finestra non misurabile (dump non disponibile): stima ").append(systemLightInset(c)).append(" px");
+        } else {
+            boolean found = false;
+            String[] blocks = dump.split("\n  Window #");
+            for (String b : blocks) {
+                if (!b.contains("com.android.systemui") || !(b.contains("ty=BOOT_PROGRESS") || b.contains("ty=2021"))) continue;
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("mFrame=\\[(-?\\d+),(-?\\d+)\\]\\[(-?\\d+),(-?\\d+)\\]").matcher(b);
+                if (!m.find()) m = java.util.regex.Pattern.compile("frame=\\[(-?\\d+),(-?\\d+)\\]\\[(-?\\d+),(-?\\d+)\\]").matcher(b);
+                boolean vis = b.contains("mViewVisibility=0x0") && !b.contains("mHasSurface=false");
+                if (m.find(0)) {
+                    int l = Integer.parseInt(m.group(1)), tp = Integer.parseInt(m.group(2)), r = Integer.parseInt(m.group(3)), bt = Integer.parseInt(m.group(4));
+                    found = true;
+                    sb.append(" · finestra spia (SystemUI tipo 2021) ").append(vis ? "VISIBILE" : "non visibile").append(" [")
+                            .append(l).append(',').append(tp).append("][").append(r).append(',').append(bt).append(']');
+                    if (vis && l < 400 && tp < 200) need = Math.max(need, r + 12);
+                }
+            }
+            if (!found) sb.append(" · nessuna finestra spia della SystemUI");
+            sb.append(dump.contains("StatusBar") ? " · barra di stato presente" : "");
+        }
+        boolean changed = false;
+        if (need > 0) {
+            int dp = Math.round(need / Math.max(0.5f, c.getResources().getDisplayMetrics().density));
+            dp = Math.max(64, Math.min(260, dp));
+            android.content.SharedPreferences sp = c.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
+            if (sp.getInt(PREF_INSET, -1) != dp) {
+                sp.edit().putInt(PREF_INSET, dp).apply();
+                changed = true;
+            }
+        }
+        sb.append(" · spazio libero ").append(systemLightInset(c)).append(" dp");
+        Diag.put("luci.pulsanteSistema", sb.toString());
+        return changed;
+    }
+
+    /** dumpsys window windows, letto con il binder del servizio finestre (solo lettura). null se non disponibile. */
+    private static String dumpWindows(Context c) {
+        java.io.File f = new java.io.File(c.getCacheDir(), "finestre.txt");
+        try {
+            Class<?> sm = Class.forName("android.os.ServiceManager");
+            android.os.IBinder b = (android.os.IBinder) sm.getMethod("getService", String.class).invoke(null, "window");
+            if (b == null) return null;
+            try (java.io.FileOutputStream os = new java.io.FileOutputStream(f)) {
+                b.dump(os.getFD(), new String[]{"windows"});
+            }
+            byte[] all = java.nio.file.Files.readAllBytes(f.toPath());
+            String s = new String(all, "UTF-8");
+            if (s.contains("Permission Denial")) return null;
+            return s;
+        } catch (Throwable e) {
+            return null;
+        } finally {
+            f.delete();
+        }
+    }
+
     private static Boolean providerExists;
 
     /**

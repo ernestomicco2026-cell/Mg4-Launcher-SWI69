@@ -63,7 +63,7 @@
     <string name="set_diag_sub" formatted="false">Valori letti dall\'auto ed errori recenti</string>
     <string name="set_diag_title" formatted="false">Diagnostica servizi auto</string>
     <string name="set_home_card" formatted="false">RIQUADRO AUTO</string>
-    <string name="set_inside_sub" formatted="false">Sotto quella esterna · «— °» se l\'auto non la fornisce</string>
+    <string name="set_inside_sub" formatted="false">Sotto l\'esterna; «--» se l\'auto non la fornisce</string>
     <string name="set_language" formatted="false">LINGUA</string>
     <string name="set_menu_title" formatted="false">Impostazioni</string>
     <string name="set_open_original" formatted="false">Apri la home originale MG</string>
@@ -392,4 +392,30 @@
     <string name="news_v040_2" formatted="false">Il tasto Home fisico chiude ora tutti i popup aperti sul launcher</string>
     <string name="news_v040_3" formatted="false">Nuove icone del clima (stile ISO) nella barra e nei popup Clima/Comfort, con stato del ricircolo reale</string>
     <string name="news_v040_4" formatted="false">Impostazioni riorganizzate in più sezioni; tasto 360 configurabile (originale, MG4 360, un\'altra app o nascosto); pulsante Apri di Android Auto/CarPlay più grande</string>
+    <string name="set_charge_limit" formatted="false">Limite di ricarica</string>
+    <string name="set_charge_limit_sub" formatted="false">Automatico: si vede solo se l\'auto supporta il comando</string>
+    <string name="set_heat" formatted="false">Riscaldamento sedili e volante</string>
+    <string name="set_heat_sub" formatted="false">Automatico: secondo l\'equipaggiamento dell\'auto. Se ce l\'hai e non compare, scegli Mostra</string>
+    <string name="set_retro" formatted="false">Dopo la retromarcia torna all\'app di prima</string>
+    <string name="set_retro_sub" formatted="false">CarPlay, Android Auto (anche da box), navigatore o l\'app che era aperta</string>
+    <string name="set_quick" formatted="false">Pulsante in alto a destra</string>
+    <string name="set_quick_sub" formatted="false">Senza pulsante le sorgenti media mostrano sempre il nome</string>
+    <string name="quick_proj" formatted="false">CarPlay / Android Auto</string>
+    <string name="quick_app" formatted="false">Un\'app…</string>
+    <string name="quick_none" formatted="false">Nessuno</string>
+    <string name="quick_pick" formatted="false">Scegli l\'app del pulsante</string>
+    <string name="notice_title" formatted="false">Avviso</string>
+    <string name="news_v042_1" formatted="false">Tema giorno/notte automatico anche sulla SWI69: segue l\'auto, i fari o alba e tramonto, con 60 s di attesa per le gallerie</string>
+    <string name="news_v042_2" formatted="false">Dopo la retromarcia si torna da soli a CarPlay, Android Auto o all\'app di prima</string>
+    <string name="news_v042_3" formatted="false">All\'accensione riparte l\'ultima sorgente audio; radio e Bluetooth partono in modo affidabile, con copertina e comandi del telefono</string>
+    <string name="news_v042_4" formatted="false">Grafica: fari accesi sull\'auto, pressione gomme più grande, FM/DAB sotto la Radio, icone 360° più chiare, temperatura esterna compatta</string>
+    <string name="news_v042_5" formatted="false">Nuove impostazioni: riscaldamento sedili e volante, limite di ricarica, pulsante in alto a destra; aggiornamenti e avvisi controllati da soli</string>
+    <string name="cb_sched" formatted="false">Programmata</string>
+    <string name="cb_sched_title" formatted="false">Ricarica programmata</string>
+    <string name="cb_sched_msg" formatted="false">Con il cavo collegato la ricarica parte all\'orario di inizio. «Fino al limite» continua dopo l\'orario di fine fino al limite di ricarica.</string>
+    <string name="sched_off" formatted="false">Spenta</string>
+    <string name="sched_to_limit" formatted="false">Fino al limite</string>
+    <string name="sched_time" formatted="false">Orario…</string>
+    <string name="sched_start" formatted="false">Inizio della ricarica</string>
+    <string name="sched_end" formatted="false">Fine della ricarica</string>
 </resources>

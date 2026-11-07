@@ -128,10 +128,14 @@ public final class HomeMode {
         }
     }
 
+    /** 0.4.2: launcher aperto dal launcher stesso (avvio/sostituzione della home MG), non dal tasto Home dell'utente. */
+    public static final String EXTRA_AUTO = "mg4_aperto_da_launcher";
+
     public static void openOurs(Context c) {
+        RetroReturn.noteBroughtBy("avvio/sostituzione home (HomeMode.openOurs)");
         try {
             c.startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setComponent(HomeDefault.ours(c))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+                    .putExtra(EXTRA_AUTO, true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
         } catch (Throwable e) {
             Diag.error("avvio launcher", e.toString());
         }

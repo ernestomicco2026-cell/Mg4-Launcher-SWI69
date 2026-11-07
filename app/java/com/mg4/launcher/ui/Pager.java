@@ -7,7 +7,6 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 
 /**
  * Pagine affiancate a scorrimento orizzontale (Home ↔ App). Il trascinamento verticale resta ai figli
@@ -75,20 +74,55 @@ public final class Pager extends ViewGroup {
         page = p;
         float target = p * getWidth();
         if (anim != null) anim.cancel();
-        if (!animate || getWidth() == 0) {
+        final int newPage = p;
+        if (!animate || getWidth() == 0 || Math.abs(offset - target) < 1) {
             offset = target;
             apply();
+            layers(false);
+            if (changedPage && listener != null) listener.onPageChanged(newPage);
         } else {
+            // 0.4.2 (punto 7c): animazione morbida: curva "veloce poi lenta", durata in proporzione allo spazio da fare,
+            // pagine disegnate come immagini (strati hardware) durante il movimento; il ricaricamento della pagina App
+            // avviene a fine animazione, non durante (era la causa degli scatti)
+            float frac = Math.min(1f, Math.abs(offset - target) / Math.max(1f, getWidth()));
             anim = ValueAnimator.ofFloat(offset, target);
-            anim.setDuration(260);
-            anim.setInterpolator(new DecelerateInterpolator(1.6f));
+            anim.setDuration(Math.max(160, Math.round(300 * frac)));
+            anim.setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f));
             anim.addUpdateListener(a -> {
                 offset = (float) a.getAnimatedValue();
                 apply();
             });
+            anim.addListener(new android.animation.AnimatorListenerAdapter() {
+                private boolean cancelled;
+
+                @Override
+                public void onAnimationCancel(android.animation.Animator a) {
+                    cancelled = true;
+                }
+
+                @Override
+                public void onAnimationEnd(android.animation.Animator a) {
+                    if (cancelled) return;
+                    layers(false);
+                    if (changedPage && listener != null) listener.onPageChanged(newPage);
+                }
+            });
+            layers(true);
             anim.start();
         }
-        if (changedPage && listener != null) listener.onPageChanged(p);
+    }
+
+    /** Strati hardware sulle pagine solo durante il movimento (poi si liberano: la RAM è poca). */
+    private boolean layered;
+
+    private void layers(boolean on) {
+        if (layered == on) return;
+        layered = on;
+        for (int i = 0; i < getChildCount(); i++) {
+            View v = getChildAt(i);
+            v.setLayerType(on ? View.LAYER_TYPE_HARDWARE : View.LAYER_TYPE_NONE, null);
+            if (on) v.buildLayer();
+        }
     }
 
     @Override
@@ -109,6 +143,7 @@ public final class Pager extends ViewGroup {
                 float dx = e.getX() - downX, dy = e.getY() - downY;
                 if (!dragging && Math.abs(dx) > slop && Math.abs(dx) > Math.abs(dy) * 1.5f) {
                     dragging = true;
+                    layers(true);
                     lastX = e.getX();
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }

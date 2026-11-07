@@ -25,6 +25,8 @@ public final class Ui {
     public static final Typeface LIGHT = Typeface.create("sans-serif-light", Typeface.NORMAL);
     public static final Typeface REGULAR = Typeface.create("sans-serif", Typeface.NORMAL);
     public static final Typeface MEDIUM = Typeface.create("sans-serif-medium", Typeface.NORMAL);
+    /** 0.4.2: scritta "360°" delle icone della telecamera. */
+    public static final Typeface BOLD = Typeface.create("sans-serif", Typeface.BOLD);
 
     /** Dimensione dei comandi toccabili: 1 Normale, 1,15 Grande, 1,3 Molto grande. */
     public static float K = 1f;

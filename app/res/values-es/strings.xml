@@ -63,7 +63,7 @@
     <string name="set_diag_sub" formatted="false">Valores leídos del coche y errores recientes</string>
     <string name="set_diag_title" formatted="false">Diagnóstico de servicios del coche</string>
     <string name="set_home_card" formatted="false">PANEL DEL COCHE</string>
-    <string name="set_inside_sub" formatted="false">Debajo de la exterior · «— °» si el coche no la proporciona</string>
+    <string name="set_inside_sub" formatted="false">Debajo de la exterior; «--» si el coche no la da</string>
     <string name="set_language" formatted="false">IDIOMA</string>
     <string name="set_menu_title" formatted="false">Ajustes</string>
     <string name="set_open_original" formatted="false">Abrir la pantalla de inicio original de MG</string>
@@ -392,4 +392,30 @@
     <string name="news_v040_2" formatted="false">El botón Home físico ahora cierra todos los popups abiertos en el launcher</string>
     <string name="news_v040_3" formatted="false">Nuevos iconos de clima (estilo ISO) en la barra y en los popups Clima/Confort, con el estado real de recirculación</string>
     <string name="news_v040_4" formatted="false">Ajustes reorganizados en más secciones; botón 360 configurable (original, MG4 360, otra app u oculto); botón Abrir de Android Auto/CarPlay más grande</string>
+    <string name="set_charge_limit" formatted="false">Límite de carga</string>
+    <string name="set_charge_limit_sub" formatted="false">Automático: solo si el coche admite el mando</string>
+    <string name="set_heat" formatted="false">Calefacción de asientos y volante</string>
+    <string name="set_heat_sub" formatted="false">Automático: según el equipamiento del coche. Si lo tienes y no aparece, elige Mostrar</string>
+    <string name="set_retro" formatted="false">Tras la marcha atrás, volver a la app anterior</string>
+    <string name="set_retro_sub" formatted="false">CarPlay, Android Auto (también por box), navegador o la app que estaba abierta</string>
+    <string name="set_quick" formatted="false">Botón arriba a la derecha</string>
+    <string name="set_quick_sub" formatted="false">Sin el botón, las fuentes muestran siempre su nombre</string>
+    <string name="quick_proj" formatted="false">CarPlay / Android Auto</string>
+    <string name="quick_app" formatted="false">Una app…</string>
+    <string name="quick_none" formatted="false">Ninguno</string>
+    <string name="quick_pick" formatted="false">Elige la app del botón</string>
+    <string name="notice_title" formatted="false">Aviso</string>
+    <string name="news_v042_1" formatted="false">Tema día/noche automático también en el SWI69: sigue al coche, los faros o el amanecer y el atardecer, con 60 s de espera para los túneles</string>
+    <string name="news_v042_2" formatted="false">Tras la marcha atrás se vuelve solo a CarPlay, Android Auto o a la app anterior</string>
+    <string name="news_v042_3" formatted="false">Al arrancar vuelve la última fuente de audio; radio y Bluetooth arrancan de forma fiable, con carátula y mandos del teléfono</string>
+    <string name="news_v042_4" formatted="false">Gráficos: faros encendidos en el coche, presión más grande, FM/DAB bajo Radio, iconos 360° más claros, temperatura exterior compacta</string>
+    <string name="news_v042_5" formatted="false">Nuevos ajustes: calefacción de asientos y volante, límite de carga, botón arriba a la derecha; actualizaciones y avisos automáticos</string>
+    <string name="cb_sched" formatted="false">Programada</string>
+    <string name="cb_sched_title" formatted="false">Carga programada</string>
+    <string name="cb_sched_msg" formatted="false">Con el cable conectado, la carga empieza a la hora de inicio. «Hasta el límite» sigue tras la hora de fin hasta el límite de carga.</string>
+    <string name="sched_off" formatted="false">Apagada</string>
+    <string name="sched_to_limit" formatted="false">Hasta el límite</string>
+    <string name="sched_time" formatted="false">Horario…</string>
+    <string name="sched_start" formatted="false">Inicio de la carga</string>
+    <string name="sched_end" formatted="false">Fin de la carga</string>
 </resources>

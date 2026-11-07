@@ -77,6 +77,15 @@ public final class BootAccessibility extends AccessibilityService {
         }
     }
 
+    /** 0.4.2 (punto 6): telecamere aperte/chiuse (stessi broadcast che ascolta la home originale). */
+    private boolean cameraRegistered;
+    private final BroadcastReceiver camera = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            RetroReturn.onCameraBroadcast(c, "com.saicmotor.360camera.show".equals(i.getAction()));
+        }
+    };
+
     private final BroadcastReceiver screenOn = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent i) {
@@ -190,6 +199,13 @@ public final class BootAccessibility extends AccessibilityService {
             registerReceiver(screenOn, new IntentFilter(Intent.ACTION_SCREEN_ON));
         } catch (Throwable ignored) {
         }
+        try {
+            IntentFilter cam = new IntentFilter("com.saicmotor.360camera.show");
+            cam.addAction("com.saicmotor.360camera.close");
+            registerReceiver(camera, cam);
+            cameraRegistered = true;
+        } catch (Throwable ignored) {
+        }
         h.postDelayed(expiry, EXPIRY_CHECK_MS);
         // 0.9.6: avvio sicuro riconfermato a ogni accensione; se la home MG non compare, si apre comunque il launcher
         new Thread(() -> HomeLock.apply(this, "accensione"), "mg4-homelock").start();
@@ -238,6 +254,12 @@ public final class BootAccessibility extends AccessibilityService {
         }
 
         if (e.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
+        // 0.4.2 (punto 6): retromarcia (telecamere) e app da riaprire dopo; prima di StartGuard, che sostituisce la home MG
+        try {
+            RetroReturn.onForeground(this, pkg);
+        } catch (Throwable t) {
+            Diag.error("retro.ritorno", t.toString());
+        }
         StartGuard.onForeground(this, pkg, e.getClassName() == null ? null : e.getClassName().toString(), true);
         if (getPackageName().equals(pkg)) probeSystemButton();
         // il nostro launcher deve restare in primo piano 5 s: si ricontrolla senza aspettare un altro evento
@@ -279,9 +301,9 @@ public final class BootAccessibility extends AccessibilityService {
                 }
             }
             sb.append(sys == 0 ? " | nessuna finestra SystemUI visibile" : "");
-            Diag.put("luci.pulsanteSistema", sb.toString());
+            Diag.put("luci.barraSistema", sb.toString());
         } catch (Throwable t) {
-            Diag.error("luci.pulsanteSistema", t.toString());
+            Diag.error("luci.barraSistema", t.toString());
         }
     }
 
@@ -296,6 +318,12 @@ public final class BootAccessibility extends AccessibilityService {
         if (started) {
             try {
                 unregisterReceiver(screenOn);
+            } catch (Throwable ignored) {
+            }
+        }
+        if (cameraRegistered) {
+            try {
+                unregisterReceiver(camera);
             } catch (Throwable ignored) {
             }
         }

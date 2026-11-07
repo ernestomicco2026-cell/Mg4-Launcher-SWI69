@@ -40,6 +40,9 @@ public final class CarView extends View {
     private final Paint rimPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
     private final Paint rimShade = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rimDst = new RectF();
+    /** 0.4.2 (punto 7b): fari accesi (anabbaglianti o luci di posizione letti dall'auto). */
+    private boolean lights;
+    private final Paint lightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public CarView(Context c) {
         super(c);
@@ -63,6 +66,12 @@ public final class CarView extends View {
         Paint p = new Paint();
         p.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
         cv.drawBitmap(roofMask, 0, 0, p);
+    }
+
+    public void setLights(boolean on) {
+        if (lights == on) return;
+        lights = on;
+        invalidate();
     }
 
     public void setLook(int bodyColor, boolean blackRoof, int wheel, Theme t) {
@@ -119,6 +128,37 @@ public final class CarView extends View {
         c.drawBitmap(highlight, null, dst, hlLayer);
         c.drawBitmap(base, null, dst, plain);
         drawWheels(c, s, dst.left, dst.top);
+        if (lights) drawLights(c, s, dst.left, dst.top);
+    }
+
+    /**
+     * Fari accesi: bagliore bianco sul faro anteriore (sinistra nella foto, centro ~ 59,137 in car_base 763×287),
+     * fascio corto davanti al muso e bagliore rosso sul fanale posteriore (~ 722,98). Solo sfumature (niente filtri pesanti).
+     */
+    private void drawLights(Canvas c, float s, float left, float top) {
+        // fascio davanti all'auto
+        float bx = left + 8 * s, by = top + 146 * s, br = 70 * s;
+        lightPaint.setShader(new RadialGradient(bx, by, br, 0x66FFF6DC, 0x00FFF6DC, Shader.TileMode.CLAMP));
+        c.save();
+        c.scale(1f, 0.35f, bx, by);
+        c.drawCircle(bx, by, br, lightPaint);
+        c.restore();
+        // faro anteriore (inclinato come nella foto)
+        float fx = left + 59 * s, fy = top + 137 * s, fr = 46 * s;
+        lightPaint.setShader(new RadialGradient(fx, fy, fr, 0xEEFFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP));
+        c.save();
+        c.rotate(-17f, fx, fy);
+        c.scale(1f, 0.22f, fx, fy);
+        c.drawCircle(fx, fy, fr, lightPaint);
+        c.restore();
+        // fanale posteriore
+        float rx = left + 722 * s, ry = top + 98 * s, rr = 26 * s;
+        lightPaint.setShader(new RadialGradient(rx, ry, rr, 0xCCFF2A2A, 0x00FF2A2A, Shader.TileMode.CLAMP));
+        c.save();
+        c.scale(0.7f, 1f, rx, ry);
+        c.drawCircle(rx, ry, rr, lightPaint);
+        c.restore();
+        lightPaint.setShader(null);
     }
 
     private void drawWheels(Canvas c, float s, float left, float top) {

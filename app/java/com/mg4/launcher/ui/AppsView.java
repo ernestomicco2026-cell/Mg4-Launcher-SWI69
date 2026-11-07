@@ -91,6 +91,13 @@ public final class AppsView extends LinearLayout {
         reload();
     }
 
+    /** App della telecamera 360: originale (EVS / AVM / around view) o un'app con "360" nel nome o nel pacchetto. */
+    static boolean isCamera360(AppCatalog.App a) {
+        String p = a.packageName == null ? "" : a.packageName.toLowerCase(java.util.Locale.ROOT);
+        String l = a.label == null ? "" : a.label;
+        return p.contains("360") || l.contains("360") || p.equals("com.saicmotor.evs") || p.contains("aroundview") || p.endsWith(".avm");
+    }
+
     private static String key(AppCatalog.App a) {
         return a.packageName + "/" + (a.component != null ? a.component.getClassName() : "");
     }
@@ -177,7 +184,12 @@ public final class AppsView extends LinearLayout {
         box.setBackground(Ui.round(boxBg, dp(22 * k)));
         ImageView iv = new ImageView(c);
         iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        if (app.iconRes != 0) {
+        if (isCamera360(app)) {
+            // 0.4.2 (punto 8c): ogni app della telecamera 360 ha la scritta "360°", grande e leggibile (non si confonde con Video USB)
+            TextView tv = Ui.text(c, "360°", 23 * k, fg, Ui.BOLD);
+            tv.setGravity(Gravity.CENTER);
+            box.addView(tv, new FrameLayout.LayoutParams(-1, -1, Gravity.CENTER));
+        } else if (app.iconRes != 0) {
             iv.setImageResource(app.iconRes);
             iv.setColorFilter(fg);
             box.addView(iv, new FrameLayout.LayoutParams(dp(34 * k), dp(34 * k), Gravity.CENTER));

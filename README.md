@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.1.apk"><img alt="Scarica / Download 0.4.1" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.1-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.2.apk"><img alt="Scarica / Download 0.4.2" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.2-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -175,7 +175,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.1.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.2.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +192,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.1.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.2.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -216,6 +216,11 @@ Serve che l'auto sia collegata a internet (connettività dell'auto o hotspot del
 Gli aggiornamenti arrivano solo da questo repository: una versione SWI68 non viene mai proposta.
 Chi ha una versione precedente alla 0.1.3 deve installare una volta a mano una versione più recente (chiavetta o adb).
 Si possono installare anche da computer, con lo stesso comando dell'installazione.
+
+Dalla 0.4.2 il launcher **controlla da solo** se ci sono aggiornamenti: 2 minuti dopo l'accensione e poi ogni 6 ore.
+Se c'è una versione nuova compare un avviso discreto con il pulsante **Aggiorna**. Per le correzioni importanti
+l'aggiornamento può partire da solo, ma solo ad auto ferma. Il launcher può anche mostrare **avvisi importanti**
+(ad esempio un problema noto e come risolverlo). Legge solo i file di questo repository.
 
 ### Tornare alla home MG originale
 
@@ -263,6 +268,29 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.2
+- **Tema giorno/notte**: ora cambia da solo anche sulla SWI69. Segue l'auto quando il sistema cambia davvero tema,
+  altrimenti i fari accesi in automatico oppure alba e tramonto. Aspetta 60 secondi prima di cambiare, così non
+  lampeggia in galleria. La scelta manuale Giorno/Notte resta.
+- **Spia fendinebbia di sistema**: l'angolo in alto a sinistra dove la SystemUI disegna la spia resta libero, con la
+  misura presa dalla finestra vera.
+- **Retromarcia**: finita la retromarcia si torna da soli a CarPlay, Android Auto (anche da box) o all'app di prima.
+  Si può spegnere in Avvio e app.
+- **Audio**: all'accensione riparte l'ultima sorgente usata. Radio e Bluetooth partono in modo affidabile, con nuovi
+  tentativi automatici; nel Bluetooth funzionano play, pausa, avanti e indietro, con titolo, artista e copertina se il
+  telefono li manda.
+- **Card media**: la scelta FM/DAB è sotto il pulsante Radio e compare solo con la radio.
+- **Home**: temperatura esterna più compatta a sinistra, temperatura interna di nuovo come opzione ("--" se l'auto non
+  la fornisce), fari accesi sull'auto disegnata, pressione gomme più grande, animazione più fluida verso la schermata App.
+- **Telecamera 360**: tutte le icone diventano la scritta "360°"; Video USB ha l'icona della pellicola.
+- **Nuove impostazioni**: riscaldamento sedili e volante (Automatico/Mostra/Nascondi, con i comandi dell'app clima
+  originale), limite di ricarica (Automatico/Mostra/Nascondi), pulsante in alto a destra (CarPlay/Android Auto, un'app,
+  nessuno).
+- **Ricarica programmata**: nuovo pulsante nella barra di ricarica, con gli stessi comandi della Gestione ricarica
+  dell'app Energia (spenta, dalle–alle, fino al limite, cambio degli orari). Compare solo se l'auto la supporta.
+- **Aggiornamenti e avvisi**: controllo automatico, pulsante Aggiorna anche fuori dalle impostazioni, avvisi importanti
+  da remoto.
 
 #### 0.4.1
 - **Sblocca presa di ricarica**: come l'app originale, lo sblocco parte solo se la presa è bloccata; se è già sbloccata
@@ -667,7 +695,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.1.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.2.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -683,7 +711,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.1.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.2.apk
    ```
 2. Make it the default home:
    ```bash
@@ -706,6 +734,11 @@ If a newer version exists, **Install** appears (also at the bottom of the settin
 The car needs an internet connection (car connectivity or phone hotspot). Updates come only from this repository:
 a SWI68 build is never offered. Anyone on a version older than 0.1.3 must install a newer one once by hand
 (USB stick or adb).
+
+From 0.4.2 the launcher **checks for updates by itself**: 2 minutes after start-up and then every 6 hours. When a new
+version exists a discreet notice with an **Update** button appears. For important fixes the update can start by itself,
+but only with the car stopped. The launcher can also show **important notices** (for example a known problem and how to
+fix it). It only reads files from this repository.
 
 ### Going back to the original MG home
 
@@ -750,6 +783,26 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.2
+- **Day/night theme**: now switches by itself on the SWI69 too. It follows the car when the system really changes theme,
+  otherwise the automatic headlights or sunrise and sunset. It waits 60 seconds before switching, so it doesn't flicker
+  in tunnels. The manual Day/Night choice stays.
+- **System fog-light button**: the top-left corner where the SystemUI draws the light stays free, measured from the
+  real window.
+- **Reverse**: after reversing you go back automatically to CarPlay, Android Auto (also via box) or the previous app.
+  It can be turned off in Startup and apps.
+- **Audio**: at start-up the last used source resumes. Radio and Bluetooth start reliably, with automatic retries; in
+  Bluetooth play, pause, next and previous work, with title, artist and cover art if the phone sends them.
+- **Media card**: the FM/DAB choice sits under the Radio button and only appears with the radio.
+- **Home**: more compact outside temperature on the left, inside temperature back as an option ("--" if the car doesn't
+  provide it), headlights on the drawn car, bigger tyre pressure, smoother animation to the Apps screen.
+- **360 camera**: every icon becomes the "360°" label; USB Video has a film icon.
+- **New settings**: heated seats and steering wheel (Automatic/Show/Hide, with the commands of the original climate app),
+  charge limit (Automatic/Show/Hide), top-right button (CarPlay/Android Auto, an app, none).
+- **Scheduled charging**: new button in the charging bar, with the same commands as the Energy app's charge management
+  (off, from–to, up to the limit, change of times). It only appears if the car supports it.
+- **Updates and notices**: automatic check, Update button outside the settings too, important remote notices.
 
 #### 0.4.1
 - **Unlock charging socket**: like the original app, the unlock is only sent when the socket is locked; if it is already

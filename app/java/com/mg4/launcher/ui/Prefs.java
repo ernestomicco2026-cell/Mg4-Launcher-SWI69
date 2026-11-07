@@ -359,4 +359,61 @@ public final class Prefs {
     public void setCam360(String v) {
         sp.edit().putString("tasto360", v == null ? "" : v).apply();
     }
+
+    // --- 0.4.2 ---
+
+    /** Scelte a tre vie: "auto" (come l'auto), "show" (mostra sempre), "hide" (nascondi sempre). */
+    public static final String SHOW_AUTO = "auto", SHOW_ON = "show", SHOW_OFF = "hide";
+
+    private String tri(String key) {
+        String v = sp.getString(key, SHOW_AUTO);
+        return SHOW_ON.equals(v) || SHOW_OFF.equals(v) ? v : SHOW_AUTO;
+    }
+
+    /** Punto 7d: limite di ricarica (Automatico = solo se l'auto supporta il comando). */
+    public String chargeLimitMode() {
+        return tri("limiteRicaricaModo");
+    }
+
+    public void setChargeLimitMode(String v) {
+        sp.edit().putString("limiteRicaricaModo", v).apply();
+    }
+
+    /** Punto 9: riscaldamento sedili e volante (Automatico = secondo la configurazione dell'auto). */
+    public String heatMode() {
+        return tri("riscaldamentoModo");
+    }
+
+    public void setHeatMode(String v) {
+        sp.edit().putString("riscaldamentoModo", v).apply();
+    }
+
+    /** Punto 6: dopo la retromarcia si torna all'app di prima (CarPlay, Android Auto, navigatore…). */
+    public boolean retroReturn() {
+        return sp.getBoolean("retroRitorno", true);
+    }
+
+    public void setRetroReturn(boolean b) {
+        sp.edit().putBoolean("retroRitorno", b).apply();
+    }
+
+    public static boolean retroReturn(SharedPreferences sp) {
+        return sp.getBoolean("retroRitorno", true);
+    }
+
+    /** Punto 8b: pulsante in alto a destra: "proj" (CarPlay / Android Auto), "app:<pacchetto>", "none". */
+    public static final String QUICK_PROJ = "proj", QUICK_APP = "app:", QUICK_NONE = "none";
+
+    public String quickButton() {
+        String v = sp.getString("pulsanteRapido", QUICK_PROJ);
+        return QUICK_NONE.equals(v) || v.startsWith(QUICK_APP) ? v : QUICK_PROJ;
+    }
+
+    public void setQuickButton(String v) {
+        sp.edit().putString("pulsanteRapido", v == null ? QUICK_PROJ : v).apply();
+    }
+
+    public SharedPreferences raw() {
+        return sp;
+    }
 }

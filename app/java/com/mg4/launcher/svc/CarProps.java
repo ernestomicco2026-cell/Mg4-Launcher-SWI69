@@ -164,6 +164,46 @@ public final class CarProps {
         }
     }
 
+    /** 0.4.2: proprietà booleana: 1 vero, 0 falso, -1 non leggibile (senza errori nella diagnostica). */
+    public int getBoolQuiet(int prop) {
+        if (unsupported.contains(prop) || denied.contains(prop)) return -1;
+        try {
+            Object p = pm();
+            if (p == null) return -1;
+            area(prop);
+            if (!areas.containsKey(prop)) return -1;
+            Method m = p.getClass().getMethod("getBooleanProperty", int.class, int.class);
+            return (Boolean) m.invoke(p, prop, area(prop)) ? 1 : 0;
+        } catch (Throwable e) {
+            Throwable c = e instanceof java.lang.reflect.InvocationTargetException && e.getCause() != null ? e.getCause() : e;
+            if (c instanceof SecurityException) denied.add(prop);
+            else if (c instanceof IllegalArgumentException) unsupported.add(prop);
+            return -1;
+        }
+    }
+
+    /** 0.4.2: decimale senza errori nella diagnostica (NaN se non leggibile o non nell'elenco dell'auto). */
+    public float getFloatQuiet(int prop, int areaId) {
+        if (unsupported.contains(prop) || denied.contains(prop)) return Float.NaN;
+        try {
+            Object p = pm();
+            if (p == null) return Float.NaN;
+            area(prop);
+            if (!areas.containsKey(prop)) return Float.NaN;
+            Method m = p.getClass().getMethod("getFloatProperty", int.class, int.class);
+            return (Float) m.invoke(p, prop, areaId == Integer.MIN_VALUE ? area(prop) : areaId);
+        } catch (Throwable e) {
+            return Float.NaN;
+        }
+    }
+
+    /** Aree configurate di una proprietà (vuoto se non c'è). */
+    public int[] areasOf(int prop) {
+        area(prop);
+        int[] a = allAreas.get(prop);
+        return a == null ? new int[0] : a;
+    }
+
     /** Decimale o NaN se non leggibile. Dopo il primo rifiuto dell'auto la proprietà non si rilegge più. */
     public float getFloat(int prop) {
         if (unsupported.contains(prop) || denied.contains(prop)) return Float.NaN;

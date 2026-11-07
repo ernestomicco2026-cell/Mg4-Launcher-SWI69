@@ -1,6 +1,6 @@
 {
-  "version": "0.4.1",
-  "apk": "releases/MG4Launcher-SWI69-0.4.1.apk",
-  "size": 677904,
-  "notes": "Sblocca presa di ricarica: parte solo se la presa è bloccata, come l'app originale. Corretta la diagnostica del pulsante fendinebbia di sistema."
+  "version": "0.4.2",
+  "apk": "releases/MG4Launcher-SWI69-0.4.2.apk",
+  "size": 722960,
+  "notes": "Tema giorno/notte automatico anche sulla SWI69; ritorno a CarPlay/Android Auto dopo la retromarcia; ultima sorgente audio all'accensione, radio e Bluetooth più affidabili; FM/DAB sotto la Radio; fari sull'auto, gomme più leggibili, icone 360°; riscaldamento sedili e volante, limite e ricarica programmata solo se l'auto li supporta; aggiornamenti e avvisi controllati da soli."
 }

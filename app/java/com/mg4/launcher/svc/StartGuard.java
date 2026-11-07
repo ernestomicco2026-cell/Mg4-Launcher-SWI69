@@ -265,6 +265,11 @@ public final class StartGuard {
             return;
         }
         String origin = prev.startsWith("com.saicmotor.") || prev.startsWith("com.saic.") ? "altro (" + prev + ")" : "tasto";
+        // 0.4.2 (punto 6): home MG comparsa alla chiusura delle telecamere → si riapre l'app di prima, non il launcher
+        if (RetroReturn.interceptMgHome(c)) {
+            Diag.put("home.tasto", "home MG dopo la retromarcia: riaperta l'app di prima");
+            return;
+        }
         HomeMode.openOurs(c);
         Diag.put("home.tasto", "home MG sostituita (origine: " + origin + ")");
     }

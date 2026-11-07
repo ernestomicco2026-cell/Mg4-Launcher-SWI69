@@ -55,17 +55,26 @@ public final class VehicleClient {
     private static final int AC_SWITCH_DEFROST = 27, AC_GET_DEFROST = 28;     // parabrezza
     // ricircolo, come la barra clima della home originale: "cambia" senza argomenti; 0 interno, 1 esterno, 2 auto
     private static final int AC_SWITCH_LOOP = 15, AC_GET_LOOP = 16;
+    /** 0.4.2 (punto 9): come l'app clima originale EH32: sedili switchSeatHeatStatus(1 sinistro / 2 destro), getSeatHeatStatus(lato);
+     *  volante setSteeringWheelHeatStatus(1) che commuta, getSteeringWheelHeatStatus (3 = acceso). */
+    private static final int AC_SWITCH_SEAT_HEAT = 31, AC_GET_SEAT_HEAT = 32, AC_SET_WHEEL_HEAT = 70, AC_GET_WHEEL_HEAT = 71;
 
     // fendinebbia, come la schermata dell'auto originale: set(1) = "premuto" (commuta), get 1 = acceso
     private static final String LAMP = "com.saicmotor.carapi.lamp.ICarLampService";
     private static final int LAMP_SET_REAR_FOG = 30, LAMP_GET_REAR_FOG = 31, LAMP_SET_FRONT_FOG = 40, LAMP_GET_FRONT_FOG = 41;
+    /** 0.4.2: anabbaglianti (0/1), luci di posizione (3 = accese), interruttore luci (1 = anabbaglianti a mano), come la home originale. */
+    private static final int LAMP_GET_DIPD_BEAM = 42, LAMP_GET_SIDE_LIGHT = 43, LAMP_GET_SWITCH_POS = 44;
     private static final String CONFIG = "com.saicmotor.carapi.config.ICarConfigService";
     private static final int CONFIG_FRONT_FOG = 60;   // getFrontFrogConfigData: 0 = fendinebbia anteriori presenti
     // assistenza alla guida, come l'app Impostazioni veicolo originale della SWI69 R45 (ICarConfigService)
     private static final int CONFIG_LKA = 20;         // getLkaConfigData: 0 = LKA presente, 1 assente
     private static final int CONFIG_ONE_PEDAL = 43;
     /** getRvcAvmConfigData, come la home originale SWI69 R45: 0 = nessuna telecamera; 1, 2, 4 = EVS; 3 = AVM; 5 = AVM quadro. */
-    private static final int CONFIG_RVC_AVM = 11;   // getOnePedalConfig: 0 = One Pedal presente (H17A), 1 assente
+    private static final int CONFIG_RVC_AVM = 11;
+    /** 0.4.2 (punto 9): configurazione usata dall'app clima originale EH32 (HvacService/HvacMainFragment t11_eh32). */
+    private static final int CONFIG_CAR_MODEL = 8, CONFIG_SEAT_HEAT = 23, CONFIG_WHEEL_HEAT = 52;
+    /** Modelli per cui l'app clima originale mostra il volante riscaldato (AppCache.hasSteeringWheelHeatEH32CarModeConfig). */
+    private static final int[] WHEEL_HEAT_MODELS = {69, 130, 131, 166, 173, 177, 132, 198, 200};   // getOnePedalConfig: 0 = One Pedal presente (H17A), 1 assente
     private static final String VS = "com.saicmotor.carapi.vs.ICarVehicleSettingService";
     // LKA (getLasMode/setLasMode): 0 nessuna richiesta, 1 spento, 2 LDW, 3 LDP, 4 LKA, 5 ELK
     private static final int VS_SET_LAS = 30, VS_GET_LAS = 31;
@@ -79,6 +88,7 @@ public final class VehicleClient {
     private static final int K_ACC_TJA = 80153, K_PEDAL = 80157;
     private static final String IPK = "com.saicmotor.carapi.ipk.ICarIpkService";
     private static final int IPK_TYRE_UNIT = 29;      // 0 bar, 1 kPa, 2 psi (scelta dell'utente sul quadro)
+    private static final int IPK_DAY_NIGHT = 23;      // 0.4.2: getClusterDayNightMode (solo diagnostica tema.candidati)
 
     /** Ventola come la barra del launcher: 0 = clima spento, 1..11, 15 = automatico. */
     public static final int FAN_OFF = 0, FAN_AUTO = 15;
@@ -118,8 +128,14 @@ public final class VehicleClient {
         public int acTemp = -1;           // 15 = LO, 16..30, 31 = HI
         public int hvacPower = -1;
         public int acOn = -1, autoOn = -1, defrostOn = -1;   // 1 acceso, 0 spento, -1 sconosciuto
-        public int seatLeft = -1, seatRight = -1;          // SWI69 R45: nessun comando dei sedili riscaldati
-        public int wheelHeat = -1;                         // SWI69 R45: nessun comando del volante riscaldato
+        public int seatLeft = -1, seatRight = -1;          // 0.4.2: livello 0..3, -1 = pulsante nascosto (auto senza o scelta Nascondi)
+        public int wheelHeat = -1;                         // 0.4.2: 1 acceso, 0 spento, -1 nascosto
+        /** 0.4.2: fari dall'auto: anabbaglianti 0/1, luci di posizione (3 = accese), interruttore (1 = a mano); -1 non letti. */
+        public int lowBeam = -1, sideLight = -1, lightSwitch = -1;
+        /** 0.4.2 (punto 7d): limite di ricarica visibile (auto che supporta il comando o scelta Mostra). */
+        public boolean chargeLimitShown;
+        /** 0.4.2 (punto 7d): ricarica programmata: modo 1 orario, 2 spenta, 3 fino al limite; -1 = l'auto non la supporta. */
+        public int schedMode = -1, schedStartH = -1, schedStartM = -1, schedEndH = -1, schedEndM = -1;
         public float[] tireBar = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};   // AS, AD, PS, PD
         public float insideTemp = Float.NaN;
         public int rearFog = -1, frontFog = -1;           // 1 acceso, 0 spento, -1 non disponibile
@@ -335,11 +351,20 @@ public final class VehicleClient {
                 Diag.error("clima", ex.toString());
                 forget(BIND_HVAC);
             }
+            readHeat(s, now);
             readCluster(s);
         }
         readLamps(s);
         readBms(s, now);
         readCarProps(s);
+        readInside(s);
+        // 0.4.2 (punto 1): giorno/notte (fari dall'auto, proprietà del veicolo, alba/tramonto)
+        try {
+            DayNight.readCar(ctx, props, clusterDayNight);
+            DayNight.tick(ctx, ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getString("theme", "auto"));
+        } catch (Throwable t) {
+            Diag.error("tema", t.toString());
+        }
         last = s;
         main.post(() -> {
             if (listener != null) listener.onVehicleState(s);
@@ -347,6 +372,7 @@ public final class VehicleClient {
     }
 
     private boolean loopSupported = true;
+    private boolean limitSupported;
 
     /** Unità della pressione scelta sul quadro (per "Automatica"). */
     private void readCluster(State s) {
@@ -359,6 +385,10 @@ public final class VehicleClient {
             if (ipk != null) {
                 clusterUnit = Rpc.callInt(ipk, IPK, IPK_TYRE_UNIT);
                 clusterAt = android.os.SystemClock.uptimeMillis();
+                try {
+                    clusterDayNight = Rpc.callInt(ipk, IPK, IPK_DAY_NIGHT);
+                } catch (Exception ignored) {
+                }
                 Diag.put("tpms.unitàQuadro", clusterUnit + " (0 bar, 1 kPa, 2 psi)");
             }
         } catch (Exception e) {
@@ -368,6 +398,7 @@ public final class VehicleClient {
     }
 
     private int clusterUnit = Integer.MIN_VALUE;
+    private volatile int clusterDayNight = Integer.MIN_VALUE;
     private long clusterAt;
 
     /** Gestore batteria: percentuale con decimali, potenza, limite e comandi di ricarica (come l'app Energia). */
@@ -384,6 +415,13 @@ public final class VehicleClient {
             s.chargeLimitCode = code;
             s.chargeLimit = limitPercent(code);
         }
+        // 0.4.2 (punto 7d): limite mostrato solo se l'auto supporta il comando (lettura valida), o per scelta dell'utente
+        if (code >= 1 && code <= 7) limitSupported = true;
+        String lm = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getString("limiteRicaricaModo", "auto");
+        s.chargeLimitShown = "show".equals(lm) || (!"hide".equals(lm) && limitSupported);
+        Diag.putQuiet("ricarica.limite", "supportato " + (limitSupported ? "sì" : "no") + " · valore letto " + code
+                + (code >= 1 && code <= 7 ? " (" + limitPercent(code) + "%)" : "") + " · scelta " + lm + " · mostrato " + (s.chargeLimitShown ? "sì" : "no"));
+        readSchedule(s, now);
         int lim = held(CarBms.CHRG_TRGT_SOC, s.chargeLimitCode, now);
         if (lim >= 1 && lim != s.chargeLimitCode) {
             s.chargeLimitCode = lim;
@@ -452,6 +490,46 @@ public final class VehicleClient {
         System.arraycopy(tireCache, 0, s.tireBar, 0, 4);
     }
 
+    // ---- 0.4.2 (punto 3): temperatura interna, solo con l'opzione accesa; mai l'esterna al suo posto -----------
+
+    private long insideAt;
+    private float insideCache = Float.NaN;
+
+    private void readInside(State s) {
+        boolean on = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getBoolean("showInsideTemp", false);
+        if (!on) {
+            Diag.putQuiet("clima.tempInterna", "non letta (opzione spenta)");
+            return;
+        }
+        long now = android.os.SystemClock.uptimeMillis();
+        if (props == null || !props.ready()) {
+            Diag.putQuiet("clima.tempInterna", "CarService non pronto → \"--\"");
+            return;
+        }
+        if (now - insideAt > 5000) {
+            insideAt = now;
+            // unica fonte dell'abitacolo: HVAC_TEMPERATURE_CURRENT (tutte le aree). HVAC_AMBIENT_TEMPERATURE è l'ESTERNA: non si usa.
+            float best = Float.NaN;
+            String src = "nessuna";
+            StringBuilder all = new StringBuilder();
+            for (int a : props.areasOf(CarProps.HVAC_TEMPERATURE_CURRENT)) {
+                float v = props.getFloatQuiet(CarProps.HVAC_TEMPERATURE_CURRENT, a);
+                all.append(all.length() == 0 ? "" : ", ").append(a).append('=').append(v);
+                if (Float.isNaN(best) && valid(v)) {
+                    best = v;
+                    src = "HVAC_TEMPERATURE_CURRENT area " + a;
+                }
+            }
+            float out = lastOutside;
+            boolean same = !Float.isNaN(best) && !Float.isNaN(out) && Math.abs(best - out) < 0.05f;
+            insideCache = best;
+            Diag.putQuiet("clima.tempInterna", (Float.isNaN(best) ? "--" : String.valueOf(best)) + " · fonte " + src
+                    + " · valida " + (Float.isNaN(best) ? "no" : "sì") + " · esterna " + (Float.isNaN(out) ? "?" : String.valueOf(out))
+                    + (same ? " (uguale all'esterna)" : "") + " · aree [" + all + "]");
+        }
+        s.insideTemp = insideCache;
+    }
+
     /** Temperatura interna leggibile? true / false, null finché non si sa (CarService non ancora pronto). */
     public static Boolean insideAvailable() {
         CarProps p = shared;
@@ -513,11 +591,32 @@ public final class VehicleClient {
                 s.hasFrontFog = frontFogConfig == 0;
                 if (s.hasFrontFog) s.frontFog = held(LAMP_GET_FRONT_FOG, Rpc.callInt(l, LAMP, LAMP_GET_FRONT_FOG) == 1 ? 1 : 0, now);
                 Diag.put("luci.fendinebbia ant/post", s.frontFog + " / " + s.rearFog);
+                // 0.4.2 (punti 1 e 7b): fari, come li legge la home originale (ModeManager.initCarLampData)
+                if (lampStateOk) {
+                    try {
+                        s.lowBeam = Rpc.callInt(l, LAMP, LAMP_GET_DIPD_BEAM);
+                        s.sideLight = Rpc.callInt(l, LAMP, LAMP_GET_SIDE_LIGHT);
+                        s.lightSwitch = Rpc.callInt(l, LAMP, LAMP_GET_SWITCH_POS);
+                    } catch (Exception ex) {
+                        lampStateOk = false;   // servizio senza questi comandi: si passa alle proprietà del veicolo
+                        Diag.put("luci.fari", "servizio luci senza stato fari (" + ex.getClass().getSimpleName() + "): uso il CarService");
+                    }
+                }
             }
         } catch (Exception e) {
             Diag.error("luci", e.toString());
             forget(BIND_LAMP);
         }
+        if (s.lowBeam < 0 && props != null && props.ready()) {
+            // riserva: proprietà del veicolo usate dalla SystemUI originale (CarLampController)
+            s.lowBeam = props.getBoolQuiet(DayNight.DIPD_BEAM_LGHT);
+            int side = props.getIntQuiet(DayNight.VEH_SIDE_LGHT), sw = props.getIntQuiet(DayNight.LIGHT_SWITCH_POS_STS);
+            s.sideLight = side == Integer.MIN_VALUE ? -1 : side;
+            s.lightSwitch = sw == Integer.MIN_VALUE ? -1 : sw;
+        }
+        DayNight.setLamps(s.lowBeam, s.sideLight, s.lightSwitch);
+        Diag.putQuiet("luci.fari", "anabbaglianti " + s.lowBeam + " · posizione " + s.sideLight + " · interruttore " + s.lightSwitch
+                + (lampStateOk ? " (servizio luci)" : " (CarService)"));
         try {
             readAssist(s, android.os.SystemClock.uptimeMillis());
         } catch (Exception e) {
@@ -613,6 +712,31 @@ public final class VehicleClient {
         return Float.isNaN(v) || v < 3f;
     }
 
+    /** VehicleProperty GEAR_SELECTION / CURRENT_GEAR (VehicleGear: 2 retromarcia, 4 parcheggio). */
+    public static final int GEAR_SELECTION = 289408000, CURRENT_GEAR = 289408001, GEAR_REVERSE = 2, GEAR_PARK = 4;
+
+    /** Marcia attuale, Integer.MIN_VALUE se non leggibile. */
+    public static int gear() {
+        CarProps p = shared;
+        if (p == null || !p.ready()) return Integer.MIN_VALUE;
+        int g = p.getIntQuiet(CURRENT_GEAR);
+        if (g == Integer.MIN_VALUE) g = p.getIntQuiet(GEAR_SELECTION);
+        return g;
+    }
+
+    /**
+     * 0.4.2 (punti 5 e 12): auto sicuramente ferma: velocità letta sotto 1 km/h oppure marcia P. False se né velocità né
+     * marcia si leggono (in quel caso un aggiornamento non si forza mai).
+     */
+    public static boolean surelyStopped() {
+        float v = speedKmh();
+        int g = gear();
+        boolean ok = (!Float.isNaN(v) && v < 1f) || g == GEAR_PARK;
+        Diag.putQuiet("auto.fermaPerAggiornamento", "velocità " + (Float.isNaN(v) ? "non letta" : String.format(java.util.Locale.ROOT, "%.1f km/h", v))
+                + " · marcia " + (g == Integer.MIN_VALUE ? "non letta" : String.valueOf(g)) + " → " + (ok ? "ferma" : "non sicura"));
+        return ok;
+    }
+
     /** Assistente di guida: Spento → ACC → TJA → Spento, come le impostazioni dell'auto. */
     public boolean cycleAccTja() {
         if (bg == null || !stopped()) return false;
@@ -681,6 +805,7 @@ public final class VehicleClient {
     // ---- stati di ricarica ----------------------------------------------------------------------
 
     private int frontFogConfig = Integer.MIN_VALUE;
+    private boolean lampStateOk = true;
 
     /** Stati di ricarica (stessi codici della SWI68): in carica / bilanciamento / rapida / wireless. */
     public static boolean isCharging(int st) {
@@ -772,18 +897,152 @@ public final class VehicleClient {
         press(BIND_LAMP, LAMP, LAMP_SET_FRONT_FOG, true, LAMP_GET_FRONT_FOG, last.frontFog, "luci.fendinebbia");
     }
 
-    /** Sedili e volante riscaldati: la SWI69 R45 non ha questi comandi (i pulsanti restano nascosti). */
+    // ---- 0.4.2 (punto 9): sedili e volante riscaldati, come l'app clima originale EH32 ------------------------
+
+    private int seatCfg = Integer.MIN_VALUE, wheelCfg = Integer.MIN_VALUE, carModel = Integer.MIN_VALUE;
+    private String heatCmd = "nessuno";
+
+    private String heatMode() {
+        String v = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getString("riscaldamentoModo", "auto");
+        return "show".equals(v) || "hide".equals(v) ? v : "auto";
+    }
+
+    private static boolean wheelModel(int m) {
+        for (int x : WHEEL_HEAT_MODELS) if (x == m) return true;
+        return false;
+    }
+
+    /**
+     * Presenza come l'app clima originale (configurazione dell'auto, NON la risposta delle letture: la SWI69 risponde
+     * anche sulle auto che non ce l'hanno). Sedili: configurazione 4 = sedili a 3 livelli (2 = assenti; gli altri valori
+     * non sono sicuri e in Automatico restano nascosti). Volante: configurazione 0 e modello tra quelli dell'app originale.
+     */
+    private void readHeat(VehicleClient.State s, long now) {
+        String mode = heatMode();
+        try {
+            if (seatCfg == Integer.MIN_VALUE || wheelCfg == Integer.MIN_VALUE || carModel == Integer.MIN_VALUE) {
+                IBinder cfg = sub(BIND_CONFIG);
+                if (cfg != null) {
+                    if (seatCfg == Integer.MIN_VALUE) seatCfg = Rpc.callInt(cfg, CONFIG, CONFIG_SEAT_HEAT);
+                    if (wheelCfg == Integer.MIN_VALUE) wheelCfg = Rpc.callInt(cfg, CONFIG, CONFIG_WHEEL_HEAT);
+                    if (carModel == Integer.MIN_VALUE) carModel = Rpc.callInt(cfg, CONFIG, CONFIG_CAR_MODEL);
+                }
+            }
+        } catch (Exception e) {
+            forget(BIND_CONFIG);
+        }
+        boolean seatAuto = seatCfg == 4;
+        boolean wheelAuto = wheelCfg == 0 && wheelModel(carModel);
+        boolean seatOn = "show".equals(mode) || ("auto".equals(mode) && seatAuto);
+        boolean wheelOn = "show".equals(mode) || ("auto".equals(mode) && wheelAuto);
+        int rl = -1, rr = -1, rw = -1;
+        if (seatOn || wheelOn || "auto".equals(mode)) {
+            try {
+                IBinder a = sub(BIND_HVAC);
+                if (a != null) {
+                    rl = Rpc.call(a, AC, AC_GET_SEAT_HEAT, p -> p.writeInt(1), android.os.Parcel::readInt);
+                    rr = Rpc.call(a, AC, AC_GET_SEAT_HEAT, p -> p.writeInt(2), android.os.Parcel::readInt);
+                    rw = Rpc.callInt(a, AC, AC_GET_WHEEL_HEAT);
+                }
+            } catch (Exception e) {
+                Diag.putQuiet("comfort.lettura", "non riuscita: " + e.getClass().getSimpleName());
+            }
+        }
+        if (seatOn) {
+            s.seatLeft = held(K_SEAT_L, rl >= 0 && rl <= 3 ? rl : 0, now);
+            s.seatRight = held(K_SEAT_R, rr >= 0 && rr <= 3 ? rr : 0, now);
+        }
+        if (wheelOn) s.wheelHeat = held(AC_GET_WHEEL_HEAT, rw == 3 ? 1 : 0, now);
+        Diag.putQuiet("comfort.riscaldamento", "presenza: sedili config " + q(seatCfg) + (seatAuto ? " (sì)" : " (no)")
+                + ", volante config " + q(wheelCfg) + " modello " + q(carModel) + (wheelAuto ? " (sì)" : " (no)")
+                + " · fonte configurazione dell'auto (app clima EH32) · scelta " + mode
+                + " · letti sedile sx " + rl + " dx " + rr + " volante " + rw + " (3 = acceso)"
+                + " · mostrati sedili " + (seatOn ? "sì" : "no") + " volante " + (wheelOn ? "sì" : "no")
+                + " · ultimo comando " + heatCmd);
+    }
+
+    private static String q(int v) {
+        return v == Integer.MIN_VALUE ? "?" : String.valueOf(v);
+    }
+
+    private static final int K_SEAT_L = 90031, K_SEAT_R = 90032;
+
+    /** Sedile sinistro (lato 1 dell'auto): un tocco = livello successivo (0 → 1 → 2 → 3 → 0), come l'app originale. */
     public void pressSeatLeft() {
+        seatCommand(1);
     }
 
     public void pressSeatRight() {
+        seatCommand(2);
+    }
+
+    /** Gruppo Comfort: sedile del guidatore o del passeggero (con la guida a destra il guidatore è il lato 2). */
+    public void stepSeat(boolean driver) {
+        boolean rhd = CarFeatures.isRightHandDrive(ctx);
+        seatCommand(driver == !rhd ? 1 : 2);
+    }
+
+    private void seatCommand(int side) {
+        if (bg == null) return;
+        int key = side == 1 ? K_SEAT_L : K_SEAT_R;
+        int cur = predicted(key, side == 1 ? last.seatLeft : last.seatRight);
+        if (cur < 0) return;
+        int next = (cur + 1) % 4;
+        hold(key, next);
+        bg.post(() -> {
+            try {
+                IBinder a = sub(BIND_HVAC);
+                if (a == null) throw new RemoteException("servizio clima non collegato");
+                Rpc.call(a, AC, AC_SWITCH_SEAT_HEAT, p -> p.writeInt(side));
+                heatCmd = "sedile " + (side == 1 ? "sx" : "dx") + " " + cur + " → " + next + " inviato";
+            } catch (Exception e) {
+                heatCmd = "sedile " + (side == 1 ? "sx" : "dx") + " non inviato: " + e.getClass().getSimpleName();
+                forget(BIND_HVAC);
+            }
+            // rilettura dopo ~1 s: se l'auto non è cambiata il pulsante torna allo stato reale
+            bg.postDelayed(() -> verifyHeat(key, side, cur), 1100);
+        });
     }
 
     public void toggleWheelHeat() {
+        if (bg == null) return;
+        int cur = predicted(AC_GET_WHEEL_HEAT, last.wheelHeat);
+        if (cur < 0) return;
+        hold(AC_GET_WHEEL_HEAT, 1 - cur);
+        bg.post(() -> {
+            try {
+                IBinder a = sub(BIND_HVAC);
+                if (a == null) throw new RemoteException("servizio clima non collegato");
+                Rpc.call(a, AC, AC_SET_WHEEL_HEAT, p -> p.writeInt(1));
+                heatCmd = "volante " + (cur == 1 ? "spegni" : "accendi") + " inviato";
+            } catch (Exception e) {
+                heatCmd = "volante non inviato: " + e.getClass().getSimpleName();
+                forget(BIND_HVAC);
+            }
+            bg.postDelayed(() -> verifyHeat(AC_GET_WHEEL_HEAT, 0, cur), 1100);
+        });
     }
 
-    /** Gruppo Comfort: sulla SWI69 R45 i sedili riscaldati non hanno comandi verificati (il gruppo non compare). */
-    public void stepSeat(boolean driver) {
+    /** side 1/2 = sedile, 0 = volante; before = valore prima del comando. */
+    private void verifyHeat(int key, int side, int before) {
+        int now = -1;
+        try {
+            IBinder a = sub(BIND_HVAC);
+            if (a != null) {
+                if (side == 0) now = Rpc.callInt(a, AC, AC_GET_WHEEL_HEAT) == 3 ? 1 : 0;
+                else now = Rpc.call(a, AC, AC_GET_SEAT_HEAT, p -> p.writeInt(side), android.os.Parcel::readInt);
+            }
+        } catch (Exception ignored) {
+        }
+        boolean changed = now >= 0 && now != before;
+        if (!changed) {
+            synchronized (holds) {
+                holds.remove(key);   // il pulsante torna subito allo stato reale
+            }
+        }
+        heatCmd += " · riletto " + now + (changed ? " (confermato)" : " (NON cambiato: torno allo stato reale)");
+        Diag.put("comfort.ultimoComando", heatCmd);
+        poll();
     }
 
     /**
@@ -917,6 +1176,46 @@ public final class VehicleClient {
         bg.post(() -> {
             boolean sent = bms.setInt(prop, value);
             Diag.put("ricarica.ultimoComando", what + (sent ? " · inviato" : " · non inviato (gestore batteria non pronto)"));
+            poll();
+        });
+    }
+
+    // ---- 0.4.2 (punto 7d): ricarica programmata, solo se l'auto la supporta -------------------------------------
+
+    private void readSchedule(State s, long now) {
+        int mode = bms.getInt(CarBms.RESER_CTRL);
+        int sh = bms.getInt(CarBms.RESER_ST_HOUR), sm = bms.getInt(CarBms.RESER_ST_MIN);
+        int eh = bms.getInt(CarBms.RESER_SP_HOUR), em = bms.getInt(CarBms.RESER_SP_MIN);
+        boolean ok = mode >= 1 && mode <= 3 && sh >= 0 && sh <= 23 && sm >= 0 && sm <= 59 && eh >= 0 && eh <= 23 && em >= 0 && em <= 59;
+        if (ok) {
+            s.schedMode = held(CarBms.RESER_CTRL, mode, now);
+            s.schedStartH = held(CarBms.RESER_ST_HOUR, sh, now);
+            s.schedStartM = held(CarBms.RESER_ST_MIN, sm, now);
+            s.schedEndH = held(CarBms.RESER_SP_HOUR, eh, now);
+            s.schedEndM = held(CarBms.RESER_SP_MIN, em, now);
+        }
+        Diag.putQuiet("ricarica.programmata", "supportata " + (ok ? "sì" : "no") + " · modo " + mode + " (1 orario, 2 spenta, 3 fino al limite)"
+                + " · inizio " + sh + ":" + sm + " · fine " + eh + ":" + em);
+    }
+
+    /** Modo della ricarica programmata: 1 orario, 2 spenta, 3 fino al limite (come l'app Energia). */
+    public void setScheduleMode(int mode) {
+        if (mode < 1 || mode > 3) return;
+        chargeCommand(CarBms.RESER_CTRL, mode, mode, "ricarica.programmata → modo " + mode);
+    }
+
+    /** Orari della ricarica programmata (l'app Energia EH32 imposta ora e minuti insieme). */
+    public void setScheduleTimes(int sh, int sm, int eh, int em) {
+        if (bg == null) return;
+        hold(CarBms.RESER_ST_HOUR, sh);
+        hold(CarBms.RESER_ST_MIN, sm);
+        hold(CarBms.RESER_SP_HOUR, eh);
+        hold(CarBms.RESER_SP_MIN, em);
+        bg.post(() -> {
+            boolean ok = bms.setInt(CarBms.RESER_ST_HOUR, sh) & bms.setInt(CarBms.RESER_ST_MIN, sm)
+                    & bms.setInt(CarBms.RESER_SP_HOUR, eh) & bms.setInt(CarBms.RESER_SP_MIN, em);
+            Diag.put("ricarica.ultimoComando", String.format(java.util.Locale.ROOT, "ricarica.programmata → %02d:%02d - %02d:%02d", sh, sm, eh, em)
+                    + (ok ? " · inviato" : " · non inviato (gestore batteria non pronto)"));
             poll();
         });
     }
