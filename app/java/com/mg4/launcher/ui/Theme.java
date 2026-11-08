@@ -36,7 +36,7 @@ public final class Theme {
         String mode = p.themeMode();
         if (Prefs.THEME_DAY.equals(mode)) return true;
         if (Prefs.THEME_NIGHT.equals(mode)) return false;
-        return com.mg4.launcher.svc.DayNight.currentDay(c, mode);
+        return com.mg4.launcher.svc.DayNight.get(c).isDay();
     }
 
     private static double luminance(int c) {

@@ -125,8 +125,10 @@ public final class AppCatalog {
                 if (si != null) out.add(new App(a[0], null, si, icon, false, targetPackage(si)));
                 continue;
             }
-            ComponentName cn = new ComponentName(a[1], a[2]);
-            if (exists(cn)) {
+            // 0.4.3: il ComponentName si crea solo con pacchetto e classe validi (prima: crash "class name is null")
+            if (empty(a[1])) continue;
+            ComponentName cn = empty(a[2]) ? null : new ComponentName(a[1], a[2]);
+            if (cn != null && exists(cn)) {
                 out.add(new App(a[0], cn, null, icon, false, a[1]));
             } else {
                 Intent li = pm.getLaunchIntentForPackage(a[1]);
@@ -314,13 +316,21 @@ public final class AppCatalog {
         }
     }
 
+    static boolean empty(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
     public Intent resolveLaunch(String pkg, String cls) {
         spm = pm;
+        // 0.4.3: senza pacchetto non c'è niente da aprire (pulsante disattivato, niente crash)
+        if (empty(pkg)) return null;
         Intent mg4 = climaOverride(pkg);
         if (mg4 != null) return mg4;
-        Intent exact = new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(pkg, cls));
+        // 0.4.3: il ComponentName si crea solo se pacchetto e classe ci sono (crash "class name is null" visto sulla SWI133)
+        boolean hasCls = !empty(cls);
         try {
-            if (cls != null && pm.resolveActivity(exact, 0) != null) return exact;
+            Intent exact = hasCls ? new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(pkg, cls)) : null;
+            if (exact != null && pm.resolveActivity(exact, 0) != null) return exact;
         } catch (Exception ignored) {
         }
         Intent li = null;
@@ -329,21 +339,26 @@ public final class AppCatalog {
         } catch (Exception ignored) {
         }
         String key = pkg + "/" + cls;
-        if (missingLogged.add(key)) {
+        if ((hasCls || li == null) && missingLogged.add(key)) {
             Diag.put("app.mancante." + pkg.substring(pkg.lastIndexOf('.') + 1),
-                    (cls == null ? "" : cls.substring(cls.lastIndexOf('.') + 1) + " assente · ") + (li != null ? "si apre l'app principale" : "app non presente: pulsante disattivato"));
+                    (hasCls ? cls.substring(cls.lastIndexOf('.') + 1) + " assente · " : "") + (li != null ? "si apre l'app principale" : "app non presente: pulsante disattivato"));
         }
         return li;
     }
 
     public boolean canLaunch(String pkg, String cls) {
-        return resolveLaunch(pkg, cls) != null;
+        try {
+            return resolveLaunch(pkg, cls) != null;
+        } catch (Exception e) {
+            Diag.error("app.verifica " + pkg, e.toString());
+            return false;
+        }
     }
 
     public boolean launchComponent(String pkg, String cls) {
-        Intent i = resolveLaunch(pkg, cls);
-        if (i == null) return false;
         try {
+            Intent i = resolveLaunch(pkg, cls);
+            if (i == null) return false;
             ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return true;
         } catch (Exception e) {

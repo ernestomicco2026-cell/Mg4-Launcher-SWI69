@@ -113,8 +113,6 @@ public final class HomeView extends LinearLayout {
     private TextView mTitle, mSub, mMeta, mPos, mDur, artFreq, artUnit, artBand;
     private ImageView artIcon, artLogo;
     private LinearLayout artRadio, progressRow, bandRow, favRow;
-    private FrameLayout subBox;
-    private View subLink;
     private View favScroll;
     private String favSignature = "";
     private Bars.Progress mProgress;
@@ -133,6 +131,7 @@ public final class HomeView extends LinearLayout {
     private int fanLevel = -1, fanMin = 1, fanMax = 11;
     private long localTempUntil, localFanUntil;
     private TextView fanTv, outTv, inTv;
+    private VehicleClient.State lastInsideState;
     private LinearLayout tpmsRow, tpmsFront, tpmsRear;
     private FrameLayout seatLeftBtn, seatRightBtn, wheelBtn;
     // 0.8.2: gruppi Clima / Comfort, LKA e OPD
@@ -469,8 +468,13 @@ public final class HomeView extends LinearLayout {
     }
 
     /** 0.4.2 (punto 3): temperatura interna di nuovo come opzione (Impostazioni › Home); "--" se l'auto non la dà. */
+    /** 0.4.3: Mostra sempre; Automatico solo se l'auto la fornisce davvero; Nascondi mai. */
     private boolean showInside() {
-        return prefs.showInsideTemp();
+        String m = prefs.insideTempMode();
+        if (Prefs.SHOW_ON.equals(m)) return true;
+        if (!Prefs.SHOW_AUTO.equals(m) || prefs.insideTempMissing()) return false;
+        VehicleClient.State st = lastInsideState;
+        return st != null && !Float.isNaN(st.insideTemp) && !st.insideSource.isEmpty();
     }
 
     private final long createdAt = System.currentTimeMillis();
@@ -520,6 +524,7 @@ public final class HomeView extends LinearLayout {
         styleChargeButtons(s);
         if (s.acTemp > 0 && SystemClock.uptimeMillis() > localTempUntil) {
             acTemp = s.acTemp;
+        lastInsideState = s;
             tempTv.setText(tempLabel(acTemp));
         }
         boolean outOk = s.outsideTemp > -60 && s.outsideTemp < 70;
@@ -656,18 +661,30 @@ public final class HomeView extends LinearLayout {
         quick = prefs.quickButton();
         if (quick.startsWith(Prefs.QUICK_APP)) {
             String pkg = quick.substring(Prefs.QUICK_APP.length());
-            android.content.Intent li = c.getPackageManager().getLaunchIntentForPackage(pkg);
-            if (li == null) quick = Prefs.QUICK_PROJ;   // app disinstallata: si torna al predefinito
+            android.content.Intent li = null;
+            try {
+                li = pkg.isEmpty() ? null : c.getPackageManager().getLaunchIntentForPackage(pkg);
+            } catch (Exception ignored) {
+            }
+            // 0.4.3 (punto 2): app disinstallata o che non si apre: si torna al pulsante predefinito, mai un crash
+            if (li == null) quick = Prefs.QUICK_PROJ;
             else {
+                final android.content.Intent launch = li.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
                 tabPhone.setText(Cam360.label(c, pkg));
+                tabPhone.setContentDescription(Cam360.label(c, pkg));
                 tabPhone.setOnClickListener(v -> {
                     try {
-                        getContext().startActivity(li.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+                        getContext().startActivity(launch);
                     } catch (Exception e) {
-                        Diag.error("pulsanteRapido", e.toString());
+                        Diag.error("pulsanteRapido", e.getClass().getSimpleName());
+                        selectTab(TAB_PHONE, true);
+                        media.openProjection();
                     }
                 });
             }
+            Diag.put("home.pulsanteAltoDestra", li == null ? "CarPlay/Android Auto (app scelta non installata: predefinito)" : "app " + pkg);
+        } else {
+            Diag.put("home.pulsanteAltoDestra", Prefs.QUICK_PROJ.equals(quick) ? "CarPlay/Android Auto" : "nessuno");
         }
         if (Prefs.QUICK_PROJ.equals(quick)) {
             tabPhone.setOnClickListener(v -> {
@@ -693,11 +710,40 @@ public final class HomeView extends LinearLayout {
         connBars.setColors(t.text, t.track);
         connRow.addView(connBars, Ui.margins(new LayoutParams(dp(22), dp(18)), dp(5), 0, 0, dp(2)));
         connRow.setVisibility(GONE);
-        topRight.addView(connRow, Ui.margins(new LayoutParams(-2, tp(48) + dp(12)), 0, 0, dp(10), 0));
-        topRight.addView(tabs);
+        // 0.4.3 (issue #25): ordine in alto scambiabile. "attuale" = sorgenti a sinistra, Mappa/Media a destra;
+        // "scambiato" = Mappa/Media all'inizio a sinistra e le sorgenti subito dopo, sulla stessa riga. Le icone
+        // Bluetooth/Wi-Fi/4G restano all'estremità destra. Misure, spazi e stile dei pulsanti non cambiano.
+        boolean swapped = prefs.topSwapped();
+        com.mg4.launcher.svc.Diag.put("home.ordineAlto", swapped ? "scambiato" : "attuale");
+        topRight.addView(connRow, Ui.margins(new LayoutParams(-2, tp(48) + dp(12)), 0, 0, swapped ? 0 : dp(10), 0));
+        if (!swapped) topRight.addView(tabs);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
         lp.setMargins(0, dp(20), dp(20), 0);
         f.addView(topRight, lp);
+        if (swapped) {
+            int inset = rhd && sysIndicator ? dp(SYSTEM_LIGHT_INSET) : 0;
+            FrameLayout.LayoutParams tl = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+            // stessa posizione di partenza che oggi ha la riga delle sorgenti (margine del pannello 28, in alto 20)
+            tl.setMargins(dp(28) + inset, dp(20), 0, 0);
+            f.addView(tabs, tl);
+            // le sorgenti partono subito dopo Mappa/Media, con lo stesso spazio (10) che c'era tra icone e schede
+            tabs.addOnLayoutChangeListener((v, l, tp, r, b, ol, ot, or, ob) -> {
+                if (srcRow == null || r - l == or - ol) return;
+                LayoutParams sl = (LayoutParams) srcRow.getLayoutParams();
+                int want = inset + (r - l) + dp(10);
+                if (sl.leftMargin != want) {
+                    sl.leftMargin = want;
+                    srcRow.setLayoutParams(sl);
+                }
+            });
+            // Mappa: le schede ora stanno in alto a sinistra, dove c'erano l'indicazione di guida e il titolo
+            // "Dove andiamo?": si spostano sotto la riga delle schede (solo con l'ordine scambiato)
+            int below = dp(20) + tp(48) + dp(12) + dp(10);
+            FrameLayout.LayoutParams cl = (FrameLayout.LayoutParams) navCard.getLayoutParams();
+            cl.topMargin = below;
+            navCard.setLayoutParams(cl);
+            navIdle.setPadding(navIdle.getPaddingLeft(), Math.max(navIdle.getPaddingTop(), below), navIdle.getPaddingRight(), navIdle.getPaddingBottom());
+        }
         return f;
     }
 
@@ -979,43 +1025,6 @@ public final class HomeView extends LinearLayout {
         int srcInset = rhd && sysIndicator ? dp(SYSTEM_LIGHT_INSET) : 0;
         col.addView(srcRow, Ui.margins(new LayoutParams(-2, tp(48) + dp(12)), srcInset, 0, 0, 0));
 
-        // 0.4.2 (punto 10): FM / DAB è una sotto-opzione della Radio: subito sotto la riga delle sorgenti, più piccola,
-        // collegata al pulsante Radio da una linea e visibile solo con la Radio attiva (prima la sorgente, poi la banda,
-        // poi le stazioni). Stessa logica per eventuali sotto-opzioni future di altre sorgenti.
-        subBox = new FrameLayout(c);
-        subLink = new View(c);
-        subLink.setBackgroundColor(t.track);
-        subBox.addView(subLink, new FrameLayout.LayoutParams(dp(2), dp(10), Gravity.TOP | Gravity.START));
-        bandRow = Ui.row(c);
-        bandRow.setBackground(Ui.round(t.overlay, dp(14)));
-        bandRow.setPadding(dp(4), dp(4), dp(4), dp(4));
-        bandChips = new TextView[2];
-        String[] bands = {"FM", "DAB"};
-        int[] bandIds = {MediaClient.BAND_FM, MediaClient.BAND_DAB};
-        for (int i = 0; i < 2; i++) {
-            final int band = bandIds[i];
-            TextView b = Ui.text(c, bands[i], ts(15), t.sub, Ui.MEDIUM);
-            b.setGravity(Gravity.CENTER);
-            b.setMinWidth(tp(56));
-            b.setPadding(tp(14), 0, tp(14), 0);
-            b.setClickable(true);
-            b.setContentDescription(L.s(R.string.src_radio) + " " + bands[i]);
-            b.setOnClickListener(v -> {
-                pendingBand = band;
-                pendingBandUntil = SystemClock.uptimeMillis() + 4000;
-                styleBands(band);
-                media.switchBand(band);
-            });
-            bandRow.addView(b, Ui.margins(Ui.lp(-2, tp(40)), i == 0 ? 0 : dp(4), 0, 0, 0));
-            bandChips[i] = b;
-        }
-        FrameLayout.LayoutParams bl = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
-        bl.topMargin = dp(10);
-        subBox.addView(bandRow, bl);
-        col.addView(subBox, Ui.margins(new LayoutParams(-2, -2), srcInset, 0, 0, 0));
-        // la linea parte dal centro del pulsante Radio (posizione nota solo dopo il disegno)
-        srcRow.addOnLayoutChangeListener((v, l, tp, r, b, ol, ot, or, ob) -> alignSubLink());
-
         // corpo: a sinistra copertina + comandi + preferiti, a destra (solo radio) l'elenco delle stazioni trovate
         LinearLayout body = Ui.row(c);
         col.addView(body, Ui.margins(Ui.lpWeight(-1, 0, 1), 0, dp(10), 0, 0));
@@ -1080,15 +1089,40 @@ public final class HomeView extends LinearLayout {
         progressRow.addView(times, Ui.margins(new LayoutParams(-1, -2), 0, dp(8), 0, 0));
         info.addView(progressRow, Ui.margins(new LayoutParams(-1, -2), 0, dp(16), 0, 0));
 
-        // comandi grandi; 0.4.2 (punto 10): la banda è salita sotto le sorgenti, lo spazio va ai comandi (più aria)
+        // comandi grandi + banda FM/DAB subito accanto. 0.4.3 (punto 9): come la SWI68 0.4.3, la banda torna qui
+        // (nella 0.4.2 era sotto la riga delle sorgenti), più grande: alta come i pulsanti avanti/indietro
         LinearLayout ctr = Ui.row(c);
         ctr.setGravity(Gravity.CENTER_VERTICAL);
-        ctr.addView(Ui.iconButton(c, t, R.drawable.ic_prev, t.text, t.chip, 68, 30, 34, L.s(R.string.previous), v -> media.skip(false)));
-        FrameLayout play = Ui.iconButton(c, t, R.drawable.ic_pause, t.panel, t.text, 88, 38, 44, L.s(R.string.play_pause), v -> media.playPause());
+        ctr.addView(Ui.iconButton(c, t, R.drawable.ic_prev, t.text, t.chip, 64, 28, 32, L.s(R.string.previous), v -> media.skip(false)));
+        FrameLayout play = Ui.iconButton(c, t, R.drawable.ic_pause, t.panel, t.text, 84, 36, 42, L.s(R.string.play_pause), v -> media.playPause());
         playIcon = (ImageView) play.getChildAt(0);
-        int gap = dp(Ui.K > 1 ? 18 : 26);
-        ctr.addView(play, Ui.margins(Ui.lp(tp(88), tp(88)), gap, 0, gap, 0));
-        ctr.addView(Ui.iconButton(c, t, R.drawable.ic_next, t.text, t.chip, 68, 30, 34, L.s(R.string.next), v -> media.skip(true)));
+        int gap = dp(Ui.K > 1 ? 12 : 16);
+        ctr.addView(play, Ui.margins(Ui.lp(tp(84), tp(84)), gap, 0, gap, 0));
+        ctr.addView(Ui.iconButton(c, t, R.drawable.ic_next, t.text, t.chip, 64, 28, 32, L.s(R.string.next), v -> media.skip(true)));
+        bandRow = Ui.row(c);
+        bandRow.setBackground(Ui.round(t.chip, dp(18)));
+        bandRow.setPadding(dp(6), dp(6), dp(6), dp(6));
+        bandChips = new TextView[2];
+        String[] bands = {"FM", "DAB"};
+        int[] bandIds = {MediaClient.BAND_FM, MediaClient.BAND_DAB};
+        for (int i = 0; i < 2; i++) {
+            final int band = bandIds[i];
+            TextView b = Ui.text(c, bands[i], ts(22), t.sub, Ui.MEDIUM);
+            b.setGravity(Gravity.CENTER);
+            b.setMinWidth(tp(80));
+            b.setPadding(tp(18), 0, tp(18), 0);
+            b.setClickable(true);
+            b.setContentDescription(L.s(R.string.src_radio) + " " + bands[i]);
+            b.setOnClickListener(v -> {
+                pendingBand = band;
+                pendingBandUntil = SystemClock.uptimeMillis() + 4000;
+                styleBands(band);
+                media.switchBand(band);
+            });
+            bandRow.addView(b, Ui.margins(Ui.lp(-2, tp(60)), i == 0 ? 0 : dp(4), 0, 0, 0));
+            bandChips[i] = b;
+        }
+        ctr.addView(bandRow, Ui.margins(Ui.lp(-2, tp(72)), dp(Ui.K > 1 ? 16 : 24), 0, 0, 0));
         info.addView(ctr, Ui.margins(new LayoutParams(-1, -2), 0, dp(20), 0, 0));
 
         // preferiti radio con i loghi (FM e DAB)
@@ -1145,31 +1179,10 @@ public final class HomeView extends LinearLayout {
         return col;
     }
 
-    /** Linea di collegamento sotto il centro del pulsante Radio. */
-    private void alignSubLink() {
-        if (subLink == null) return;
-        View radioBtn = null;
-        for (int i = 0; i < srcRow.getChildCount(); i++) {
-            View v = srcRow.getChildAt(i);
-            if (Integer.valueOf(MediaClient.SRC_RADIO).equals(v.getTag())) radioBtn = v;
-        }
-        int x = radioBtn == null ? dp(40) : srcRow.getPaddingLeft() + radioBtn.getLeft() + radioBtn.getWidth() / 2;
-        if (rhd && srcRow.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL && radioBtn != null) x = radioBtn.getLeft() + radioBtn.getWidth() / 2;
-        FrameLayout.LayoutParams ll = (FrameLayout.LayoutParams) subLink.getLayoutParams();
-        int target = Math.max(0, x - dp(1));
-        if (ll.leftMargin != target) {
-            ll.leftMargin = target;
-            subLink.setLayoutParams(ll);
-            FrameLayout.LayoutParams bl = (FrameLayout.LayoutParams) bandRow.getLayoutParams();
-            bl.leftMargin = Math.max(0, x - dp(36));
-            bandRow.setLayoutParams(bl);
-        }
-    }
-
     private void styleBands(int band) {
         int sel = band == MediaClient.BAND_DAB ? 1 : band == MediaClient.BAND_FM ? 0 : -1;
         for (int i = 0; i < bandChips.length; i++) {
-            bandChips[i].setBackground(i == sel ? Ui.round(t.text, dp(12)) : Ui.pressable(getContext(), 0, 12, t));
+            bandChips[i].setBackground(i == sel ? Ui.round(t.text, dp(14)) : Ui.pressable(getContext(), 0, 14, t));
             bandChips[i].setTextColor(i == sel ? t.panel : t.sub);
         }
     }
@@ -1177,7 +1190,9 @@ public final class HomeView extends LinearLayout {
     private static String sourceLabel(int src) {
         switch (src) {
             case MediaClient.SRC_RADIO: return L.s(R.string.src_radio);
-            case MediaClient.SRC_USB: return "USB";
+            // 0.4.3 (punto 5): con la seconda porta in uso le due sorgenti si chiamano "USB 1" e "USB 2"
+            case MediaClient.SRC_USB: return MediaClient.usbBoth ? "USB 1" : "USB";
+            case MediaClient.SRC_USB2: return "USB 2";
             case MediaClient.SRC_BT: return "Bluetooth";
             case MediaClient.SRC_ONLINE: return L.s(R.string.src_online);
             case MediaClient.SRC_CARPLAY: return "CarPlay";
@@ -1407,7 +1422,8 @@ public final class HomeView extends LinearLayout {
 
     private static int sourceIcon(int src) {
         switch (src) {
-            case MediaClient.SRC_USB: return R.drawable.ic_usb;
+            case MediaClient.SRC_USB:
+            case MediaClient.SRC_USB2: return R.drawable.ic_usb;
             case MediaClient.SRC_BT: return R.drawable.ic_bluetooth;
             case MediaClient.SRC_ONLINE: return R.drawable.ic_wave;
             case MediaClient.SRC_CARPLAY:
@@ -1445,13 +1461,16 @@ public final class HomeView extends LinearLayout {
             artFreq.setTextSize(dab ? 30 : 56);
             artUnit.setText(m.radioUnit);
             mMeta.setText(dab ? band + (m.radioUnit.isEmpty() ? "" : " · " + m.radioUnit)
-                    : band + " · " + m.radioFreq + " " + m.radioUnit);
+                    : band + (m.radioFreq.isEmpty() ? "" : " · " + m.radioFreq + " " + m.radioUnit));
             styleBands(SystemClock.uptimeMillis() < pendingBandUntil ? pendingBand : m.radioBand);
             showFavorites(m);
         } else {
             mMeta.setText(sourceLabel(m.source).toUpperCase(L.locale()));
         }
-        subBox.setVisibility(radio ? VISIBLE : GONE);
+        // 0.4.3: banda FM/DAB accanto ai comandi, solo per la Radio
+        bandRow.setVisibility(radio ? VISIBLE : GONE);
+        // con poco spazio in verticale (comandi grandi o barra grande) la riga "FM · 101,5 MHz" lascia posto alla banda
+        mMeta.setVisibility(radio && (big || Ui.K > 1.05f) ? GONE : VISIBLE);
         stationPanel.setVisibility(radio ? VISIBLE : GONE);
         if (radio) showStations(m);
         favScroll.setVisibility(radio && !m.favorites.isEmpty() ? VISIBLE : GONE);
@@ -1693,7 +1712,21 @@ public final class HomeView extends LinearLayout {
         miniPlayIcon = (ImageView) mp.getChildAt(0);
         mini.addView(mp);
         mini.addView(Ui.iconButton(c, t, R.drawable.ic_next, t.text, 0, big ? 76 : 52, big ? 34 : 24, 26, L.s(R.string.next), v -> media.skip(true)));
-        if (showMini) bar.addView(mini, Ui.lpWeight(0, -1, 1));
+        // 0.4.3 (punto 7): al posto del mini-player si possono avere i preferiti del telefono o scorciatoie alle app
+        String tileMode = prefs.tileMode();
+        if (showMini && !Prefs.TILE_MEDIA.equals(tileMode)) {
+            tileBox = Ui.row(c);
+            tileBox.setGravity(Gravity.CENTER_VERTICAL);
+            tileBox.setPadding(dp(6), 0, dp(4), 0);
+            tileIsPhone = Prefs.TILE_PHONE.equals(tileMode);
+            fillTile();
+            android.widget.HorizontalScrollView hs = new android.widget.HorizontalScrollView(c);
+            hs.setHorizontalScrollBarEnabled(false);
+            hs.setFillViewport(true);
+            hs.addView(tileBox, new FrameLayout.LayoutParams(-2, -1));
+            bar.addView(hs, Ui.lpWeight(0, -1, 1));
+            if (tileIsPhone) com.mg4.launcher.svc.PhoneClient.get(c).start(phoneListener);
+        } else if (showMini) bar.addView(mini, Ui.lpWeight(0, -1, 1));
         else bar.addView(Ui.spacer(c));
 
         bar.addView(Ui.divider(c, t.track, big ? 72 : 48));
@@ -2103,6 +2136,126 @@ public final class HomeView extends LinearLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (popup != null) popup.close();
+        if (tileIsPhone) {
+            tileIsPhone = false;
+            com.mg4.launcher.svc.PhoneClient.get(getContext()).stop(phoneListener);
+        }
+    }
+
+    // =========================================================================================
+    // 0.4.3 (punto 7): riquadro in basso configurabile — preferiti del telefono o scorciatoie alle app
+    // =========================================================================================
+
+    private LinearLayout tileBox;
+    private boolean tileIsPhone;
+    private Boolean tilePhoneShown;
+    private final com.mg4.launcher.svc.PhoneClient.Listener phoneListener = () -> {
+        boolean conn = com.mg4.launcher.svc.PhoneClient.get(getContext()).phoneConnected();
+        if (tilePhoneShown == null || tilePhoneShown != conn) fillTile();
+    };
+
+    private void fillTile() {
+        if (tileBox == null) return;
+        Context c = getContext();
+        tileBox.removeAllViews();
+        int h = bs(56, 76);
+        float rad = big ? 22 : 18 * Ui.K;
+        if (tileIsPhone) {
+            com.mg4.launcher.svc.PhoneClient pc = com.mg4.launcher.svc.PhoneClient.get(c);
+            boolean conn = pc.phoneConnected();
+            tilePhoneShown = conn;
+            java.util.List<String[]> favs = prefs.tileContacts();
+            com.mg4.launcher.svc.Diag.put("home.riquadro", "Preferiti telefono · " + favs.size() + " preferiti · telefono "
+                    + (conn ? "collegato" : "non collegato"));
+            if (!conn) {
+                tileBox.addView(tileHint(c, R.drawable.ic_phone, L.s(R.string.tile_connect_phone), h, rad,
+                        v -> host.launch(com.mg4.launcher.apps.MgApps.PHONE_PKG, com.mg4.launcher.apps.MgApps.PHONE_CLS)));
+                return;
+            }
+            if (favs.isEmpty()) {
+                tileBox.addView(tileHint(c, R.drawable.ic_phone, L.s(R.string.tile_hint_contacts), h, rad, v -> host.openSettings()));
+                return;
+            }
+            for (int i = 0; i < favs.size(); i++) {
+                String[] f = favs.get(i);
+                LinearLayout chip = Ui.row(c);
+                chip.setPadding(dp(6), 0, tp(16), 0);
+                chip.setBackground(Ui.pressable(c, t.chip, rad, t));
+                chip.setClickable(true);
+                chip.setContentDescription(f[0]);
+                TextView ini = Ui.text(c, initials(f[0]), bt(16, 22), t.text, Ui.MEDIUM);
+                ini.setGravity(Gravity.CENTER);
+                ini.setBackground(Ui.round(t.overlay, dp(100)));
+                int ic = h - dp(12);
+                chip.addView(ini, new LayoutParams(ic, ic));
+                TextView nm = Ui.oneLine(Ui.text(c, firstName(f[0]), bt(16, 22), t.text, Ui.MEDIUM));
+                nm.setMaxWidth(dp(big ? 180 : 140));
+                chip.addView(nm, Ui.margins(new LayoutParams(-2, -2), dp(10), 0, 0, 0));
+                chip.setOnClickListener(v -> pc.call(f[1], ok -> {
+                    if (!ok) android.widget.Toast.makeText(getContext(), L.s(R.string.tile_call_failed), android.widget.Toast.LENGTH_SHORT).show();
+                }));
+                tileBox.addView(chip, Ui.margins(new LayoutParams(-2, h), i == 0 ? 0 : dp(8), 0, 0, 0));
+            }
+            return;
+        }
+        java.util.List<String> pkgs = prefs.tileApps();
+        android.content.pm.PackageManager pm = c.getPackageManager();
+        int shown = 0;
+        for (String pkg : pkgs) {
+            android.graphics.drawable.Drawable icon;
+            String label;
+            try {
+                if (pm.getLaunchIntentForPackage(pkg) == null) continue;   // app tolta o non apribile: si salta
+                android.content.pm.ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+                icon = pm.getApplicationIcon(ai);
+                label = String.valueOf(pm.getApplicationLabel(ai));
+            } catch (Exception e) {
+                continue;
+            }
+            FrameLayout b = new FrameLayout(c);
+            b.setBackground(Ui.pressable(c, t.chip, rad, t));
+            b.setClickable(true);
+            b.setContentDescription(label);
+            ImageView iv = new ImageView(c);
+            iv.setImageDrawable(icon);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            int is = h - dp(16);
+            b.addView(iv, new FrameLayout.LayoutParams(is, is, Gravity.CENTER));
+            b.setOnClickListener(v -> host.launch(pkg, null));
+            tileBox.addView(b, Ui.margins(new LayoutParams(h, h), shown == 0 ? 0 : dp(8), 0, 0, 0));
+            shown++;
+        }
+        com.mg4.launcher.svc.Diag.put("home.riquadro", "Scorciatoie app · " + shown + " di " + pkgs.size() + " apribili");
+        if (shown == 0) tileBox.addView(tileHint(c, R.drawable.ic_app, L.s(R.string.tile_hint_apps), h, rad, v -> host.openSettings()));
+    }
+
+    private View tileHint(Context c, int icon, String text, int h, float rad, View.OnClickListener l) {
+        LinearLayout chip = Ui.row(c);
+        chip.setPadding(tp(16), 0, tp(18), 0);
+        chip.setBackground(Ui.pressable(c, t.chip, rad, t));
+        chip.setClickable(true);
+        chip.setOnClickListener(l);
+        chip.addView(Ui.icon(c, icon, t.sub, bs(24, 32) / 1), new LayoutParams(bs(24, 32), bs(24, 32)));
+        chip.addView(Ui.oneLine(Ui.text(c, text, bt(16, 20), t.sub, Ui.MEDIUM)), Ui.margins(new LayoutParams(-2, -2), dp(10), 0, 0, 0));
+        chip.setLayoutParams(new LayoutParams(-2, h));
+        return chip;
+    }
+
+    private static String initials(String name) {
+        StringBuilder sb = new StringBuilder();
+        for (String w : name.trim().split("\\s+")) {
+            if (w.isEmpty()) continue;
+            int cp = w.codePointAt(0);
+            if (Character.isLetterOrDigit(cp)) sb.appendCodePoint(Character.toUpperCase(cp));
+            if (sb.length() >= 2) break;
+        }
+        return sb.length() == 0 ? "?" : sb.toString();
+    }
+
+    private static String firstName(String name) {
+        String n = name.trim();
+        int sp = n.indexOf(' ');
+        return sp > 0 && sp < n.length() - 1 ? n.substring(0, sp) : n;
     }
 
     /** 0.4.0: chiude il riquadro Clima/Comfort/Guida, se aperto (tasto Home). True se c'era. */

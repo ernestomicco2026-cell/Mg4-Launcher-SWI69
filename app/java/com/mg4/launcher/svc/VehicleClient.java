@@ -138,6 +138,7 @@ public final class VehicleClient {
         public int schedMode = -1, schedStartH = -1, schedStartM = -1, schedEndH = -1, schedEndM = -1;
         public float[] tireBar = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};   // AS, AD, PS, PD
         public float insideTemp = Float.NaN;
+        public String insideSource = "";            // 0.4.3: da dove arriva la temperatura interna ("" = nessuna fonte valida)
         public int rearFog = -1, frontFog = -1;           // 1 acceso, 0 spento, -1 non disponibile
         public boolean hasFrontFog;
         /** Configurazione telecamere (getRvcAvmConfigData); Integer.MIN_VALUE finché non si sa. */
@@ -358,13 +359,6 @@ public final class VehicleClient {
         readBms(s, now);
         readCarProps(s);
         readInside(s);
-        // 0.4.2 (punto 1): giorno/notte (fari dall'auto, proprietà del veicolo, alba/tramonto)
-        try {
-            DayNight.readCar(ctx, props, clusterDayNight);
-            DayNight.tick(ctx, ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getString("theme", "auto"));
-        } catch (Throwable t) {
-            Diag.error("tema", t.toString());
-        }
         last = s;
         main.post(() -> {
             if (listener != null) listener.onVehicleState(s);
@@ -494,16 +488,22 @@ public final class VehicleClient {
 
     private long insideAt;
     private float insideCache = Float.NaN;
+    private String insideSrc = "";
 
     private void readInside(State s) {
-        boolean on = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).getBoolean("showInsideTemp", false);
-        if (!on) {
-            Diag.putQuiet("clima.tempInterna", "non letta (opzione spenta)");
-            return;
-        }
+        android.content.SharedPreferences sp = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
         long now = android.os.SystemClock.uptimeMillis();
         if (props == null || !props.ready()) {
             Diag.putQuiet("clima.tempInterna", "CarService non pronto → \"--\"");
+            return;
+        }
+        // 0.4.3 (punto 3): proprietà assente su questa auto (elenco già letto) → l'opzione "Automatico" si nasconde da sola
+        boolean missing = !props.has(CarProps.HVAC_TEMPERATURE_CURRENT);
+        if (sp.getBoolean("tempInternaAssente", false) != missing) sp.edit().putBoolean("tempInternaAssente", missing).apply();
+        String mode = sp.getString("tempInternaModo", null);
+        if (mode == null) mode = sp.getBoolean("showInsideTemp", false) ? "auto" : "hide";
+        if ("hide".equals(mode)) {
+            Diag.putQuiet("clima.tempInterna", "non letta (opzione Nascondi)" + (missing ? " · proprietà assente su questa auto" : ""));
             return;
         }
         if (now - insideAt > 5000) {
@@ -523,11 +523,13 @@ public final class VehicleClient {
             float out = lastOutside;
             boolean same = !Float.isNaN(best) && !Float.isNaN(out) && Math.abs(best - out) < 0.05f;
             insideCache = best;
+            insideSrc = Float.isNaN(best) ? "" : src;
             Diag.putQuiet("clima.tempInterna", (Float.isNaN(best) ? "--" : String.valueOf(best)) + " · fonte " + src
                     + " · valida " + (Float.isNaN(best) ? "no" : "sì") + " · esterna " + (Float.isNaN(out) ? "?" : String.valueOf(out))
                     + (same ? " (uguale all'esterna)" : "") + " · aree [" + all + "]");
         }
         s.insideTemp = insideCache;
+        s.insideSource = insideSrc;
     }
 
     /** Temperatura interna leggibile? true / false, null finché non si sa (CarService non ancora pronto). */
@@ -609,12 +611,15 @@ public final class VehicleClient {
         }
         if (s.lowBeam < 0 && props != null && props.ready()) {
             // riserva: proprietà del veicolo usate dalla SystemUI originale (CarLampController)
-            s.lowBeam = props.getBoolQuiet(DayNight.DIPD_BEAM_LGHT);
-            int side = props.getIntQuiet(DayNight.VEH_SIDE_LGHT), sw = props.getIntQuiet(DayNight.LIGHT_SWITCH_POS_STS);
+            s.lowBeam = props.getBoolQuiet(DIPD_BEAM_LGHT);
+            int side = props.getIntQuiet(VEH_SIDE_LGHT), sw = props.getIntQuiet(LIGHT_SWITCH_POS_STS);
             s.sideLight = side == Integer.MIN_VALUE ? -1 : side;
             s.lightSwitch = sw == Integer.MIN_VALUE ? -1 : sw;
         }
-        DayNight.setLamps(s.lowBeam, s.sideLight, s.lightSwitch);
+        // 0.4.3: stato dei fari per il tema automatico (DayNight, uguale alla SWI68): 1 accesi, 0 spenti, -1 non letti
+        lightsState = s.lowBeam == 1 || s.sideLight == 3 || s.lightSwitch == 1 ? 1 : s.lowBeam == 0 || s.sideLight >= 0 ? 0 : -1;
+        lightsDesc = "anabbaglianti " + s.lowBeam + " · posizione " + s.sideLight + " · interruttore " + s.lightSwitch
+                + (lampStateOk ? " (servizio luci)" : " (CarService)");
         Diag.putQuiet("luci.fari", "anabbaglianti " + s.lowBeam + " · posizione " + s.sideLight + " · interruttore " + s.lightSwitch
                 + (lampStateOk ? " (servizio luci)" : " (CarService)"));
         try {
@@ -806,6 +811,20 @@ public final class VehicleClient {
 
     private int frontFogConfig = Integer.MIN_VALUE;
     private boolean lampStateOk = true;
+
+    /** Proprietà dei fari usate dalla SystemUI originale R45 (CarLampController). */
+    static final int DIPD_BEAM_LGHT = 555782944, VEH_SIDE_LGHT = 557880099, LIGHT_SWITCH_POS_STS = 557880119;
+    private static volatile int lightsState = -1;
+    private static volatile String lightsDesc = "non letti";
+
+    /** 0.4.3: fari per il tema automatico: 1 accesi, 0 spenti, -1 non leggibili. */
+    public static int lights() {
+        return lightsState;
+    }
+
+    public static String lightsDescription() {
+        return lightsDesc;
+    }
 
     /** Stati di ricarica (stessi codici della SWI68): in carica / bilanciamento / rapida / wireless. */
     public static boolean isCharging(int st) {

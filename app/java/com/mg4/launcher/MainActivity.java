@@ -87,6 +87,9 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         nav = new NavClient(this);
         updater = new Updater(this);
         logs = new com.mg4.launcher.svc.LogUploader(this);
+        // 0.4.3: Controllo funzioni (sola lettura) e controllo automatico 60 s dopo l'avvio di una versione nuova
+        com.mg4.launcher.svc.SelfCheck.bind(vehicle, media, logs);
+        com.mg4.launcher.svc.SelfCheck.scheduleAfterUpdate(this, updater.currentVersion());
         lastUiMode = getResources().getConfiguration().uiMode;
 
         root = new FrameLayout(this);
@@ -126,14 +129,14 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         nav.setListener(s -> {
             if (home != null) home.onNav(s);
         });
-        // 0.4.2 (punto 1): tema automatico dalla catena di fonti (cambio dopo 60 s stabili)
-        com.mg4.launcher.svc.DayNight.setListener(day -> {
-            if (Prefs.THEME_AUTO.equals(prefs.themeMode()) && theme != null && theme.day != day && !isFinishing()) {
-                IconStyler.clearCache();
-                boolean wasSettings = settings != null;
-                build();
-                if (wasSettings) openSettings();
-            }
+        // 0.4.3: tema automatico uguale alla SWI68 0.4.3 (catena di fonti, uiMode bloccato ignorato, 60 s di conferma)
+        com.mg4.launcher.svc.DayNight.get(this).start(day -> {
+            if (!Prefs.THEME_AUTO.equals(prefs.themeMode()) || theme == null || theme.day == day || isFinishing()) return;
+            com.mg4.launcher.svc.Diag.put("tema.ricostruito", (day ? "giorno" : "notte") + " (cambio confermato)");
+            IconStyler.clearCache();
+            boolean wasSettings = settings != null;
+            build();
+            if (wasSettings) openSettings();
         });
         // 0.4.2 (punto 6): dopo la retromarcia si riapre l'app di prima come la aprono i pulsanti del launcher
         com.mg4.launcher.svc.RetroReturn.setOpener(new com.mg4.launcher.svc.RetroReturn.Opener() {
@@ -483,6 +486,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Novità di ogni versione (testi in tutte le lingue in strings.xml). */
     private static int[] newsFor(String ver) {
         switch (ver) {
+            case "0.4.3":
+                return new int[]{R.string.news_v043_1, R.string.news_v043_2, R.string.news_v043_3, R.string.news_v043_4, R.string.news_v043_5};
             case "0.4.2":
                 return new int[]{R.string.news_v042_1, R.string.news_v042_2, R.string.news_v042_3, R.string.news_v042_4, R.string.news_v042_5};
             case "0.4.1":
@@ -546,7 +551,6 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     protected void onPause() {
         inFront = false;
-        com.mg4.launcher.svc.DayNight.setVisible(false);
         super.onPause();
     }
 
@@ -567,10 +571,10 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         askOfficina();
         goFullscreen();
         com.mg4.launcher.svc.RetroReturn.noteBroughtBy("launcher ripreso (MainActivity.onResume)");
-        // 0.4.2: il launcher era dietro: il tema si aggiorna subito (nessuno l'ha visto cambiare), poi con l'attesa di 60 s
-        com.mg4.launcher.svc.DayNight.setVisible(false);
-        com.mg4.launcher.svc.DayNight.tick(this, prefs.themeMode());
-        com.mg4.launcher.svc.DayNight.setVisible(true);
+        // 0.4.3 (punto 6): tornando dall'app Radio l'elenco delle stazioni si rilegge subito
+        if (media != null) media.refreshRadioLists("ritorno nel launcher");
+        // 0.4.3 (punto 7): stato del telefono riletto (riquadro "Preferiti telefono"), anche se gli avvisi del servizio non arrivano
+        com.mg4.launcher.svc.PhoneClient.get(this).refresh();
         // 0.4.0: se giorno/notte è cambiato mentre il launcher era dietro e l'avviso non è arrivato, si ricostruisce qui
         if (theme != null && root != null && com.mg4.launcher.ui.Theme.wouldBeDay(this, prefs) != theme.day) {
             com.mg4.launcher.svc.Diag.put("tema.ripreso", "cambio recuperato al ritorno nel launcher");
@@ -641,7 +645,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         root.removeCallbacks(autoCheck);
         root.removeCallbacks(hidePopup);
         root.removeCallbacks(probeLight);
-        com.mg4.launcher.svc.DayNight.setListener(null);
+        com.mg4.launcher.svc.DayNight.get(this).stop();
         com.mg4.launcher.svc.RetroReturn.setOpener(null);
         try {
             unregisterReceiver(screen);
@@ -714,8 +718,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         }
         if (cfg.uiMode != lastUiMode) {
             lastUiMode = cfg.uiMode;
-            // 0.4.2: uiMode è una delle fonti del tema automatico; il cambio passa dalla catena (attesa di 60 s)
-            com.mg4.launcher.svc.DayNight.tick(this, prefs.themeMode());
+            // il cambio si applica dopo 60 s di conferma (DayNight richiama la ricostruzione)
+            com.mg4.launcher.svc.DayNight.get(this).onConfigurationChanged();
         }
     }
 

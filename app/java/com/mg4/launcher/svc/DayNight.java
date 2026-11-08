@@ -5,304 +5,460 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * 0.4.2 (punto 1): tema giorno/notte automatico, uguale in tutte le versioni del launcher.
- * <p>
- * Come fa la home originale MG (firmware SWI69 R45): non ha una logica sua, usa le risorse "notte" di Android, cioè
- * uiMode. uiMode lo cambia solo il CarService (CarNightService) quando arriva la proprietà del veicolo NIGHT_MODE
- * (287310855). Sulla SWI69 quella proprietà non cambia mai, quindi anche le app originali restano in giorno.
- * <p>
- * Catena delle fonti (la prima affidabile decide):
+ * 1.0.2: tema automatico giorno/notte uguale per tutte le versioni, con una catena di fonti:
  * <ol>
- *   <li>uiMode di sistema, solo se nelle ultime 12 ore ha detto almeno una volta "notte";</li>
- *   <li>la stessa fonte della home originale letta direttamente: proprietà NIGHT_MODE, con la stessa regola;</li>
- *   <li>fari: anabbaglianti o luci di posizione accesi in automatico = notte (l'interruttore manuale non conta);</li>
- *   <li>alba e tramonto calcolati offline dalla posizione (se manca: fuso orario e centro dell'Italia).</li>
+ *   <li>il sistema (uiMode della configurazione, UiModeManager, proprietà NIGHT_MODE), solo se è "affidabile": nelle
+ *       ultime 72 ore ha detto "notte" almeno una volta (sulla SWI68 lo fa; su SWI69/SWI132 dice sempre "giorno");</li>
+ *   <li>i fari (anabbaglianti o posizione, proprietà dell'auto): accesi con il sole basso = notte;</li>
+ *   <li>l'orario: alba e tramonto calcolati senza internet dall'ultima posizione nota (se manca, fuso orario e Italia).</li>
  * </ol>
- * Il cambio di tema aspetta 60 s di valore stabile (gallerie). La scelta manuale Giorno/Notte ha sempre la precedenza.
+ * Un cambio si applica solo se resta uguale per 60 s (in galleria il tema non lampeggia). La scelta manuale Giorno/Notte
+ * delle impostazioni ha sempre la precedenza (la controlla Theme).
  */
 public final class DayNight {
-    private DayNight() {}
-
     public interface Listener {
-        void onDayNightChanged(boolean day);
+        void onThemeChange(boolean day);
     }
 
-    /** Proprietà del veicolo (YFVehicleProperty del firmware R45). */
-    public static final int NIGHT_MODE = 287310855, PMS_SYSTEM_DAY_NIGHT_MODE = 289442317, FICM_DAY_NIGHT_MD = 557873928,
-            DIM_LGHT_LVL = 559971102, DISPLAY_BRIGHTNESS = 289409539, DIPD_BEAM_LGHT = 555782944, VEH_SIDE_LGHT = 557880099,
-            LIGHT_SWITCH_POS_STS = 557880119;
+    private static final long CONFIRM_MS = 60_000, TICK_MS = 20_000, CANDIDATES_EVERY_MS = 10 * 60_000L;
+    private static final long RELIABLE_WINDOW_MS = 72L * 60 * 60 * 1000;
+    private static final String K_SYS_NIGHT_AT = "temaNotteSistemaAlle", K_LAT = "temaUltimaLat", K_LON = "temaUltimaLon";
+    /** Italia, centro: riferimento se non c'è nessuna posizione. */
+    private static final double ITALY_LAT = 42.5, ITALY_LON = 12.5;
 
-    private static final long STABLE_MS = 60_000L, TRUST_MS = 12 * 3600_000L, CANDIDATES_EVERY = 20_000L;
+    private static DayNight instance;
 
-    private static final Handler main = new Handler(Looper.getMainLooper());
-    private static Listener listener;
-    private static Boolean applied;
-    private static boolean desired = true;
-    private static long desiredSince;
-    private static String lastChange = "—", source = "—";
-    private static long candidatesAt;
-    private static String candidates = "";
-    private static volatile boolean visible;
+    private final Context ctx;
+    private final SharedPreferences sp;
+    private final Handler h = new Handler(Looper.getMainLooper());
+    /** Le letture (CarService, posizione) si fanno su questo thread, mai sul thread principale. */
+    private final Handler work;
+    private Listener listener;
+    private Boolean applied;            // tema automatico applicato (true = giorno)
+    private Boolean pending;
+    private long pendingSince;
+    private String lastChange = "—", source = "—", detail = "";
+    private int lastUiNight = -1;
+    private long candidatesAt;
 
-    // ultimi valori letti
-    private static volatile int lowBeam = -1, sideLight = -1, lightSwitch = -1;
-    private static volatile int nightProp = -1;   // 1 notte, 0 giorno, -1 non letta
+    private DayNight(Context c) {
+        ctx = c.getApplicationContext();
+        sp = ctx.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
+        android.os.HandlerThread t = new android.os.HandlerThread("mg4-tema");
+        t.start();
+        work = new Handler(t.getLooper());
+    }
 
-    public static synchronized void setListener(Listener l) {
+    public static synchronized DayNight get(Context c) {
+        if (instance == null) instance = new DayNight(c);
+        return instance;
+    }
+
+    public void start(Listener l) {
         listener = l;
+        work.removeCallbacks(tick);
+        work.post(tick);
+        new Thread(this::ensureLocationPermission, "mg4-posizione").start();
     }
 
-    /** Launcher visibile? Se non lo è il cambio si applica subito, senza attese (nessuno lo vede). */
-    public static void setVisible(boolean v) {
-        visible = v;
+    public void stop() {
+        work.removeCallbacksAndMessages(null);
+        listener = null;
     }
 
-    /** Stato luci dal servizio luci (VehicleClient): -1 se non letto. */
-    public static boolean lightsOn() {
-        return lowBeam == 1 || sideLight == 3 || lightSwitch == 1;
-    }
-
-    /** Fari letti dall'auto? (per l'auto disegnata: se non si sa, resta com'è) */
-    public static boolean lightsKnown() {
-        return lowBeam >= 0 || sideLight >= 0;
-    }
-
-    static void setLamps(int low, int side, int sw) {
-        lowBeam = low;
-        sideLight = side;
-        lightSwitch = sw;
-    }
-
-    // ---- fiducia nelle fonti che "dicono sempre giorno" -----------------------------------------
-
-    private static SharedPreferences sp(Context c) {
-        return c.getApplicationContext().getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
-    }
-
-    private static boolean trusted(Context c, String key, boolean nightNow) {
-        long now = System.currentTimeMillis();
-        SharedPreferences s = sp(c);
-        if (nightNow) {
-            if (now - s.getLong("tema.notteVista." + key, 0) > 60_000L) s.edit().putLong("tema.notteVista." + key, now).apply();
-            return true;
+    private final Runnable tick = new Runnable() {
+        @Override
+        public void run() {
+            evaluate(false);
+            work.postDelayed(this, TICK_MS);
         }
-        long seen = s.getLong("tema.notteVista." + key, 0);
-        return seen > 0 && now - seen < TRUST_MS && now >= seen;
+    };
+
+    /** Il sistema ha cambiato uiMode: si rivaluta subito e di nuovo dopo il tempo di conferma. */
+    public void onConfigurationChanged() {
+        work.post(() -> evaluate(false));
+        work.postDelayed(() -> evaluate(false), CONFIRM_MS + 1000);
     }
 
-    // ---- valutazione -----------------------------------------------------------------------------
-
-    /** Tema da applicare adesso in automatico (senza attese): true = giorno. */
-    public static synchronized boolean evaluate(Context c) {
-        String vUi, vProp, vLamp, vSun;
-        boolean day;
-        String src;
-
-        int night = c.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        boolean uiNight = night == Configuration.UI_MODE_NIGHT_YES;
-        boolean uiTrust = trusted(c, "uimode", uiNight);
-        vUi = (uiNight ? "notte" : night == Configuration.UI_MODE_NIGHT_NO ? "giorno" : "non definito") + (uiTrust ? "" : " (mai notte nelle ultime 12 h: ignorato)");
-
-        int np = nightProp;
-        boolean propTrust = np >= 0 && trusted(c, "nightmode", np == 1);
-        vProp = np < 0 ? "non letta" : (np == 1 ? "notte" : "giorno") + (propTrust ? "" : " (mai notte nelle ultime 12 h: ignorata)");
-
-        boolean manual = lightSwitch == 1;
-        boolean autoLights = !manual && (lowBeam == 1 || sideLight == 3);
-        vLamp = !lightsKnown() ? "non letti" : "anabbaglianti " + lowBeam + " · posizione " + sideLight + " · interruttore " + lightSwitch
-                + (manual ? " (accesi a mano: non contano)" : autoLights ? " → notte" : " → nessuna indicazione");
-
-        double[] pos = position(c);
-        TimeZone tz = TimeZone.getDefault();
-        long now = System.currentTimeMillis();
-        boolean sunDay = SunCalc.isDay(pos[0], pos[1], now, tz);
-        int[] rs = SunCalc.sunriseSunset(pos[0], pos[1], now, tz);
-        vSun = (sunDay ? "giorno" : "notte") + (rs == null ? "" : " (alba " + SunCalc.hhmm(rs[0]) + ", tramonto " + SunCalc.hhmm(rs[1]) + ")")
-                + " · posizione " + (pos[2] > 0 ? "dall'auto" : "Italia (riferimento)");
-
-        if (uiTrust) {
-            day = !uiNight;
-            src = "uiMode di sistema";
-        } else if (propTrust) {
-            day = np != 1;
-            src = "NIGHT_MODE (come la home originale)";
-        } else if (autoLights) {
-            day = false;
-            src = "fari accesi";
-        } else {
-            day = sunDay;
-            src = "alba/tramonto";
-        }
-        source = src;
-        lastValues = "uiMode " + vUi + " | NIGHT_MODE " + vProp + " | fari " + vLamp + " | sole " + vSun;
-        return day;
+    /** Tema automatico da applicare adesso (alla prima chiamata si calcola subito, senza attesa). */
+    public synchronized boolean isDay() {
+        if (applied == null) evaluate(true);
+        return applied == null || applied;
     }
 
-    private static String lastValues = "";
-
-    /**
-     * Chiamata periodicamente (thread di lavoro del veicolo) e al ritorno nel launcher. Applica il cambio solo dopo
-     * 60 s di valore stabile; restituisce il tema applicato (true = giorno).
-     */
-    public static boolean tick(Context c, String themeMode) {
-        boolean d = evaluate(c);
-        boolean changed = false;
-        synchronized (DayNight.class) {
-            long t = android.os.SystemClock.elapsedRealtime();
-            if (d != desired) {
-                desired = d;
-                desiredSince = t;
-            }
-            boolean auto = com.mg4.launcher.ui.Prefs.THEME_AUTO.equals(themeMode);
-            if (applied == null) {
-                applied = d;
-                lastChange = now();
-            } else if (auto && applied != d && (!visible || t - desiredSince >= STABLE_MS)) {
-                applied = d;
-                lastChange = now();
-                changed = true;
-            }
-            String manual = com.mg4.launcher.ui.Prefs.THEME_DAY.equals(themeMode) ? "scelta Giorno"
-                    : com.mg4.launcher.ui.Prefs.THEME_NIGHT.equals(themeMode) ? "scelta Notte" : null;
-            boolean shown = manual != null ? com.mg4.launcher.ui.Prefs.THEME_DAY.equals(themeMode) : applied;
-            String wait = auto && applied != d ? " · in attesa: " + (d ? "giorno" : "notte") + " da " + ((t - desiredSince) / 1000) + " s" : "";
-            Diag.putQuiet("tema.stato", (manual != null ? manual : "automatico · fonte " + source) + " · applicato "
-                    + (shown ? "giorno" : "notte") + " · ultimo cambio " + lastChange + wait + " || " + lastValues);
+    /** Valuta le fonti; con immediate = true applica subito (avvio), altrimenti dopo 60 s di conferma. */
+    public synchronized void evaluate(boolean immediate) {
+        boolean target;
+        try {
+            target = compute();
+        } catch (Throwable e) {
+            Diag.error("tema.stato", e.toString());
+            return;
         }
-        if (changed) {
+        long now = SystemClock.elapsedRealtime();
+        if (applied == null || immediate && applied != target) {
+            applyNow(target, applied == null ? "avvio" : "subito");
+            return;
+        }
+        if (applied == target) {
+            pending = null;
+        } else if (pending == null || pending != target) {
+            pending = target;
+            pendingSince = now;
+        } else if (now - pendingSince >= CONFIRM_MS) {
+            pending = null;
+            applyNow(target, "confermato dopo 60 s");
             Listener l = listener;
-            boolean day = applied;
-            if (l != null) main.post(() -> l.onDayNightChanged(day));
+            // la ricostruzione della home si fa sul thread principale
+            if (l != null) h.post(() -> l.onThemeChange(target));
         }
+        writeDiag();
+        if (now - candidatesAt > CANDIDATES_EVERY_MS || candidatesAt == 0) {
+            candidatesAt = now;
+            new Thread(this::candidates, "mg4-tema-candidati").start();   // letture lente fuori dal thread principale
+        }
+    }
+
+    // ---- 0.4.3: letture per il Controllo funzioni ------------------------------------------------
+
+    private volatile double lastSunElevation = Double.NaN;
+
+    /** Fonte usata adesso (testo del log). */
+    public String source() {
+        return source;
+    }
+
+    /** Tema automatico applicato: true giorno, false notte, null non ancora deciso. */
+    public Boolean applied() {
         return applied;
     }
 
-    /** Tema automatico attuale (true = giorno): l'ultimo applicato, o una valutazione immediata all'avvio. */
-    public static boolean currentDay(Context c, String themeMode) {
-        synchronized (DayNight.class) {
-            if (applied != null) return applied;
-        }
-        return tick(c, themeMode);
+    public double sunElevation() {
+        return lastSunElevation;
     }
 
-    private static String now() {
-        return new SimpleDateFormat("dd/MM HH:mm:ss", Locale.ITALY).format(new Date());
+    public boolean uiStuck() {
+        return sp.getBoolean(K_UI_STUCK, false);
     }
 
-    // ---- lettura delle proprietà e diagnostica tema.candidati ------------------------------------
+    private void applyNow(boolean day, String how) {
+        applied = day;
+        lastChange = new SimpleDateFormat("dd/MM HH:mm:ss", Locale.ITALY).format(new Date()) + " (" + how + ")";
+        writeDiag();
+    }
 
-    /** Letture "pesanti" (proprietà del veicolo, impostazioni): al massimo ogni 20 s. */
-    static void readCar(Context c, CarProps p, int clusterMode) {
-        long t = android.os.SystemClock.elapsedRealtime();
-        if (t - candidatesAt < CANDIDATES_EVERY && candidatesAt > 0) return;
-        candidatesAt = t;
-        StringBuilder sb = new StringBuilder();
-        if (p != null && p.ready()) {
-            int nm = p.getBoolQuiet(NIGHT_MODE);
-            nightProp = nm;
-            sb.append("NIGHT_MODE ").append(nm < 0 ? "?" : nm == 1 ? "notte" : "giorno");
-            sb.append(" · PMS_SYSTEM_DAY_NIGHT_MODE ").append(q(p.getIntQuiet(PMS_SYSTEM_DAY_NIGHT_MODE)));
-            sb.append(" · FICM_DAY_NIGHT_MD ").append(q(p.getIntQuiet(FICM_DAY_NIGHT_MD)));
-            sb.append(" · DIM_LGHT_LVL ").append(q(p.getIntQuiet(DIM_LGHT_LVL)));
-            sb.append(" · DISPLAY_BRIGHTNESS ").append(q(p.getIntQuiet(DISPLAY_BRIGHTNESS)));
-            int low = p.getBoolQuiet(DIPD_BEAM_LGHT);
-            sb.append(" · DIPD_BEAM_LGHT ").append(low < 0 ? "?" : String.valueOf(low));
-            sb.append(" · VEH_SIDE_LGHT ").append(q(p.getIntQuiet(VEH_SIDE_LGHT)));
-            sb.append(" · LIGHT_SWITCH_POS_STS ").append(q(p.getIntQuiet(LIGHT_SWITCH_POS_STS)));
-        } else {
-            sb.append("CarService non pronto");
-        }
-        sb.append(" · quadro (IPK) ").append(clusterMode == Integer.MIN_VALUE ? "?" : String.valueOf(clusterMode));
-        sb.append(" · SAIC_DAY_NIGHT_MODE_FROM_CAR ").append(setting(c, "SAIC_DAY_NIGHT_MODE_FROM_CAR"));
-        sb.append(" · CLUSTER_SKIN_AUTO_CONFIG ").append(setting(c, "CLUSTER_SKIN_AUTO_CONFIG"));
-        sb.append(" · luminosità schermo ").append(setting(c, "screen_brightness"));
+    // ------------------------------------------------------------------------------------------
+
+    private String uiTxt = "?", mgrTxt = "?", nightPropTxt = "?", lightsTxt = "?", sunTxt = "?";
+
+    private boolean compute() {
+        // a) sistema
+        int ui = ctx.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        int uiNight = ui == Configuration.UI_MODE_NIGHT_YES ? 1 : ui == Configuration.UI_MODE_NIGHT_NO ? 0 : -1;
+        uiTxt = uiNight == 1 ? "notte" : uiNight == 0 ? "giorno" : "non definito";
+        int mgr = -1;
         try {
-            android.app.UiModeManager um = (android.app.UiModeManager) c.getSystemService(Context.UI_MODE_SERVICE);
+            android.app.UiModeManager um = (android.app.UiModeManager) ctx.getSystemService(Context.UI_MODE_SERVICE);
             int m = um.getNightMode();
-            sb.append(" · UiModeManager ").append(m == android.app.UiModeManager.MODE_NIGHT_YES ? "notte"
-                    : m == android.app.UiModeManager.MODE_NIGHT_NO ? "giorno" : m == android.app.UiModeManager.MODE_NIGHT_AUTO ? "auto" : String.valueOf(m));
-        } catch (Throwable ignored) {
-        }
-        Diag.putQuiet("tema.candidati", sb.toString());
-    }
-
-    private static String q(int v) {
-        return v == Integer.MIN_VALUE ? "?" : String.valueOf(v);
-    }
-
-    private static String setting(Context c, String key) {
-        try {
-            String v = android.provider.Settings.System.getString(c.getContentResolver(), key);
-            return v == null ? "-" : v;
+            mgr = m == android.app.UiModeManager.MODE_NIGHT_YES ? 1 : m == android.app.UiModeManager.MODE_NIGHT_NO ? 0 : -1;
+            mgrTxt = mgr == 1 ? "notte" : mgr == 0 ? "giorno" : m == android.app.UiModeManager.MODE_NIGHT_AUTO ? "auto" : String.valueOf(m);
         } catch (Throwable e) {
-            return "?";
+            mgrTxt = "?";
+        }
+        int nightProp = Integer.MIN_VALUE;
+        CarProps p = VehicleClient.carProps();
+        if (p != null && p.ready()) nightProp = p.getBoolQuiet(CarProps.NIGHT_MODE);
+        nightPropTxt = nightProp == 1 ? "notte" : nightProp == 0 ? "giorno" : "non c'è";
+        boolean sysNight = uiNight == 1 || mgr == 1 || nightProp == 1;
+        long wall = System.currentTimeMillis();
+        trackUiChanges(uiNight, wall);
+        long prevSeen = sp.getLong(K_SYS_NIGHT_AT, 0);
+        boolean changed = lastUiNight >= 0 && uiNight >= 0 && uiNight != lastUiNight;
+        // si scrive solo quando serve (al più una volta l'ora), non a ogni giro
+        if ((sysNight || changed) && wall - prevSeen > 60 * 60_000L) sp.edit().putLong(K_SYS_NIGHT_AT, wall).apply();
+        if (uiNight >= 0) lastUiNight = uiNight;
+        long seen = sp.getLong(K_SYS_NIGHT_AT, 0);
+        boolean reliable = seen > 0 && wall - seen < RELIABLE_WINDOW_MS && wall >= seen;
+
+        // c) sole (calcolato sempre, serve anche ai fari e alla diagnostica)
+        double[] loc = location();
+        Sun sun = sun(loc[0], loc[1], wall);
+        lastSunElevation = sun.elevation;
+        sunTxt = "alba " + sun.rise + " · tramonto " + sun.set + " · sole a " + Math.round(sun.elevation) + "° (" + (loc[2] == 1 ? "posizione"
+                : loc[2] == 2 ? "ultima posizione salvata" : "fuso orario/Italia") + ")";
+
+        // b) fari
+        int lights = VehicleClient.lights();
+        lightsTxt = lights == 1 ? "accesi" : lights == 0 ? "spenti" : "non leggibili";
+
+        // 0.4.3: su alcune SWI68 uiMode (e UiModeManager) restano su "notte" per sempre. Un uiMode che non cambia
+        // da 12 ore di accensione e dice il contrario del sole è bloccato; alla prima accensione senza storico basta
+        // "notte" con il sole sopra +10°. Una volta bloccato resta ignorato finché uiMode non cambia davvero.
+        uiStuckTxt = "";
+        if (uiNight >= 0) {
+            boolean contradicts = uiNight == 1 ? sun.elevation > 6 : sun.elevation < -6;
+            long onMs = sp.getLong(K_UI_ON_MS, 0) + onPending;
+            boolean noHistory = sp.getLong(K_UI_CHANGED_AT, 0) == 0 && onMs < UI_STUCK_ON_MS;
+            if (!sp.getBoolean(K_UI_STUCK, false)) {
+                if (onMs >= UI_STUCK_ON_MS && contradicts) {
+                    markStuck("mai cambiato da 12 h, contraddice il sole");
+                } else if (noHistory && uiNight == 1 && sun.elevation > 10) {
+                    markStuck("prima accensione, notte con il sole a " + Math.round(sun.elevation) + "°");
+                }
+            }
+            if (sp.getBoolean(K_UI_STUCK, false)) {
+                uiStuckTxt = "uiMode " + uiTxt + " (" + sp.getString(K_UI_STUCK_WHY, "bloccato") + ": ignorato)";
+                reliable = false;
+            }
+        }
+
+        if (reliable) {
+            source = "sistema (" + (nightProp == 1 ? "NIGHT_MODE" : uiNight >= 0 ? "uiMode" : "UiModeManager") + ", affidabile)";
+            return !sysNight;
+        }
+        boolean sunNight = sun.elevation < -0.833;
+        if (lights >= 0) {
+            // con il sole alto i fari accesi sono quelli diurni o la galleria: resta giorno
+            boolean night = sunNight || (lights == 1 && sun.elevation < 6);
+            source = "fari (" + lightsTxt + ") + sole";
+            return !night;
+        }
+        source = "orario (alba/tramonto)";
+        return !sunNight;
+    }
+
+    // ---- uiMode bloccato (0.4.3) ----------------------------------------------------------------
+
+    /** Tempo di accensione senza cambi di uiMode oltre il quale, se contraddice il sole, uiMode è considerato bloccato. */
+    private static final long UI_STUCK_ON_MS = 12L * 60 * 60 * 1000;
+    private static final String K_UI_LAST = "temaUiUltimo", K_UI_CHANGED_AT = "temaUiCambiatoAlle", K_UI_ON_MS = "temaUiAccesoMs",
+            K_UI_STUCK = "temaUiBloccato", K_UI_STUCK_WHY = "temaUiBloccatoPerche";
+    private long onTickAt, onPending, onSavedAt;
+    private String uiStuckTxt = "";
+
+    /**
+     * Conta il tempo di accensione da quando uiMode è cambiato l'ultima volta (giorno↔notte), anche tra un'accensione e
+     * l'altra. Il tempo a auto spenta non conta: tra due giri si aggiunge al massimo 3 volte l'intervallo del controllo.
+     */
+    private void trackUiChanges(int uiNight, long wall) {
+        long now = SystemClock.elapsedRealtime();
+        if (onTickAt > 0) onPending += Math.max(0, Math.min(now - onTickAt, 3 * TICK_MS));
+        onTickAt = now;
+        if (uiNight < 0) return;
+        int last = sp.getInt(K_UI_LAST, -1);
+        SharedPreferences.Editor e = null;
+        if (last != uiNight) {
+            e = sp.edit().putInt(K_UI_LAST, uiNight);
+            if (last >= 0) {
+                // cambio reale: si azzera il conteggio e uiMode torna affidabile
+                e.putLong(K_UI_CHANGED_AT, wall).putLong(K_UI_ON_MS, 0).putBoolean(K_UI_STUCK, false).remove(K_UI_STUCK_WHY);
+                onPending = 0;
+                onSavedAt = now;
+            }
+        }
+        if (onPending > 0 && (now - onSavedAt > 5 * 60_000L || e != null)) {
+            if (e == null) e = sp.edit();
+            e.putLong(K_UI_ON_MS, sp.getLong(K_UI_ON_MS, 0) + onPending);
+            onPending = 0;
+            onSavedAt = now;
+        }
+        if (e != null) e.apply();
+    }
+
+    private void markStuck(String why) {
+        sp.edit().putBoolean(K_UI_STUCK, true).putString(K_UI_STUCK_WHY, why).apply();
+    }
+
+    private String uiHistoryTxt() {
+        long at = sp.getLong(K_UI_CHANGED_AT, 0);
+        long onH = (sp.getLong(K_UI_ON_MS, 0) + onPending) / 3_600_000L;
+        return "ultimo cambio uiMode " + (at == 0 ? "mai visto" : new SimpleDateFormat("dd/MM HH:mm", Locale.ITALY).format(new Date(at)))
+                + " (" + onH + " h di accensione da allora)";
+    }
+
+    private void writeDiag() {
+        String mode = sp.getString("theme", "auto");
+        String manual = "giorno".equals(mode) ? "scelta manuale Giorno (ha la precedenza) · automatico: " : "notte".equals(mode)
+                ? "scelta manuale Notte (ha la precedenza) · automatico: " : "";
+        Diag.put("tema.stato", manual + "fonte " + source + (uiStuckTxt.isEmpty() ? "" : " · " + uiStuckTxt) + " · " + uiHistoryTxt()
+                + " · uiMode " + uiTxt + " · UiModeManager " + mgrTxt + " · NIGHT_MODE " + nightPropTxt
+                + " · fari " + lightsTxt + " · " + sunTxt + " · applicato " + (applied == null ? "—" : applied ? "giorno" : "notte")
+                + (pending != null ? " (in conferma: " + (pending ? "giorno" : "notte") + ")" : "") + " · ultimo cambio " + lastChange);
+    }
+
+    // ---- posizione ---------------------------------------------------------------------------
+
+    private void ensureLocationPermission() {
+        for (String perm : new String[]{"android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"}) {
+            if (ctx.checkSelfPermission(perm) == android.content.pm.PackageManager.PERMISSION_GRANTED) continue;
+            try {
+                android.content.pm.PackageManager pm = ctx.getPackageManager();
+                pm.getClass().getMethod("grantRuntimePermission", String.class, String.class, android.os.UserHandle.class)
+                        .invoke(pm, ctx.getPackageName(), perm, android.os.Process.myUserHandle());
+            } catch (Throwable ignored) {
+            }
         }
     }
 
-    // ---- posizione per alba e tramonto -----------------------------------------------------------
-
-    private static double[] cachedPos;
-    private static long posAt;
-    private static boolean permAsked;
-
-    /** {lat, lon, 1 se dall'auto / 0 se riferimento}. Ultima posizione nota, riletta al massimo ogni 10 minuti. */
-    private static double[] position(Context c) {
-        long t = android.os.SystemClock.elapsedRealtime();
-        if (cachedPos != null && t - posAt < 10 * 60_000L) return cachedPos;
-        posAt = t;
-        double[] out = null;
+    /** {lat, lon, tipo}: tipo 1 = posizione attuale, 2 = ultima salvata, 0 = fuso orario/Italia. */
+    private double[] location() {
         try {
-            if (!permAsked) {
-                permAsked = true;
-                grant(c, android.Manifest.permission.ACCESS_COARSE_LOCATION);
-                grant(c, android.Manifest.permission.ACCESS_FINE_LOCATION);
-            }
-            android.location.LocationManager lm = (android.location.LocationManager) c.getSystemService(Context.LOCATION_SERVICE);
+            android.location.LocationManager lm = (android.location.LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
             android.location.Location best = null;
             if (lm != null) {
-                for (String prov : lm.getAllProviders()) {
+                for (String prov : lm.getProviders(false)) {
                     try {
                         android.location.Location l = lm.getLastKnownLocation(prov);
                         if (l != null && (best == null || l.getTime() > best.getTime())) best = l;
-                    } catch (SecurityException ignored) {
+                    } catch (Throwable ignored) {
                     }
                 }
             }
-            if (best != null) {
-                out = new double[]{best.getLatitude(), best.getLongitude(), 1};
-                sp(c).edit().putFloat("tema.lat", (float) best.getLatitude()).putFloat("tema.lon", (float) best.getLongitude()).apply();
+            if (best != null && (best.getLatitude() != 0 || best.getLongitude() != 0)) {
+                sp.edit().putFloat(K_LAT, (float) best.getLatitude()).putFloat(K_LON, (float) best.getLongitude()).apply();
+                return new double[]{best.getLatitude(), best.getLongitude(), 1};
             }
         } catch (Throwable ignored) {
         }
-        if (out == null) {
-            SharedPreferences s = sp(c);
-            if (s.contains("tema.lat")) out = new double[]{s.getFloat("tema.lat", 0), s.getFloat("tema.lon", 0), 1};
-        }
-        if (out == null) {
-            // senza posizione: centro dell'Italia, ma la longitudine segue il fuso orario se è lontano da quello italiano
-            double lon = SunCalc.ITALY_LON;
-            int offH = TimeZone.getDefault().getRawOffset() / 3600_000;
-            if (Math.abs(offH - 1) > 1) lon = offH * 15.0;
-            out = new double[]{SunCalc.ITALY_LAT, lon, 0};
-        }
-        cachedPos = out;
-        return out;
+        if (sp.contains(K_LAT)) return new double[]{sp.getFloat(K_LAT, 0), sp.getFloat(K_LON, 0), 2};
+        TimeZone tz = TimeZone.getDefault();
+        String id = tz.getID();
+        if (id == null || id.equals("Europe/Rome") || id.equals("GMT") || id.equals("UTC")) return new double[]{ITALY_LAT, ITALY_LON, 0};
+        // longitudine dal fuso (15° per ora), latitudine dell'Italia
+        double lon = tz.getRawOffset() / 3_600_000.0 * 15.0;
+        return new double[]{ITALY_LAT, lon, 0};
     }
 
-    private static void grant(Context c, String perm) {
-        if (c.checkSelfPermission(perm) == android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+    // ---- sole (formule NOAA semplificate, precisione di qualche minuto) ------------------------
+
+    static final class Sun {
+        double elevation;
+        String rise = "—", set = "—";
+    }
+
+    static Sun sun(double lat, double lon, long wallMs) {
+        Calendar u = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        u.setTimeInMillis(wallMs);
+        int doy = u.get(Calendar.DAY_OF_YEAR);
+        double hour = u.get(Calendar.HOUR_OF_DAY) + u.get(Calendar.MINUTE) / 60.0 + u.get(Calendar.SECOND) / 3600.0;
+        double g = 2 * Math.PI / 365.0 * (doy - 1 + (hour - 12) / 24.0);
+        double eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+        double decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g)
+                - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+        double tst = hour * 60 + eq + 4 * lon;
+        double ha = Math.toRadians(tst / 4.0 - 180);
+        double la = Math.toRadians(lat);
+        double cosZ = Math.sin(la) * Math.sin(decl) + Math.cos(la) * Math.cos(decl) * Math.cos(ha);
+        Sun s = new Sun();
+        s.elevation = 90 - Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, cosZ))));
+        double c = Math.cos(Math.toRadians(90.833)) / (Math.cos(la) * Math.cos(decl)) - Math.tan(la) * Math.tan(decl);
+        if (c >= -1 && c <= 1) {
+            double ha0 = Math.toDegrees(Math.acos(c));
+            s.rise = localTime(u, 720 - 4 * (lon + ha0) - eq);
+            s.set = localTime(u, 720 - 4 * (lon - ha0) - eq);
+        }
+        return s;
+    }
+
+    private static String localTime(Calendar utcDay, double minutesUtc) {
+        Calendar c = (Calendar) utcDay.clone();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        long ms = c.getTimeInMillis() + Math.round(minutesUtc * 60_000);
+        return new SimpleDateFormat("HH:mm", Locale.ITALY).format(new Date(ms));
+    }
+
+    // ---- tema.candidati: tutti i segnali giorno/notte che si riescono a leggere -------------------
+
+    private float lastLux = Float.NaN;
+    private boolean luxAsked;
+
+    private void candidates() {
+        StringBuilder sb = new StringBuilder();
+        CarProps p = VehicleClient.carProps();
+        if (p != null && p.ready()) {
+            sb.append("NIGHT_MODE ").append(val(p.getBoolQuiet(CarProps.NIGHT_MODE)));
+            sb.append(" · HEADLIGHTS_STATE ").append(val(p.getIntSafe(CarProps.HEADLIGHTS_STATE)));
+            sb.append(" · HEADLIGHTS_SWITCH ").append(val(p.getIntSafe(CarProps.HEADLIGHTS_SWITCH)));
+            sb.append(" · DISPLAY_BRIGHTNESS ").append(val(p.getIntSafe(CarProps.DISPLAY_BRIGHTNESS)));
+        } else {
+            sb.append("CarService non pronto");
+        }
+        sb.append(" · fari (servizio) ").append(VehicleClient.lightsDescription());
+        // sensore di luce
         try {
-            android.content.pm.PackageManager pm = c.getPackageManager();
-            pm.getClass().getMethod("grantRuntimePermission", String.class, String.class, android.os.UserHandle.class)
-                    .invoke(pm, c.getPackageName(), perm, android.os.Process.myUserHandle());
+            android.hardware.SensorManager sm = (android.hardware.SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
+            android.hardware.Sensor light = sm == null ? null : sm.getDefaultSensor(android.hardware.Sensor.TYPE_LIGHT);
+            if (light == null) sb.append(" · sensore di luce assente");
+            else {
+                sb.append(" · sensore di luce ").append(Float.isNaN(lastLux) ? "in lettura" : Math.round(lastLux) + " lux");
+                if (!luxAsked) {
+                    luxAsked = true;
+                    sm.registerListener(new android.hardware.SensorEventListener() {
+                        @Override
+                        public void onSensorChanged(android.hardware.SensorEvent e) {
+                            lastLux = e.values[0];
+                            sm.unregisterListener(this);   // una lettura basta per la diagnostica
+                            luxAsked = false;
+                        }
+
+                        @Override
+                        public void onAccuracyChanged(android.hardware.Sensor s, int a) {
+                        }
+                    }, light, android.hardware.SensorManager.SENSOR_DELAY_NORMAL);
+                }
+            }
+        } catch (Throwable e) {
+            sb.append(" · sensore di luce errore");
+        }
+        // impostazioni di sistema legate a giorno/notte o luminosità
+        sb.append(" · impostazioni ").append(settingsMatching());
+        try {
+            sb.append(" · ui_night_mode ").append(android.provider.Settings.Secure.getString(ctx.getContentResolver(), "ui_night_mode"));
         } catch (Throwable ignored) {
         }
+        sb.append(" · broadcast: cambio di configurazione (uiMode) ascoltato dall'activity");
+        Diag.put("tema.candidati", sb.toString());
+    }
+
+    private static String val(int v) {
+        return v == Integer.MIN_VALUE ? "non c'è" : String.valueOf(v);
+    }
+
+    private String settingsMatching() {
+        StringBuilder sb = new StringBuilder();
+        for (String table : new String[]{"system", "secure", "global"}) {
+            android.database.Cursor c = null;
+            try {
+                c = ctx.getContentResolver().query(android.net.Uri.parse("content://settings/" + table), new String[]{"name", "value"}, null, null, null);
+                if (c == null) continue;
+                while (c.moveToNext()) {
+                    String n = c.getString(0);
+                    if (n == null) continue;
+                    String l = n.toLowerCase(Locale.ROOT);
+                    if (l.contains("night") || l.contains("day_") || l.contains("dark") || l.contains("brightness") || l.contains("daynight")
+                            || l.contains("theme") || l.contains("lamp") || l.contains("headlight")) {
+                        if (sb.length() > 0) sb.append(", ");
+                        sb.append(table).append('/').append(n).append('=').append(c.getString(1));
+                        if (sb.length() > 900) return sb.append("…").toString();
+                    }
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                if (c != null) c.close();
+            }
+        }
+        return sb.length() == 0 ? "nessuna" : sb.toString();
     }
 }

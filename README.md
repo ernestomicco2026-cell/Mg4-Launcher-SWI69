@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.2.apk"><img alt="Scarica / Download 0.4.2" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.2-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.3.apk"><img alt="Scarica / Download 0.4.3" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.3-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -175,7 +175,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.2.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.3.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +192,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.2.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.3.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -268,6 +268,24 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.3
+- **Tema giorno/notte**: se l'auto dice sempre «giorno» o sempre «notte» per 12 ore contro la posizione del sole, il
+  launcher non la segue più e usa i fari, poi alba e tramonto. La scelta manuale resta prioritaria.
+- **Seconda porta USB**: USB 1 e USB 2 sono sorgenti separate. Con la USB 2 in riproduzione avanti e indietro al
+  volante cambiano il brano anche quando la musica è partita dall'app Media originale.
+- **Bluetooth all'accensione**: il launcher aspetta che il telefono si ricolleghi (al massimo 30 secondi) prima di
+  far partire la musica.
+- **Elenco stazioni**: si aggiorna tornando alla home e quando l'app Radio finisce una ricerca; se è vuoto mostra i
+  preferiti.
+- **Riquadro sotto la stazione**: a scelta musica (come prima), preferiti del telefono (fino a 6, chiamata con un
+  tocco) o scorciatoie alle app.
+- **Ordine in alto**: nuova opzione in Home, «Sorgenti, poi Mappa/Media» oppure «Mappa/Media, poi Sorgenti».
+- **FM/DAB**: il selettore torna accanto ai comandi, più grande.
+- **Temperatura interna**: Automatico/Mostra/Nascondi; se l'auto non la fornisce l'opzione si nasconde da sola.
+- **Controllo funzioni** in Impostazioni › Sistema: prova in sola lettura cosa funziona su questa auto, con il
+  pulsante «Invia log». Dopo ogni aggiornamento gira da solo, senza mostrare niente.
+- **Stabilità**: corretto un blocco quando un'app scelta non c'è più (pulsante in alto a destra e tasto 360).
 
 #### 0.4.2
 - **Tema giorno/notte**: ora cambia da solo anche sulla SWI69. Segue l'auto quando il sistema cambia davvero tema,
@@ -695,7 +713,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.2.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.3.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -711,7 +729,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.2.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.3.apk
    ```
 2. Make it the default home:
    ```bash
@@ -783,6 +801,22 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.3
+- **Day/night theme**: if the car keeps saying "day" or "night" for 12 hours against the sun's position, the launcher
+  stops following it and uses the headlights, then sunrise and sunset. The manual choice still comes first.
+- **Second USB port**: USB 1 and USB 2 are separate sources. With USB 2 playing, the steering wheel next/previous
+  buttons change track even when the music was started from the original Media app.
+- **Bluetooth at start-up**: the launcher waits for the phone to reconnect (up to 30 seconds) before starting the music.
+- **Station list**: refreshes when you come back to the home and when the Radio app finishes a search; if it is empty
+  the favourites are shown.
+- **Panel under the station**: choose music (as before), phone favourites (up to 6, one-tap call) or app shortcuts.
+- **Top order**: new Home option, "Sources, then Map/Media" or "Map/Media, then Sources".
+- **FM/DAB**: the selector is back next to the controls, larger.
+- **Inside temperature**: Automatic/Show/Hide; if the car doesn't provide it the option hides itself.
+- **Feature check** in Settings › System: checks, read-only, what works on this car, with a "Send log" button. After
+  every update it runs by itself without showing anything.
+- **Stability**: fixed a crash when a chosen app is no longer installed (top-right button and 360 button).
 
 #### 0.4.2
 - **Day/night theme**: now switches by itself on the SWI69 too. It follows the car when the system really changes theme,

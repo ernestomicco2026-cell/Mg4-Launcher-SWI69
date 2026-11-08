@@ -418,4 +418,58 @@
     <string name="sched_time" formatted="false">Uhrzeit…</string>
     <string name="sched_start" formatted="false">Ladebeginn</string>
     <string name="sched_end" formatted="false">Ladeende</string>
+    <string name="set_tile" formatted="false">Feld neben der Klimaanlage</string>
+    <string name="set_tile_sub" formatted="false">In der unteren Leiste: Musik, Telefon-Favoriten oder deine Apps</string>
+    <string name="tile_media" formatted="false">Medien (wie bisher)</string>
+    <string name="tile_phone" formatted="false">Telefon-Favoriten</string>
+    <string name="tile_apps" formatted="false">App-Verknüpfungen</string>
+    <string name="tile_connect_phone" formatted="false">Telefon verbinden</string>
+    <string name="tile_hint_contacts" formatted="false">Favoriten in den Einstellungen wählen</string>
+    <string name="tile_hint_apps" formatted="false">Apps in den Einstellungen wählen</string>
+    <string name="tile_call_failed" formatted="false">Anruf fehlgeschlagen</string>
+    <string name="tile_no_contacts" formatted="false">Telefonbuch leer: Telefon verbinden und Synchronisierung abwarten</string>
+    <string name="tile_pick_contacts" formatted="false">Telefon-Favoriten</string>
+    <string name="tile_pick_contacts_sub" formatted="false">Bis zu 6 Kontakte: ein Tippen in der Leiste startet den Anruf</string>
+    <string name="tile_pick_apps" formatted="false">App-Verknüpfungen</string>
+    <string name="tile_pick_apps_sub" formatted="false">Bis zu 6 Apps, in der Reihenfolge, in der du sie antippst</string>
+    <string name="check_title" formatted="false">Funktionsprüfung</string>
+    <string name="check_sub" formatted="false">Prüft nur lesend, was in diesem Auto funktioniert: es werden keine Befehle gesendet</string>
+    <string name="check_start" formatted="false">Prüfung starten</string>
+    <string name="check_running" formatted="false">Prüfung läuft…</string>
+    <string name="check_ok" formatted="false">Funktioniert</string>
+    <string name="check_fail" formatted="false">Funktioniert nicht</string>
+    <string name="check_absent" formatted="false">In diesem Auto nicht vorhanden</string>
+    <string name="check_skipped" formatted="false">Übersprungen</string>
+    <string name="check_press_keys">Drücke Weiter oder Zurück am Lenkrad (%s s)</string>
+    <string name="check_summary">%1$s ok · %2$s Fehler · %3$s fehlen</string>
+    <string name="check_send_log" formatted="false">Protokoll senden</string>
+    <string name="check_log_sent" formatted="false">Protokoll wird gesendet</string>
+    <string name="chk_vehicle" formatted="false">Fahrzeugdienst</string>
+    <string name="chk_climate" formatted="false">Klima</string>
+    <string name="chk_radio" formatted="false">Radiodienst</string>
+    <string name="chk_media" formatted="false">Mediendienst</string>
+    <string name="chk_bms" formatted="false">Batterie (BMS)</string>
+    <string name="chk_projection" formatted="false">CarPlay / Android Auto</string>
+    <string name="chk_out_temp" formatted="false">Außentemperatur</string>
+    <string name="chk_in_temp" formatted="false">Innentemperatur</string>
+    <string name="chk_theme" formatted="false">Tag-/Nachtmodus</string>
+    <string name="chk_usb" formatted="false">USB-Anschlüsse</string>
+    <string name="chk_bt" formatted="false">Bluetooth und Titelanzeige</string>
+    <string name="chk_stations" formatted="false">Senderliste</string>
+    <string name="chk_keys" formatted="false">Lenkradtasten</string>
+    <string name="chk_sys_button" formatted="false">Klimataste</string>
+    <string name="chk_comfort" formatted="false">Sitz- und Lenkradheizung</string>
+    <string name="chk_update" formatted="false">Updates erreichbar</string>
+    <string name="chk_logs" formatted="false">Protokoll-Upload</string>
+    <string name="chk_notices" formatted="false">Hinweise aus der Ferne</string>
+    <string name="set_top_order" formatted="false">Reihenfolge oben</string>
+    <string name="set_top_order_sub" formatted="false">Reihenfolge der Bedienelemente oben im rechten Feld</string>
+    <string name="top_order_current" formatted="false">Quellen, dann Karte/Medien (aktuell)</string>
+    <string name="top_order_swapped" formatted="false">Karte/Medien, dann Quellen</string>
+    <string name="chk_fog_window" formatted="false">Fenster der Nebelleuchten-Anzeige</string>
+    <string name="news_v043_1" formatted="false">Automatisches Design: Meldet das Auto immer „Tag“ oder immer „Nacht“ gegen den Sonnenstand, gelten Scheinwerfer und Sonnenauf-/-untergang</string>
+    <string name="news_v043_2" formatted="false">Zweiter USB-Anschluss als eigene Quelle (USB 1 und USB 2); vollständige Senderliste vom Radiodienst</string>
+    <string name="news_v043_3" formatted="false">Feld unter dem Sender wählbar: Musik, Telefon-Favoriten (Anruf mit einem Tippen) oder Apps</string>
+    <string name="news_v043_4" formatted="false">Reihenfolge der oberen Bedienelemente tauschbar; FM/DAB-Auswahl wieder neben den Tasten, größer</string>
+    <string name="news_v043_5" formatted="false">Funktionsprüfung unter Einstellungen → System; Bluetooth wartet beim Einschalten auf das Telefon; Stabilitätskorrekturen</string>
 </resources>

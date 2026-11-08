@@ -126,7 +126,9 @@ public final class CarProps {
                         allAreas.put(id, ids != null && ids.length > 0 ? ids : new int[]{0});
                     }
                     Diag.put("auto.proprietà", cfgs.size() + " disponibili; TPMS " + (areas.containsKey(TIRE_FL) ? "sì" : "no")
-                            + ", temp. interna " + (areas.containsKey(HVAC_TEMPERATURE_CURRENT) || areas.containsKey(HVAC_AMBIENT_TEMPERATURE) ? "sì" : "no"));
+                            // 0.4.3: "ambient" è la temperatura esterna, non conta come interna
+                            + ", temp. interna " + (areas.containsKey(HVAC_TEMPERATURE_CURRENT) ? "sì"
+                            : areas.containsKey(HVAC_AMBIENT_TEMPERATURE) ? "no (solo ambient = esterna)" : "no"));
                 }
             } catch (Throwable e) {
                 areasRead = false;
@@ -160,6 +162,42 @@ public final class CarProps {
             Method m = p.getClass().getMethod("getIntProperty", int.class, int.class);
             return (Integer) m.invoke(p, prop, area(prop));
         } catch (Throwable e) {
+            return Integer.MIN_VALUE;
+        }
+    }
+
+    /** 0.4.3 (dalla SWI68 0.4.3): NIGHT_MODE (BOOLEAN), il sistema dice che è notte. */
+    public static final int NIGHT_MODE = 287310855;
+    /** HEADLIGHTS_STATE (INT32): 0 spenti, 1 accesi, 2 luci diurne. */
+    public static final int HEADLIGHTS_STATE = 289410560;
+    /** HEADLIGHTS_SWITCH (INT32): posizione della leva, 0 spenti, 1 accesi, 2 diurne, 3 automatico. */
+    public static final int HEADLIGHTS_SWITCH = 289410576;
+    /** DISPLAY_BRIGHTNESS (INT32). */
+    public static final int DISPLAY_BRIGHTNESS = 289409539;
+
+    /** True se la proprietà è nell'elenco dell'auto (letto una volta). */
+    public synchronized boolean has(int prop) {
+        try {
+            area(prop);
+        } catch (Throwable ignored) {
+        }
+        return areasRead && areas.containsKey(prop);
+    }
+
+    /** Intero senza errori nella diagnostica; ricorda i rifiuti dell'auto. */
+    public int getIntSafe(int prop) {
+        if (unsupported.contains(prop) || denied.contains(prop)) return Integer.MIN_VALUE;
+        try {
+            Object p = pm();
+            if (p == null) return Integer.MIN_VALUE;
+            area(prop);
+            if (!areas.containsKey(prop)) return Integer.MIN_VALUE;
+            Method m = p.getClass().getMethod("getIntProperty", int.class, int.class);
+            return (Integer) m.invoke(p, prop, area(prop));
+        } catch (Throwable e) {
+            Throwable c = e instanceof java.lang.reflect.InvocationTargetException && e.getCause() != null ? e.getCause() : e;
+            if (c instanceof SecurityException) denied.add(prop);
+            else if (c instanceof IllegalArgumentException) unsupported.add(prop);
             return Integer.MIN_VALUE;
         }
     }

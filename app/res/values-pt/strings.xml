@@ -418,4 +418,58 @@
     <string name="sched_time" formatted="false">Horário…</string>
     <string name="sched_start" formatted="false">Início do carregamento</string>
     <string name="sched_end" formatted="false">Fim do carregamento</string>
+    <string name="set_tile" formatted="false">Painel ao lado do clima</string>
+    <string name="set_tile_sub" formatted="false">Na barra inferior: a música, os favoritos do telemóvel ou as tuas apps</string>
+    <string name="tile_media" formatted="false">Média (como agora)</string>
+    <string name="tile_phone" formatted="false">Favoritos do telemóvel</string>
+    <string name="tile_apps" formatted="false">Atalhos de apps</string>
+    <string name="tile_connect_phone" formatted="false">Liga o telemóvel</string>
+    <string name="tile_hint_contacts" formatted="false">Escolhe os favoritos nas definições</string>
+    <string name="tile_hint_apps" formatted="false">Escolhe as apps nas definições</string>
+    <string name="tile_call_failed" formatted="false">Não foi possível ligar</string>
+    <string name="tile_no_contacts" formatted="false">Agenda vazia: liga o telemóvel e espera que sincronize</string>
+    <string name="tile_pick_contacts" formatted="false">Favoritos do telemóvel</string>
+    <string name="tile_pick_contacts_sub" formatted="false">Até 6 contactos: um toque na barra e a chamada começa</string>
+    <string name="tile_pick_apps" formatted="false">Atalhos de apps</string>
+    <string name="tile_pick_apps_sub" formatted="false">Até 6 apps, pela ordem em que lhes tocas</string>
+    <string name="check_title" formatted="false">Verificação de funções</string>
+    <string name="check_sub" formatted="false">Verifica o que funciona neste carro só a ler: não é enviado nenhum comando</string>
+    <string name="check_start" formatted="false">Iniciar</string>
+    <string name="check_running" formatted="false">A verificar…</string>
+    <string name="check_ok" formatted="false">Funciona</string>
+    <string name="check_fail" formatted="false">Não funciona</string>
+    <string name="check_absent" formatted="false">Não existe neste carro</string>
+    <string name="check_skipped" formatted="false">Ignorada</string>
+    <string name="check_press_keys">Carrega em seguinte ou anterior no volante (%s s)</string>
+    <string name="check_summary">%1$s ok · %2$s erros · %3$s ausentes</string>
+    <string name="check_send_log" formatted="false">Enviar registo</string>
+    <string name="check_log_sent" formatted="false">A enviar registo</string>
+    <string name="chk_vehicle" formatted="false">Serviço do veículo</string>
+    <string name="chk_climate" formatted="false">Clima</string>
+    <string name="chk_radio" formatted="false">Serviço de rádio</string>
+    <string name="chk_media" formatted="false">Serviço de média</string>
+    <string name="chk_bms" formatted="false">Bateria (BMS)</string>
+    <string name="chk_projection" formatted="false">CarPlay / Android Auto</string>
+    <string name="chk_out_temp" formatted="false">Temperatura exterior</string>
+    <string name="chk_in_temp" formatted="false">Temperatura interior</string>
+    <string name="chk_theme" formatted="false">Tema dia/noite</string>
+    <string name="chk_usb" formatted="false">Portas USB</string>
+    <string name="chk_bt" formatted="false">Bluetooth e títulos das faixas</string>
+    <string name="chk_stations" formatted="false">Lista de estações</string>
+    <string name="chk_keys" formatted="false">Botões do volante</string>
+    <string name="chk_sys_button" formatted="false">Botão do clima</string>
+    <string name="chk_comfort" formatted="false">Bancos e volante aquecidos</string>
+    <string name="chk_update" formatted="false">Atualizações acessíveis</string>
+    <string name="chk_logs" formatted="false">Envio de registos</string>
+    <string name="chk_notices" formatted="false">Avisos remotos</string>
+    <string name="set_top_order" formatted="false">Ordem em cima</string>
+    <string name="set_top_order_sub" formatted="false">Ordem dos comandos em cima no painel direito</string>
+    <string name="top_order_current" formatted="false">Fontes, depois Mapa/Multimédia (atual)</string>
+    <string name="top_order_swapped" formatted="false">Mapa/Multimédia, depois Fontes</string>
+    <string name="chk_fog_window" formatted="false">Janela do indicador de nevoeiro</string>
+    <string name="news_v043_1" formatted="false">Tema automático: se o carro diz sempre «dia» ou sempre «noite» contra o sol, usam-se os faróis e o nascer/pôr do sol</string>
+    <string name="news_v043_2" formatted="false">Segunda porta USB como fonte separada (USB 1 e USB 2); lista completa de estações do serviço de rádio</string>
+    <string name="news_v043_3" formatted="false">Quadro sob a estação à escolha: música, favoritos do telefone (chamada com um toque) ou apps</string>
+    <string name="news_v043_4" formatted="false">Ordem dos comandos em cima trocável; seletor FM/DAB de novo junto aos comandos, maior</string>
+    <string name="news_v043_5" formatted="false">Verificação de funções em Definições → Sistema; o Bluetooth ao ligar espera pelo telefone; correções de estabilidade</string>
 </resources>

@@ -733,4 +733,21 @@ public final class Updater {
     public boolean canInstallSilently() {
         return ctx.checkSelfPermission("android.permission.INSTALL_PACKAGES") == PackageManager.PERMISSION_GRANTED;
     }
+
+    /** 0.4.3 (Controllo funzioni): legge latest.json e avvisi.json senza toccare lo stato degli aggiornamenti. */
+    public static String[] probeRemote() {
+        String[] out = new String[2];
+        try {
+            out[0] = new JSONObject(fetch(RAW + "releases/latest.json")).optString("version", "?");
+        } catch (Exception e) {
+            out[0] = null;
+        }
+        try {
+            JSONArray a = new JSONObject(fetch(RAW + "releases/avvisi.json")).optJSONArray("avvisi");
+            out[1] = String.valueOf(a == null ? 0 : a.length());
+        } catch (Exception e) {
+            out[1] = null;
+        }
+        return out;
+    }
 }
