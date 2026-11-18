@@ -50,16 +50,45 @@
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/guida.png" alt="Gruppo Guida: corsia, One Pedal, assistente, pedale del freno" width="100%"><br>
-<sub>Gruppo <b>Guida</b>: corsia, One Pedal, assistente, pedale del freno · <i><b>Driving</b> group: lane, One Pedal, assistant, brake pedal</i></sub></td>
-<td width="50%" valign="top"><img src="screenshots/clima-rapido.png" alt="Gruppo Clima: A/C, automatico, ricircolo" width="100%"><br>
-<sub>Gruppo <b>Clima</b>: A/C, automatico, ricircolo · <i><b>Climate</b> group: A/C, auto, recirculation</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-normale-giorno.png" alt="Home di giorno con la radio: FM/DAB sotto Radio, Mappa/Media in basso (simulazione)" width="100%"><br>
+<sub>Tema <b>giorno</b> con la radio: <b>FM/DAB</b> sotto Radio, <b>Mappa/Media</b> in basso prima dei preferiti · <i><b>Day</b> theme with the radio: <b>FM/DAB</b> under Radio, <b>Map/Media</b> at the bottom before the favourites</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-ricarica.gif" alt="Animazione di ricarica: l'auto si gira, il cavo si aggancia e la carica scorre (simulazione)" width="100%"><br>
+<sub><b>Animazione di ricarica</b>: l'auto si gira, il cavo si aggancia e la carica scorre; potenza accanto alla temperatura · <i><b>Charging animation</b>: the car turns, the cable plugs in and the charge flows; power next to the temperature</i></sub></td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-normale-notte.png" alt="Home di notte con la radio (simulazione)" width="100%"><br>
+<sub>Tema <b>notte</b> con la radio e l'elenco delle stazioni · <i><b>Night</b> theme with the radio and the station list</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-usb-notte.png" alt="Home di notte con la chiavetta USB (simulazione)" width="100%"><br>
+<sub>Sorgente <b>USB</b>: pulsanti delle sorgenti più grandi, ognuno con il suo fondo · <i><b>USB</b> source: bigger source buttons, each with its own background</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-mappa-giorno.png" alt="Riquadro Mappa di giorno (simulazione)" width="100%"><br>
+<sub>Riquadro <b>Mappa</b>: si naviga con CarPlay o Android Auto, Mappa/Media in basso a sinistra · <i><b>Map</b> panel: navigation via CarPlay or Android Auto, Map/Media at the bottom left</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-grande-giorno.png" alt="Home con Dimensione comandi Grande (simulazione)" width="100%"><br>
+<sub>Dimensione comandi <b>Grande</b>: testo e pulsanti crescono insieme · <i>Control size <b>Large</b>: text and buttons grow together</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-grande-notte.png" alt="Home con Dimensione comandi Grande di notte (simulazione)" width="100%"><br>
+<sub>Dimensione comandi <b>Grande</b>, di notte · <i>Control size <b>Large</b>, at night</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-molto-grande-notte.png" alt="Home con Dimensione comandi Molto grande di notte (simulazione)" width="100%"><br>
+<sub>Dimensione comandi <b>Molto grande</b>, di notte: tutte le sorgenti con la scritta · <i>Control size <b>Extra large</b>, at night: every source keeps its label</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-molto-grande-giorno.png" alt="Home con Dimensione comandi Molto grande di giorno (simulazione)" width="100%"><br>
+<sub>Dimensione comandi <b>Molto grande</b>, di giorno · <i>Control size <b>Extra large</b>, by day</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/guida.png" alt="Gruppo Guida: corsia, One Pedal, assistente, pedale del freno" width="100%"><br>
+<sub>Gruppo <b>Guida</b>: corsia, One Pedal, assistente, pedale del freno · <i><b>Driving</b> group: lane, One Pedal, assistant, brake pedal</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/clima-rapido.png" alt="Gruppo Clima: A/C, automatico, ricircolo" width="100%"><br>
+<sub>Gruppo <b>Clima</b>: A/C, automatico, ricircolo · <i><b>Climate</b> group: A/C, auto, recirculation</i></sub></td>
 <td width="50%" valign="top"><img src="screenshots/impostazioni.png" alt="Impostazioni: colore, cerchi e tetto dell'auto" width="100%"><br>
 <sub><b>Impostazioni</b>: colore, cerchi e tetto dell'auto · <i><b>Settings</b>: car colour, wheels and roof</i></sub></td>
+</tr>
+<tr>
 <td width="50%" valign="top"><img src="screenshots/mg4clima.png" alt="MG4 Clima aperto dal tasto del clima" width="100%"><br>
 <sub><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> aperto dal tasto del clima · <i><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> opened from the climate button</i></sub></td>
+<td width="50%" valign="top"></td>
 </tr>
 </table>
 
