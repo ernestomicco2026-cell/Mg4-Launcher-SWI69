@@ -516,6 +516,8 @@ public final class Updater {
 
     public static final String OWN_REPO = "ernestomicco2026-cell/Mg4-Launcher-SWI69";
     private static final String RAW = "https://raw.githubusercontent.com/" + OWN_REPO + "/main/";
+    /** 0.4.4: indirizzo dei file del proprio repository (animazioni.json, pacchetti dell'animazione). */
+    public static final String OWN_RAW = RAW;
     private static final int MAX_FORCED_TRIES = 3;
 
     /** Esito del controllo automatico (sul thread principale). */
@@ -711,6 +713,11 @@ public final class Updater {
         }
         Diag.put("avvisi.stato", "letti " + noticeIds + " · " + noticeShown);
         if (!out.isEmpty()) main.post(() -> cb.onNotices(out));
+    }
+
+    /** 0.4.4: GET di un file piccolo di testo del proprio repository (animazioni.json). */
+    public static String getText(String url) throws IOException {
+        return fetch(url);
     }
 
     private static String fetch(String url) throws IOException {

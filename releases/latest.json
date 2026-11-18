@@ -1,6 +1,6 @@
 {
-  "version": "0.4.3",
-  "apk": "releases/MG4Launcher-SWI69-0.4.3.apk",
-  "size": 776208,
-  "notes": "Tema automatico più affidabile; seconda porta USB come sorgente separata; Bluetooth all'accensione aspetta il telefono; elenco stazioni aggiornato; riquadro sotto la stazione con preferiti del telefono o app; ordine in alto scambiabile; FM/DAB accanto ai comandi; Controllo funzioni; correzioni di stabilità."
+  "version": "0.4.4",
+  "apk": "releases/MG4Launcher-SWI69-0.4.4.apk",
+  "size": 1116772,
+  "notes": "Disinstallazione sicura; tema giorno/notte scritto in tutto il sistema; nuova home come la SWI68; auto dal modello 3D e animazione di ricarica; MG4 Store incluso; sorgenti e navigatore a scelta; radio all'accensione più affidabile; ritorno dopo la retromarcia corretto; elenco stazioni costruito dalle stazioni ascoltate."
 }

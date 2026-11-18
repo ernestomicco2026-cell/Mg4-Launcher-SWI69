@@ -120,7 +120,9 @@ public final class Prefs {
     public static final String NAV_AUTO = "auto", NAV_MG = "mg", NAV_PHONE = "phone";
 
     public String navApp() {
-        return sp.getString("navApp", NAV_AUTO);
+        // 0.4.4: sulla SWI69 non c'è il navigatore MG: predefinito Automatico (anche per un vecchio valore "mg")
+        String v = sp.getString("navApp", NAV_AUTO);
+        return NAV_MG.equals(v) ? NAV_AUTO : v;
     }
 
     public void setNavApp(String v) {
@@ -381,14 +383,34 @@ public final class Prefs {
 
     // --- 0.4.3 ---
 
-    /** Ordine in alto nel riquadro destro: false = sorgenti poi Mappa/Media (attuale, predefinito), true = scambiato. */
-    public boolean topSwapped() {
-        return sp.getBoolean("ordineAltoScambiato", false);
+    /**
+     * 1.0.4 (issue #28): sorgenti audio da mostrare. Si salvano quelle NASCOSTE (così le sorgenti nuove compaiono da
+     * sole); predefinito: nessuna nascosta. CarPlay e Android Auto non si nascondono.
+     */
+    public boolean sourceShown(int src) {
+        // 0.4.4 (SWI69): la seconda porta USB segue la scelta di "USB"
+        if (src == com.mg4.launcher.svc.MediaClient.SRC_USB2) src = com.mg4.launcher.svc.MediaClient.SRC_USB;
+        return !("," + sp.getString("sorgentiNascoste", "") + ",").contains("," + src + ",");
     }
 
-    public void setTopSwapped(boolean b) {
-        sp.edit().putBoolean("ordineAltoScambiato", b).apply();
+    public void setSourceShown(int src, boolean shown) {
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+        for (String x : sp.getString("sorgentiNascoste", "").split(",")) if (!x.trim().isEmpty()) set.add(x.trim());
+        if (shown) set.remove(String.valueOf(src));
+        else set.add(String.valueOf(src));
+        sp.edit().putString("sorgentiNascoste", android.text.TextUtils.join(",", set)).apply();
     }
+
+    /** 1.0.4 (punto F): animazione di ricarica (predefinito: attiva). */
+    public boolean chargeAnim() {
+        return sp.getBoolean("animazioneRicarica", true);
+    }
+
+    public void setChargeAnim(boolean on) {
+        sp.edit().putBoolean("animazioneRicarica", on).apply();
+    }
+
+    /** Ordine in alto nel riquadro destro: false = sorgenti poi Mappa/Media (attuale, predefinito), true = scambiato. */
 
     /** Riquadro in basso accanto al clima: "media" (come prima, predefinito), "telefono" (preferiti), "app" (scorciatoie). */
     public static final String TILE_MEDIA = "media", TILE_PHONE = "telefono", TILE_APPS = "app";
@@ -472,15 +494,23 @@ public final class Prefs {
     }
 
     /** Punto 8b: pulsante in alto a destra: "proj" (CarPlay / Android Auto), "app:<pacchetto>", "none". */
-    public static final String QUICK_PROJ = "proj", QUICK_APP = "app:", QUICK_NONE = "none";
+    /**
+     * Pulsante accanto a Mappa/Media (dalla SWI68 1.0.4): nessuno o un'app. CarPlay/Android Auto stanno nella barra in
+     * basso. 0.4.4: si riprende la scelta "un'app" del vecchio pulsante in alto a destra della 0.4.2–0.4.3.
+     */
+    public static final String TOP_PROJECTION = "proiezione", TOP_APP = "app:", TOP_NONE = "nessuno";
 
-    public String quickButton() {
-        String v = sp.getString("pulsanteRapido", QUICK_PROJ);
-        return QUICK_NONE.equals(v) || v.startsWith(QUICK_APP) ? v : QUICK_PROJ;
+    public String topButton() {
+        String v = sp.getString("pulsanteAltoDestra", null);
+        if (v == null) {
+            String old = sp.getString("pulsanteRapido", "");
+            v = old.startsWith(TOP_APP) ? old : TOP_PROJECTION;
+        }
+        return TOP_NONE.equals(v) || v.startsWith(TOP_APP) ? v : TOP_PROJECTION;
     }
 
-    public void setQuickButton(String v) {
-        sp.edit().putString("pulsanteRapido", v == null ? QUICK_PROJ : v).apply();
+    public void setTopButton(String v) {
+        sp.edit().putString("pulsanteAltoDestra", v == null ? TOP_PROJECTION : v).apply();
     }
 
     public SharedPreferences raw() {

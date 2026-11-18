@@ -107,6 +107,11 @@ public final class VehicleClient {
     /** Istantanea dello stato del veicolo letta dai servizi. */
     public static final class State {
         public boolean connected;
+        /** 1.0.4: presa di ricarica BMS_CHRG_PLUG_CNCTNIO (0 cavo inserito, 1 no, -1 non letta). */
+        public int plugProp = -1;
+        /** 1.0.4: accensione (getVehicleIgnition): 2 = READY, -1 non letta. */
+        public int ignition = -1;
+        public float speedKmh = Float.NaN;
         public float soc = -1;            // %
         public int rangeKm = -1;
         public int chargingStatus = -1;   // codici SAIC (uguali alla SWI68), vedi chargeText
@@ -359,7 +364,9 @@ public final class VehicleClient {
         readBms(s, now);
         readCarProps(s);
         readInside(s);
+        readChargeSignals(s);
         last = s;
+        lastShared = s;
         main.post(() -> {
             if (listener != null) listener.onVehicleState(s);
         });
@@ -532,6 +539,28 @@ public final class VehicleClient {
         s.insideSource = insideSrc;
     }
 
+    /**
+     * 0.4.4 (dalla SWI68 1.0.4, punto F): segnale "cavo inserito" separato dallo stato di carica, velocità e accensione
+     * per l'animazione di ricarica. Sulla SWI69 R45 la presa è la stessa proprietà BMS della SWI68 (YFVehicleProperty
+     * BMS_CHRG_PLUG_CNCTNIO 557904904: 0 inserito, 1 no); l'accensione è la proprietà che legge CarAdapterService
+     * (getIgnitionState, 289412477: 2 = READY); la velocità PERF_VEHICLE_SPEED.
+     */
+    static final int IGNITION_STS = 289412477;
+    private volatile int plugCache = -1;
+
+    private void readChargeSignals(State s) {
+        if (props != null && props.ready()) {
+            String[] why = new String[1];
+            Integer plug = props.readLight(CarProps.BMS_CHRG_PLUG_CNCTNIO, false, why);
+            plugCache = plug == null ? -1 : plug;
+            Diag.putQuiet("ricarica.presa", plug == null ? "non letta (" + why[0] + ")" : (plug == 0 ? "cavo inserito" : "cavo non inserito") + " (" + plug + ")");
+            int ign = props.getIntSafe(IGNITION_STS);
+            s.ignition = ign == Integer.MIN_VALUE ? -1 : ign;
+        }
+        s.plugProp = plugCache;
+        s.speedKmh = speedKmh();
+    }
+
     /** Temperatura interna leggibile? true / false, null finché non si sa (CarService non ancora pronto). */
     public static Boolean insideAvailable() {
         CarProps p = shared;
@@ -555,6 +584,36 @@ public final class VehicleClient {
     public static Boolean cameraPresent(int cfg) {
         if (cfg < 0) return null;
         return cfg >= 1 && cfg <= 5;
+    }
+
+    /** 0.4.4: rilettura immediata dei fari (prova del Controllo funzioni, fuori dal thread principale). */
+    public void refreshLightsNow() {
+        Handler h = bg;
+        if (h == null) return;
+        final Object done = new Object();
+        final boolean[] ok = {false};
+        h.post(() -> {
+            try {
+                State s = new State();
+                s.connected = last.connected;
+                readLamps(s);
+            } catch (Throwable ignored) {
+            }
+            synchronized (done) {
+                ok[0] = true;
+                done.notifyAll();
+            }
+        });
+        synchronized (done) {   // la prova del Controllo funzioni aspetta la lettura (al massimo 1,5 s)
+            long until = android.os.SystemClock.uptimeMillis() + 1500;
+            while (!ok[0] && android.os.SystemClock.uptimeMillis() < until) {
+                try {
+                    done.wait(200);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
     }
 
     private void readLamps(State s) {
@@ -841,6 +900,35 @@ public final class VehicleClient {
      * 2 = presa V2L collegata (11 collegato, 13 in scarica, 14 sospeso, 15 finito), 1 = cavo di ricarica collegato,
      * 0 = niente di collegato.
      */
+    /**
+     * 1.0.4 (punto F): cavo di ricarica inserito, anche prima che la colonnina cominci. Segnale della presa
+     * (BMS_CHRG_PLUG_CNCTNIO = 0) oppure uno stato di ricarica con il cavo attaccato (1-5, 7-10, 12; 11 solo con potenza).
+     * Escluso il V2L (13, 14, 15).
+     */
+    private static volatile State lastShared;
+
+    /** 0.4.4: cavo inserito adesso (ultima lettura); false se non si sa. */
+    public static boolean cablePluggedNow() {
+        State s = lastShared;
+        return s != null && s.connected && cablePlugged(s);
+    }
+
+    public static boolean cablePlugged(State s) {
+        int st = s.chargingStatus;
+        if (st == 13 || st == 14 || st == 15) return false;
+        if (s.plugProp == 0) return true;
+        if (s.plugProp == 1) return false;   // la presa dice "staccato": vale più dello stato di ricarica
+        if (st == 11) return s.chargeKw > 0.3f;
+        return st >= 1 && st <= 5 || st >= 7 && st <= 10 || st == 12;
+    }
+
+    /** 1.0.4: carica finita (2) o ferma al limite (7/8 con la batteria al limite scelto). */
+    public static boolean chargeDone(State s) {
+        int st = s.chargingStatus;
+        if (st == 2) return true;
+        return (st == 7 || st == 8) && s.chargeLimit > 0 && s.soc >= s.chargeLimit - 1;
+    }
+
     public static int plugMode(State s) {
         int st = s.chargingStatus;
         if (st == 13 || st == 14 || st == 15) return 2;

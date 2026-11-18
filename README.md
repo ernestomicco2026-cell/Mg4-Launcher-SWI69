@@ -1,3 +1,20 @@
+> [!WARNING]
+> 🇮🇹 **Per togliere il launcher usa sempre Impostazioni → Disinstalla del launcher**, non il menu App di Android. Se l'auto resta su "Smartphone starting", installa [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) da chiavetta e aprilo: riaccende la home originale.
+>
+> 🇬🇧 **To remove the launcher always use Settings → Uninstall in the launcher**, not the Android Apps menu. If the car stays on "Smartphone starting", install [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) from a USB stick and open it: it turns the original home back on.
+>
+> 🇪🇸 **Para quitar el launcher usa siempre Ajustes → Desinstalar del launcher**, no el menú Apps de Android. Si el coche se queda en "Smartphone starting", instala [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) desde un USB y ábrelo: vuelve a activar la pantalla de inicio original.
+>
+> 🇩🇪 **Zum Entfernen des Launchers immer Einstellungen → Deinstallieren im Launcher verwenden**, nicht das App-Menü von Android. Bleibt das Auto bei „Smartphone starting“ hängen, [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) vom USB-Stick installieren und öffnen: Es schaltet den Original-Startbildschirm wieder ein.
+>
+> 🇫🇷 **Pour supprimer le launcher, utilisez toujours Réglages → Désinstaller dans le launcher**, pas le menu Applis d'Android. Si la voiture reste sur « Smartphone starting », installez [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) depuis une clé USB et ouvrez-le : il réactive l'écran d'accueil d'origine.
+>
+> 🇵🇱 **Aby usunąć launcher, zawsze używaj Ustawienia → Odinstaluj w launcherze**, a nie menu Aplikacje Androida. Jeśli auto zostaje na „Smartphone starting”, zainstaluj [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) z pendrive'a i otwórz go: włącza z powrotem oryginalny ekran główny.
+>
+> 🇹🇷 **Başlatıcıyı kaldırmak için her zaman başlatıcıdaki Ayarlar → Kaldır'ı kullanın**, Android Uygulamalar menüsünü değil. Araç "Smartphone starting" ekranında kalırsa [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) uygulamasını USB bellekten yükleyip açın: orijinal ana ekranı yeniden etkinleştirir.
+>
+> 🇵🇹 **Para remover o launcher usa sempre Definições → Desinstalar do launcher**, não o menu Apps do Android. Se o carro ficar em "Smartphone starting", instala o [MG4 Ripristino Home](https://github.com/ernestomicco2026-cell/Mg4-Launcher-SWI68/raw/main/releases/MG4HomeRescue-1.0.apk) a partir de uma pen USB e abre-o: volta a ligar o ecrã inicial original.
+
 # MG4 Launcher — SWI69 Color Radio
 
 <p align="center"><img src="screenshots/home.png" alt="Home di MG4 Launcher SWI69 Color Radio (simulazione) · MG4 Launcher SWI69 Color Radio home (mock-up)" width="100%"></p>
@@ -8,7 +25,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.3.apk"><img alt="Scarica / Download 0.4.3" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.3-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.4.apk"><img alt="Scarica / Download 0.4.4" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.4-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -175,7 +192,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.3.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.4.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -192,7 +209,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.3.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.4.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -268,6 +285,30 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.4
+- **Disinstallazione sicura**: "Disinstalla" riaccende la home originale MG, controlla che sia davvero attiva e solo
+  dopo toglie il launcher; mentre la conferma è a schermo il launcher non la rispegne più. Anche aprendo le impostazioni
+  di Android la home MG si riaccende in anticipo. Per chi è già rimasto su "Smartphone starting" c'è la piccola app
+  **MG4 Ripristino Home** (link in cima a questa pagina), valida per tutte le versioni.
+- **Tema giorno/notte di tutto il sistema**: lo decide il launcher (scelta manuale, fari, alba/tramonto) e lo scrive
+  nel sistema come fanno le app MG (SKIN_THEME_CONFIG): Clima, app MG e tendina seguono da sole.
+- **Nuova home**, uguale alla versione SWI68: Mappa/Media in basso prima dei preferiti, FM/DAB sotto Radio, pulsanti
+  delle sorgenti più grandi; CarPlay e Android Auto solo nella barra in basso con la loro icona originale.
+- **Elenco delle stazioni** più leggibile e più in alto; la radio non manda l'elenco completo, quindi il launcher lo
+  costruisce con le stazioni FM e DAB ascoltate e con le ricerche; se è vuoto si vedono i preferiti.
+- **Auto disegnata dal modello 3D** e **animazione di ricarica** quando colleghi il cavo (aggancio, in carica, carica
+  finita, sgancio). Il pacchetto del colore scelto si scarica da solo; si può disattivare nelle impostazioni.
+- **MG4 Store incluso**: alla prima accensione si installa da solo se manca, poi si aggiorna per conto suo.
+- **Sorgenti audio a scelta** e **app di navigazione a scelta** (anche Google Maps, Waze, ABRP...).
+- **Radio all'accensione** più affidabile: aspetta che il sintonizzatore sia pronto (fino a circa un minuto).
+- **Ritorno dopo la retromarcia**: riporta davanti la finestra già aperta, senza riaprire altri launcher né riavviare
+  le app (issue #2).
+- **Impostazioni**: cambiando un'opzione la pagina resta dov'era, anche dopo una pausa lunga.
+- **Disinstallare le app**: pressione lunga sull'icona di un'app installata da te → "Disinstalla", con conferma.
+- **Animazione di ricarica**: se il pacchetto cambia su GitHub, si riscarica da solo (controllo ogni 12 ore).
+- Controllo funzioni con le prove "tema di sistema", "fari" e "animazione di ricarica".
+- L'opzione "Ordine in alto" della 0.4.3 non serve più ed è stata tolta.
 
 #### 0.4.3
 - **Tema giorno/notte**: se l'auto dice sempre «giorno» o sempre «notte» per 12 ore contro la posizione del sole, il
@@ -713,7 +754,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.3.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.4.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -729,7 +770,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.3.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.4.apk
    ```
 2. Make it the default home:
    ```bash
@@ -801,6 +842,30 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.4
+- **Safe uninstall**: "Uninstall" turns the original MG home back on, checks that it is really active and only then
+  removes the launcher; while the confirmation is on screen the launcher no longer switches it off again. Opening the
+  Android settings also turns the MG home back on in advance. If you are already stuck on "Smartphone starting", the
+  small **MG4 Ripristino Home** app (link at the top of this page) works on every version.
+- **System-wide day/night theme**: the launcher decides it (manual choice, headlights, sunrise/sunset) and writes it to
+  the system the way the MG apps do (SKIN_THEME_CONFIG), so Climate, MG apps and the pull-down panel follow by themselves.
+- **New home**, the same as the SWI68 version: Map/Media at the bottom before the favourites, FM/DAB under Radio, bigger
+  source buttons; CarPlay and Android Auto only in the bottom bar with their original icon.
+- **Station list** easier to read and higher up; the radio does not share its full list, so the launcher builds it
+  from the FM and DAB stations you listen to and from searches; if it is empty the favourites are shown.
+- **Car drawn from the 3D model** and **charging animation** when you plug in the cable (plugging in, charging, charge
+  complete, unplugging). The package for the chosen colour downloads by itself; it can be turned off in the settings.
+- **MG4 Store included**: on first start it installs itself if missing, then it updates on its own.
+- **Choice of audio sources** and **choice of navigation app** (also Google Maps, Waze, ABRP...).
+- **Radio at start-up** more reliable: it waits until the tuner is ready (up to about a minute).
+- **Return after reversing**: brings back the window that was already open, without opening other launchers or
+  restarting apps (issue #2).
+- **Settings**: changing an option keeps the page where it was, even after a long pause.
+- **Uninstalling apps**: long-press the icon of an app you installed → "Uninstall", with confirmation.
+- **Charging animation**: if the package changes on GitHub it is downloaded again by itself (checked every 12 hours).
+- Feature check with the new "system theme", "headlights" and "charging animation" tests.
+- The 0.4.3 "Top order" option is no longer needed and has been removed.
 
 #### 0.4.3
 - **Day/night theme**: if the car keeps saying "day" or "night" for 12 hours against the sun's position, the launcher

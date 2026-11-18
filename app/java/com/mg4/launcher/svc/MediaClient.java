@@ -447,11 +447,30 @@ public final class MediaClient {
         }
     }
 
+    /** Riserva: CarPlay / Android Auto dalla sessione media attiva delle app AllGo (0 se nessuna). */
+    private int projectionFromSessions() {
+        try {
+            android.media.session.MediaSessionManager msm =
+                    (android.media.session.MediaSessionManager) ctx.getSystemService(Context.MEDIA_SESSION_SERVICE);
+            for (MediaController mc : msm.getActiveSessions(null)) {
+                String p = mc.getPackageName();
+                if ("com.allgo.app.androidauto".equals(p)) return DEV_AAUTO;
+                if ("com.allgo.carplay.service".equals(p)) return DEV_CARPLAY;
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
+
     private void poll() {
         State s = new State();
 
         // CarPlay / Android Auto collegato?
+        // 1.0.4 (punto E5): fonte principale il servizio AllGo (getActiveRemoteDevice, codice 15: null = nessuna
+        // sessione; tipo 1 CarPlay, 2 Android Auto). Se non risponde, le sessioni media delle app AllGo.
         IBinder r = rui.binder();
+        String projSrc = "AllGo (codice 15)";
+        boolean ruiOk = false;
         if (r != null) {
             try {
                 int[] dev = Rpc.call(r, RUI, RUI_ACTIVE_DEVICE, Rpc.NONE, p -> Rpc.readNullable(p, q -> {
@@ -464,11 +483,18 @@ public final class MediaClient {
                     return new int[]{type, session};
                 }));
                 s.deviceType = dev == null ? 0 : dev[0];
-                Diag.put("carplay.dispositivo", dev == null ? "nessuno" : ("tipo " + dev[0] + ", sessione " + dev[1] + ", " + s.deviceName));
+                ruiOk = true;
+                // nel log niente nome del telefono (dato personale)
+                Diag.put("carplay.dispositivo", dev == null ? "nessuno" : ("tipo " + dev[0] + ", sessione " + dev[1]));
             } catch (Exception e) {
                 Diag.error("carplay", e.toString());
             }
         }
+        if (!ruiOk) {
+            projSrc = "sessioni media AllGo (servizio AllGo non risponde)";
+            s.deviceType = projectionFromSessions();
+        }
+        Diag.putQuiet("proiezione", "fonte " + projSrc + " · " + (s.deviceType == DEV_AAUTO ? "AA" : s.deviceType == DEV_CARPLAY ? "CarPlay" : "nessuna"));
 
         // sorgenti disponibili
         s.sources.add(SRC_RADIO);
@@ -479,6 +505,7 @@ public final class MediaClient {
         usbBoth = usb2Shown;
         s.sources.add(SRC_BT);
         if (online.ready() && onlineAvailable()) s.sources.add(SRC_ONLINE);
+        onlinePossible = s.sources.contains(SRC_ONLINE);
         if (s.deviceType == DEV_CARPLAY) s.sources.add(SRC_CARPLAY);
         if (s.deviceType == DEV_AAUTO) s.sources.add(SRC_AAUTO);
 
@@ -650,7 +677,8 @@ public final class MediaClient {
         }
         // elenco delle stazioni della banda in onda. 0.4.3 (punto 6): se è vuoto si mostrano i preferiti della banda
         List<Station> list = band == BAND_DAB ? dabList : fmList;
-        String listSrc = band == BAND_DAB ? "servizio radio (elenco DAB)" : sp.getString("radio_fm_fonte", "stazioni ascoltate");
+        String listSrc = band == BAND_DAB ? sp.getString("radio_dab_fonte", "stazioni DAB ascoltate")
+                : sp.getString("radio_fm_fonte", "stazioni ascoltate");
         if (list.isEmpty()) {
             List<Station> favBand = new ArrayList<>();
             for (Station st : favorites) if ((st.band == BAND_DAB) == (band == BAND_DAB)) favBand.add(st);
@@ -793,6 +821,7 @@ public final class MediaClient {
                         java.util.Collections.sort(out, (x, y) -> x.name.compareToIgnoreCase(y.name));
                         dabList = out;
                         saveList("radio_dab_elenco", out);
+                        sp.edit().putString("radio_dab_fonte", "servizio radio (elenco DAB)").apply();
                     }
                     Diag.put("radio.dab.elenco", out.size() + " stazioni");
                     radioListWhy = "servizio radio: elenco DAB";
@@ -802,6 +831,7 @@ public final class MediaClient {
                     if (data.readInt() != 0) {
                         dabCurrent = readDabStation(data);
                         bandFromCallback = BAND_DAB;
+                        rememberDab(dabCurrent);
                     }
                 } else if (code == 4) {            // notifyDabDLSChanged(char[])
                     char[] t = data.createCharArray();
@@ -856,6 +886,9 @@ public final class MediaClient {
     private volatile boolean onlineFailed;      // toccata ma non è partita: nascosta fino al riavvio del launcher
 
     /** "0" = funzione assente sull'auto: il servizio esiste ma non riproduce nulla, quindi il pulsante non si mostra. */
+    /** 0.4.4: sulla SWI69 la musica Online di solito non c'è: l'opzione si mostra solo se la sorgente è comparsa. */
+    public static volatile boolean onlinePossible;
+
     private boolean onlineAvailable() {
         if (!onlineFeatureRead) {
             onlineFeatureRead = true;
@@ -1047,37 +1080,83 @@ public final class MediaClient {
      * riproduci" (32773) al RadioService dell'app Radio, che riapre la banda salvata, prende il fuoco audio e risintonizza
      * l'ultima stazione. Se dopo 2,5 s non suona: play sulla sessione, poi nuovi tentativi (1, 2, 4 s).
      */
+    /**
+     * 0.4.4 (dalla SWI68 1.0.4, punto C1): all'accensione il sintonizzatore può non essere ancora pronto. Prima si
+     * aspetta che il servizio radio sia collegato e la sua sessione pronta (fino a 20 s, controllo ogni secondo), poi si
+     * avvia con nuovi controlli per circa 49 s (1+2+3+5+8+10+10+10). All'accensione l'app Radio non si apre mai.
+     * Se nel frattempo l'utente sceglie un'altra sorgente la ripresa si ferma.
+     */
+    private static final long[] RESUME_WAIT_MS = {1000, 2000, 3000, 5000, 8000, 10_000, 10_000, 10_000};
+    private static final long RADIO_READY_MAX_MS = 20_000;
+    private long radioStartAt, radioReadyWaited;
+    private int radioTries;
+
     private void startRadio(String why) {
         markRadioByUser();
         chosen = SRC_RADIO;
         radioAttempt++;
         final int attempt = radioAttempt;
+        radioStartAt = SystemClock.uptimeMillis();
+        radioTries = 1;
+        boolean power = why.contains("accensione");
+        if (power) {
+            waitRadioReady(why, attempt);
+            return;
+        }
         boolean sent = radioSourceCommand();
         Diag.put("media.radio.avvio", why + ": comando 32773 al servizio radio " + (sent ? "inviato" : "NON inviato"));
-        radioStartCheck(why, attempt, 0);
+        radioStartCheck(why, attempt, 0, RETRY_MS);
     }
 
-    private void radioStartCheck(String why, int attempt, int n) {
+    private void waitRadioReady(String why, int attempt) {
+        if (attempt != radioAttempt || chosen != SRC_RADIO) return;
+        long waited = SystemClock.uptimeMillis() - radioStartAt;
+        boolean ready = radio.binder() != null && radioMbs.ready();
+        if (bg == null) return;
+        if (ready || waited >= RADIO_READY_MAX_MS) {
+            radioReadyWaited = waited;
+            Diag.put("radio.pronta", (ready ? "pronta" : "non ancora pronta, provo lo stesso") + " dopo " + Math.round(waited / 1000.0)
+                    + " s (servizio " + (radio.binder() != null ? "collegato" : "non collegato") + ", sessione " + radioMbs.stateName() + ")");
+            boolean sent = radioSourceCommand();
+            Diag.put("media.radio.avvio", why + ": comando 32773 al servizio radio " + (sent ? "inviato" : "NON inviato"));
+            radioStartCheck(why, attempt, 0, RESUME_WAIT_MS);
+            return;
+        }
+        bg.postDelayed(() -> waitRadioReady(why, attempt), 1000);
+    }
+
+    private void radioStartCheck(String why, int attempt, int n, long[] waits) {
         bg.postDelayed(() -> {
             if (attempt != radioAttempt) return;
+            boolean power = waits == RESUME_WAIT_MS;
+            if (power && chosen != SRC_RADIO) {
+                Diag.put("radio.tentativi", "avvio RADIO: annullato, l'utente ha scelto un'altra sorgente · tentativi " + radioTries);
+                return;
+            }
+            long total = SystemClock.uptimeMillis() - radioStartAt;
             if (radioMbs.isPlaying()) {
                 Diag.put("media.radio.avvio", why + ": radio in onda" + (n > 0 ? " (tentativo " + (n + 1) + ")" : ""));
+                if (power) Diag.put("radio.tentativi", "avvio RADIO: riuscito · attesa servizio " + Math.round(radioReadyWaited / 1000.0)
+                        + " s · tentativi " + radioTries + " · totale " + Math.round(total / 1000.0) + " s");
                 poll();
                 return;
             }
             MediaController.TransportControls tc = radioMbs.controls();
             if (tc != null) tc.play();
             else radioMbs.connect();
-            if (n >= RETRY_MS.length) {
+            radioTries++;
+            if (n >= waits.length) {
                 Diag.put("media.radio.avvio", why + ": la radio non è partita dopo " + (n + 1) + " tentativi (" + radioMbs.stateName() + ")");
+                if (power) Diag.put("radio.tentativi", "avvio RADIO: non riuscito · attesa servizio " + Math.round(radioReadyWaited / 1000.0)
+                        + " s · tentativi " + radioTries + " · totale " + Math.round(total / 1000.0) + " s");
                 poll();
                 return;
             }
-            if (n == 1) radioSourceCommand();   // a metà strada si ripete anche il comando di sorgente
+            if (n == 1 || power && n % 3 == 2) radioSourceCommand();   // ogni tanto si ripete anche il comando di sorgente
             Diag.put("media.radio.avvio", why + ": non ancora in onda (" + radioMbs.stateName() + ") → play e nuovo controllo tra "
-                    + (RETRY_MS[n] / 1000) + " s");
-            radioStartCheck(why, attempt, n + 1);
-        }, n == 0 ? 2500 : RETRY_MS[n - 1]);
+                    + (waits[n] / 1000) + " s");
+            radioStartCheck(why, attempt, n + 1, waits);
+        }, n == 0 ? 2500 : waits[n - 1]);
     }
 
     private boolean radioSourceCommand() {
@@ -1583,6 +1662,27 @@ public final class MediaClient {
         List<Station> one = new ArrayList<>();
         one.add(st);
         mergeFm(one, false);
+    }
+
+    /**
+     * 0.4.4 (EH32: SWI69, SWI131, SWI132): il servizio radio R45 non manda mai l'elenco DAB ai client esterni
+     * (DabTunerCallback.onDabStationListInfoChanged lo salva solo nel suo RadioStorage, senza
+     * notifyDabStationListInfoChanged) e l'elenco FM pre-scansionato resta nel database privato dell'app Radio. Per questo
+     * il launcher si costruisce l'elenco da solo: ogni stazione DAB sintonizzata (notifyDabMainInfoChanged) entra
+     * nell'elenco e viene ricordata, come già succede per l'FM (stazioni con nome RDS + risultati delle ricerche).
+     */
+    private void rememberDab(Station d) {
+        if (d == null || d.name.trim().isEmpty() || d.sid == 0) return;
+        List<Station> cur = dabList;
+        for (Station st : cur) if (st.sid == d.sid && st.name.equalsIgnoreCase(d.name)) return;
+        List<Station> out = new ArrayList<>(cur);
+        out.add(d);
+        java.util.Collections.sort(out, (x, y) -> x.name.compareToIgnoreCase(y.name));
+        if (out.size() > 300) return;
+        dabList = out;
+        saveList("radio_dab_elenco", out);
+        if (!sp.contains("radio_dab_fonte")) sp.edit().putString("radio_dab_fonte", "stazioni DAB ascoltate").apply();
+        radioListWhy = "nuova stazione DAB ascoltata";
     }
 
     private volatile String radioListWhy = "avvio", radioListLog = "";

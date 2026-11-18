@@ -472,4 +472,44 @@
     <string name="news_v043_3" formatted="false">Feld unter dem Sender wählbar: Musik, Telefon-Favoriten (Anruf mit einem Tippen) oder Apps</string>
     <string name="news_v043_4" formatted="false">Reihenfolge der oberen Bedienelemente tauschbar; FM/DAB-Auswahl wieder neben den Tasten, größer</string>
     <string name="news_v043_5" formatted="false">Funktionsprüfung unter Einstellungen → System; Bluetooth wartet beim Einschalten auf das Telefon; Stabilitätskorrekturen</string>
+    <string name="set_nav_default" formatted="false">Standard-Navigator</string>
+    <string name="set_nav_default_sub" formatted="false">Was das Kartenfeld beim Tippen auf „Los\" öffnet; bei verbundenem CarPlay/Android Auto erscheint es ebenfalls als Option</string>
+    <string name="nav_default_mg" formatted="false">MG-Navigator</string>
+    <string name="nav_default_phone" formatted="false">CarPlay / Android Auto</string>
+    <string name="set_top_button" formatted="false">Taste neben Karte/Medien</string>
+    <string name="set_top_button_sub" formatted="false">Eine dritte Taste, die eine App deiner Wahl öffnet; CarPlay und Android Auto sind in der unteren Leiste</string>
+    <string name="top_app" formatted="false">Eine App…</string>
+    <string name="top_none" formatted="false">Keine</string>
+    <string name="top_pick_app" formatted="false">App für die Taste oben rechts</string>
+    <string name="set_sources" formatted="false">Audioquellen</string>
+    <string name="set_sources_sub" formatted="false">Welche Quellen oben im Medienfeld angezeigt werden (mindestens eine)</string>
+    <string name="nav_other_app" formatted="false">Andere App…</string>
+    <string name="nav_other_app_sub" formatted="false">Im Auto installierte Navigations-Apps</string>
+    <string name="nav_no_apps" formatted="false">Keine Navigations-App außer der von MG installiert</string>
+    <string name="store_install" formatted="false">MG4 Store installieren</string>
+    <string name="store_install_sub" formatted="false">Der MG4-App-Store ist im Launcher enthalten: hier installieren, danach aktualisiert er sich selbst</string>
+    <string name="store_installing" formatted="false">Store wird installiert…</string>
+    <string name="store_installed" formatted="false">MG4 Store installiert</string>
+    <string name="store_failed" formatted="false">Installation fehlgeschlagen</string>
+    <string name="set_charge_anim" formatted="false">Lade-Animation</string>
+    <string name="set_charge_anim_sub" formatted="false">Beim Einstecken des Kabels wird das Auto animiert; das Paket der gewählten Farbe lädt sich selbst</string>
+    <string name="anim_test" formatted="false">Lade-Animation testen</string>
+    <string name="anim_test_sub" formatted="false">Zeigt die Phasen nacheinander; ohne Paket wird animazione-&lt;Farbe&gt;.zip vom USB-Stick verwendet</string>
+    <string name="anim_test_missing" formatted="false">Kein Paket: animazione-&lt;Farbe&gt;.zip auf den USB-Stick kopieren</string>
+    <string name="chk_theme_system" formatted="false">Systemmodus</string>
+    <string name="chk_lights" formatted="false">Scheinwerfer</string>
+    <string name="chk_charge_anim" formatted="false">Lade-Animation</string>
+    <string name="check_lights_on">Standlicht einschalten (%s s)</string>
+    <string name="news_v104_1" formatted="false">Der Launcher bestimmt jetzt den Tag-/Nachtmodus und wendet ihn auf das ganze System an (Klima, MG-Apps, Leiste)</string>
+    <string name="news_v104_2" formatted="false">Neuer Startbildschirm: Karte/Medien unten, FM/DAB unter Radio, größere Quellentasten</string>
+    <string name="news_v104_3" formatted="false">Lade-Animation beim Einstecken des Kabels und MG4 Store im Launcher enthalten</string>
+    <string name="news_v104_4" formatted="false">Audioquellen und Navigations-App wählbar; Scheinwerfer vom Auto gelesen; Radio zuverlässiger beim Start</string>
+    <string name="news_v104_5" formatted="false">Sichereres Deinstallieren: der originale MG-Startbildschirm kommt immer zurück, auch wenn der Launcher über das App-Menü entfernt wird</string>
+    <string name="news_v104_6" formatted="false">Einstellungen: beim Ändern einer Option bleibt die Seite, wo sie war · Apps: eine selbst installierte App lange drücken, um sie zu deinstallieren</string>
+    <string name="anim_preparing" formatted="false">Ladeanimation wird vorbereitet: nur beim ersten Mal, 2–3 Minuten. Sie startet von selbst, sobald sie fertig ist.</string>
+    <string name="anim_prepare_failed">Die Ladeanimation konnte nicht vorbereitet werden (%1$s). Details stehen im Log.</string>
+    <string name="app_uninstall" formatted="false">Deinstallieren</string>
+    <string name="app_uninstall_q">Möchtest du %1$s deinstallieren?</string>
+    <string name="app_uninstall_done">%1$s deinstalliert</string>
+    <string name="app_uninstall_failed">%1$s konnte nicht deinstalliert werden</string>
 </resources>
