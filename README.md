@@ -17,7 +17,7 @@
 
 # MG4 Launcher — SWI69 Color Radio
 
-<p align="center"><img src="screenshots/home.png" alt="Home di MG4 Launcher SWI69 Color Radio (simulazione) · MG4 Launcher SWI69 Color Radio home (mock-up)" width="100%"></p>
+<p align="center"><img src="screenshots/MG4Launcher-SWI69-0.4.4-ricarica.gif" alt="Home di MG4 Launcher SWI69 Color Radio con l'animazione di ricarica (simulazione) · MG4 Launcher SWI69 Color Radio home with the charging animation (mock-up)" width="100%"></p>
 
 <p align="center">
 <b>Launcher in stile Tesla per l'infotainment MG4 SWI69 Color Radio</b><br>
