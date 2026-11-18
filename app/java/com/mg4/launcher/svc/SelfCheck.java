@@ -99,6 +99,7 @@ public final class SelfCheck {
         l.add(new Item("log", R.string.chk_logs));
         l.add(new Item("avvisi", R.string.chk_notices));
         l.add(new Item("animazione", R.string.chk_charge_anim));
+        l.add(new Item("ready", R.string.chk_ready));
         return l;
     }
 
@@ -342,8 +343,20 @@ public final class SelfCheck {
                     WheelKeys.setProbe(null);
                     if (p != null) main.post(() -> p.onKeysCountdown(0));
                 }
-                if (seen[0] > 0) set(it, OK, "visto codice " + seen[0] + " (" + WheelKeys.name(seen[0]) + ")", WheelKeys.name(seen[0]));
+                if (seen[0] > 0) set(it, OK, "visto codice " + seen[0] + " (" + WheelKeys.name(seen[0]) + ")", "#" + seen[0]);
                 else set(it, FAIL, "nessun tasto avanti/indietro visto in 10 s · " + Diag.value("media.tastiVolante"), "");
+                break;
+            }
+            case "ready": {
+                // 0.4.5: READY letto da SENSOR_EPTRDY (sola lettura); l'accensione non conta come READY
+                if (s == null) {
+                    set(it, FAIL, "servizio veicolo non collegato", "");
+                    break;
+                }
+                String txt = "ready " + s.ready + " (" + s.readySource + ") · marcia " + VehicleClient.gearName(s.gear);
+                if (s.ready == 1) set(it, OK, txt, "READY");
+                else if (s.ready == 0) set(it, OK, txt, "—");
+                else set(it, FAIL, txt + " · READY sconosciuto: l'animazione non si blocca", "");
                 break;
             }
             case "tastoClima": {

@@ -109,8 +109,14 @@ public final class VehicleClient {
         public boolean connected;
         /** 1.0.4: presa di ricarica BMS_CHRG_PLUG_CNCTNIO (0 cavo inserito, 1 no, -1 non letta). */
         public int plugProp = -1;
-        /** 1.0.4: accensione (getVehicleIgnition): 2 = READY, -1 non letta. */
-        public int ignition = -1;
+        /**
+         * 0.4.5: READY vero da SENSOR_EPTRDY (servizio stato auto SAIC, ICarStateService.getSensorEptrdyState):
+         * 1 = READY, 0 = non in READY, -1 = sconosciuto. L'accensione (quadro acceso) NON è READY.
+         */
+        public int ready = -1;
+        public String readySource = "non letto";
+        /** 0.4.5: marcia dal servizio stato auto (CarState: 1 P, 2 R, 3 N, 4-11 avanti, 0 tra due marce); -1 non letta. */
+        public int gear = -1;
         public float speedKmh = Float.NaN;
         public float soc = -1;            // %
         public int rangeKm = -1;
@@ -540,12 +546,18 @@ public final class VehicleClient {
     }
 
     /**
-     * 0.4.4 (dalla SWI68 1.0.4, punto F): segnale "cavo inserito" separato dallo stato di carica, velocità e accensione
-     * per l'animazione di ricarica. Sulla SWI69 R45 la presa è la stessa proprietà BMS della SWI68 (YFVehicleProperty
-     * BMS_CHRG_PLUG_CNCTNIO 557904904: 0 inserito, 1 no); l'accensione è la proprietà che legge CarAdapterService
-     * (getIgnitionState, 289412477: 2 = READY); la velocità PERF_VEHICLE_SPEED.
+     * Segnali per l'animazione di ricarica (SWI69 R45, famiglia EH32: vale anche per SWI131/SWI132):
+     * <ul>
+     *   <li>presa: proprietà BMS della SWI68 (YFVehicleProperty BMS_CHRG_PLUG_CNCTNIO 557904904: 0 inserito, 1 no);</li>
+     *   <li>0.4.5: READY vero da SENSOR_EPTRDY. Servizio stato auto SAIC: CarAdapterService, codice 11
+     *       (BIND_CODE_CAR_STATE), interfaccia com.saicmotor.carapi.carstate.ICarStateService, 8 = getSensorEptrdyState
+     *       (CarState: 1 READY, 0 non READY), 3 = isServiceReady, 5 = getGearState. Con il servizio non pronto o un
+     *       errore READY resta sconosciuto. L'accensione (2 = quadro acceso) non si usa più come READY;</li>
+     *   <li>velocità PERF_VEHICLE_SPEED.</li>
+     * </ul>
      */
-    static final int IGNITION_STS = 289412477;
+    private static final int BIND_STATE = 11, ST_SERVICE_READY = 3, ST_GEAR = 5, ST_EPTRDY = 8;
+    private static final String STATE_DESC = "com.saicmotor.carapi.carstate.ICarStateService";
     private volatile int plugCache = -1;
 
     private void readChargeSignals(State s) {
@@ -553,12 +565,41 @@ public final class VehicleClient {
             String[] why = new String[1];
             Integer plug = props.readLight(CarProps.BMS_CHRG_PLUG_CNCTNIO, false, why);
             plugCache = plug == null ? -1 : plug;
-            Diag.putQuiet("ricarica.presa", plug == null ? "non letta (" + why[0] + ")" : (plug == 0 ? "cavo inserito" : "cavo non inserito") + " (" + plug + ")");
-            int ign = props.getIntSafe(IGNITION_STS);
-            s.ignition = ign == Integer.MIN_VALUE ? -1 : ign;
+            Diag.putQuiet("ricarica.presa.segnale", plug == null ? "non letta (" + why[0] + ")" : (plug == 0 ? "cavo inserito" : "cavo non inserito") + " (" + plug + ")");
         }
         s.plugProp = plugCache;
         s.speedKmh = speedKmh();
+        try {
+            IBinder st = sub(BIND_STATE);
+            if (st == null) {
+                s.readySource = "servizio stato auto non disponibile";
+            } else {
+                Boolean ok = Rpc.call(st, STATE_DESC, ST_SERVICE_READY, Rpc.NONE, p -> p.readInt() != 0);
+                int r = Rpc.callInt(st, STATE_DESC, ST_EPTRDY);
+                int g = Rpc.callInt(st, STATE_DESC, ST_GEAR);
+                if (ok == null || !ok) s.readySource = "SENSOR_EPTRDY, servizio non pronto";
+                else if (r == 0 || r == 1) {
+                    s.ready = r;
+                    s.readySource = "SENSOR_EPTRDY";
+                } else s.readySource = "SENSOR_EPTRDY valore " + (r == Integer.MIN_VALUE ? "non letto" : String.valueOf(r));
+                if (ok != null && ok && g != Integer.MIN_VALUE && g >= 0 && g <= 11) s.gear = g;
+            }
+        } catch (Exception e) {
+            s.readySource = "SENSOR_EPTRDY errore " + e.getClass().getSimpleName();
+        }
+        Diag.putQuiet("auto.ready", "ready " + s.ready + " (" + s.readySource + ") · marcia " + gearName(s.gear));
+    }
+
+    /** Nome della marcia del servizio stato auto, per i log. */
+    public static String gearName(int g) {
+        switch (g) {
+            case -1: return "non letta";
+            case 0: return "tra due marce";
+            case 1: return "P";
+            case 2: return "R";
+            case 3: return "N";
+            default: return "D (" + g + ")";
+        }
     }
 
     /** Temperatura interna leggibile? true / false, null finché non si sa (CarService non ancora pronto). */
@@ -913,13 +954,24 @@ public final class VehicleClient {
         return s != null && s.connected && cablePlugged(s);
     }
 
+    /**
+     * 0.4.5: cavo inserito. La presa che dice "attaccato" basta da sola; la presa che dice "staccato" NON vince su uno
+     * stato di ricarica che dice cavo attaccato (1-5, 7-10, 12; 11 solo con potenza). Se non sono d'accordo si scrive
+     * "ricarica.presa = contrasto: presa <p> · stato <s>".
+     */
     public static boolean cablePlugged(State s) {
         int st = s.chargingStatus;
-        if (st == 13 || st == 14 || st == 15) return false;
-        if (s.plugProp == 0) return true;
-        if (s.plugProp == 1) return false;   // la presa dice "staccato": vale più dello stato di ricarica
-        if (st == 11) return s.chargeKw > 0.3f;
-        return st >= 1 && st <= 5 || st >= 7 && st <= 10 || st == 12;
+        if (st == 13 || st == 14 || st == 15) return false;   // V2L: niente cavo di ricarica
+        boolean byState = st == 11 ? s.chargeKw > 0.3f : st >= 1 && st <= 5 || st >= 7 && st <= 10 || st == 12;
+        boolean plugged = s.plugProp == 0 || byState;
+        String txt;
+        if (s.plugProp == 1 && byState || s.plugProp == 0 && !byState && st >= 0) {
+            txt = "contrasto: presa " + s.plugProp + " · stato " + st + " → " + (plugged ? "cavo inserito" : "cavo non inserito");
+        } else {
+            txt = (plugged ? "cavo inserito" : "cavo non inserito") + " · presa " + s.plugProp + " · stato " + st;
+        }
+        Diag.putQuiet("ricarica.presa", txt);
+        return plugged;
     }
 
     /** 1.0.4: carica finita (2) o ferma al limite (7/8 con la batteria al limite scelto). */

@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">%1$s kaldırılsın mı?</string>
     <string name="app_uninstall_done">%1$s kaldırıldı</string>
     <string name="app_uninstall_failed">%1$s kaldırılamadı</string>
+    <string name="news_v045_1" formatted="false">Şarj animasyonu: ekran açıkken ve araç P\'de dururken de başlar; yalnızca READY\'de, hareket halinde veya P dışında durur</string>
+    <string name="news_v045_2" formatted="false">Şarj kablosu daha iyi algılanıyor; İşlev kontrolünde yeni “READY okundu” testi</string>
+    <string name="chk_ready" formatted="false">READY okundu</string>
 </resources>

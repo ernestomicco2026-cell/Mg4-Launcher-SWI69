@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">Möchtest du %1$s deinstallieren?</string>
     <string name="app_uninstall_done">%1$s deinstalliert</string>
     <string name="app_uninstall_failed">%1$s konnte nicht deinstalliert werden</string>
+    <string name="news_v045_1" formatted="false">Lade-Animation: startet auch bei eingeschaltetem Bildschirm und Auto in P; stoppt nur bei READY, während der Fahrt oder außerhalb von P</string>
+    <string name="news_v045_2" formatted="false">Ladekabel wird zuverlässiger erkannt; neuer Test „READY gelesen“ in der Funktionsprüfung</string>
+    <string name="chk_ready" formatted="false">READY gelesen</string>
 </resources>

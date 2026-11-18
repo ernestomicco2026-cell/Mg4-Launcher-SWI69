@@ -1,6 +1,6 @@
 {
-  "version": "0.4.4",
-  "apk": "releases/MG4Launcher-SWI69-0.4.4.apk",
-  "size": 1116772,
-  "notes": "Disinstallazione sicura; tema giorno/notte scritto in tutto il sistema; nuova home come la SWI68; auto dal modello 3D e animazione di ricarica; MG4 Store incluso; sorgenti e navigatore a scelta; radio all'accensione più affidabile; ritorno dopo la retromarcia corretto; elenco stazioni costruito dalle stazioni ascoltate."
+  "version": "0.4.5",
+  "apk": "releases/MG4Launcher-SWI69-0.4.5.apk",
+  "size": 1120868,
+  "notes": "Animazione di ricarica che parte anche con lo schermo acceso e l'auto in P (READY letto dal segnale vero); cavo di ricarica riconosciuto meglio; nuova prova READY nel Controllo funzioni."
 }

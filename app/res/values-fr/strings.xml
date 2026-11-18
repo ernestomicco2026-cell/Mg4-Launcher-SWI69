@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">Voulez-vous désinstaller %1$s ?</string>
     <string name="app_uninstall_done">%1$s désinstallée</string>
     <string name="app_uninstall_failed">Impossible de désinstaller %1$s</string>
+    <string name="news_v045_1" formatted="false">Animation de recharge : elle démarre aussi écran allumé et voiture à l\'arrêt en P ; elle s\'arrête seulement en READY, en roulant ou hors de P</string>
+    <string name="news_v045_2" formatted="false">Câble de recharge mieux détecté ; nouveau test « READY lu » dans le Contrôle des fonctions</string>
+    <string name="chk_ready" formatted="false">READY lu</string>
 </resources>

@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">Czy odinstalować %1$s?</string>
     <string name="app_uninstall_done">Odinstalowano %1$s</string>
     <string name="app_uninstall_failed">Nie udało się odinstalować %1$s</string>
+    <string name="news_v045_1" formatted="false">Animacja ładowania: startuje też przy włączonym ekranie i aucie stojącym na P; zatrzymuje się tylko w READY, w ruchu lub poza P</string>
+    <string name="news_v045_2" formatted="false">Kabel ładowania wykrywany lepiej; nowy test „READY odczytany” w Kontroli funkcji</string>
+    <string name="chk_ready" formatted="false">READY odczytany</string>
 </resources>

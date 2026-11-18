@@ -530,4 +530,8 @@ PL = {
     'app_uninstall_q': 'Czy odinstalować %1$s?',
     'app_uninstall_done': 'Odinstalowano %1$s',
     'app_uninstall_failed': 'Nie udało się odinstalować %1$s',
+    # --- 0.4.5 ---
+    'news_v045_1': 'Animacja ładowania: startuje też przy włączonym ekranie i aucie stojącym na P; zatrzymuje się tylko w READY, w ruchu lub poza P',
+    'news_v045_2': 'Kabel ładowania wykrywany lepiej; nowy test „READY odczytany” w Kontroli funkcji',
+    'chk_ready': 'READY odczytany',
 }

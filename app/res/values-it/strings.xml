@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">Vuoi disinstallare %1$s?</string>
     <string name="app_uninstall_done">%1$s disinstallata</string>
     <string name="app_uninstall_failed">Non sono riuscito a disinstallare %1$s</string>
+    <string name="news_v045_1" formatted="false">Animazione di ricarica: parte anche con lo schermo acceso e l\'auto ferma in P; si ferma solo in READY, in movimento o fuori da P</string>
+    <string name="news_v045_2" formatted="false">Cavo di ricarica riconosciuto meglio; nuova prova «READY letto» nel Controllo funzioni</string>
+    <string name="chk_ready" formatted="false">READY letto</string>
 </resources>

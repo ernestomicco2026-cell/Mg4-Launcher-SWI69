@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">Do you want to uninstall %1$s?</string>
     <string name="app_uninstall_done">%1$s uninstalled</string>
     <string name="app_uninstall_failed">Could not uninstall %1$s</string>
+    <string name="news_v045_1" formatted="false">Charging animation: it also starts with the screen on and the car parked in P; it stops only in READY, while moving or out of P</string>
+    <string name="news_v045_2" formatted="false">Charging cable detected more reliably; new “READY read” test in the Feature check</string>
+    <string name="chk_ready" formatted="false">READY read</string>
 </resources>

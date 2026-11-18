@@ -512,4 +512,7 @@
     <string name="app_uninstall_q">¿Quieres desinstalar %1$s?</string>
     <string name="app_uninstall_done">%1$s desinstalada</string>
     <string name="app_uninstall_failed">No se pudo desinstalar %1$s</string>
+    <string name="news_v045_1" formatted="false">Animación de carga: también arranca con la pantalla encendida y el coche parado en P; se detiene solo en READY, en movimiento o fuera de P</string>
+    <string name="news_v045_2" formatted="false">Cable de carga detectado mejor; nueva prueba «READY leído» en la Comprobación de funciones</string>
+    <string name="chk_ready" formatted="false">READY leído</string>
 </resources>
