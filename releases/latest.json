@@ -1,6 +1,6 @@
 {
-  "version": "0.4.5",
-  "apk": "releases/MG4Launcher-SWI69-0.4.5.apk",
-  "size": 1120868,
-  "notes": "Animazione di ricarica che parte anche con lo schermo acceso e l'auto in P (READY letto dal segnale vero); cavo di ricarica riconosciuto meglio; nuova prova READY nel Controllo funzioni."
+  "version": "0.4.6",
+  "apk": "releases/MG4Launcher-SWI69-0.4.6.apk",
+  "size": 1230838,
+  "notes": "Android Auto, chiavetta USB e radio regolari all'accensione; Spegni la vettura (solo in P); riquadro auto nascondibile; Simula ricarica e fotogrammi più veloci; Android Auto e CarPlay tra le sorgenti con titolo e artista; testi più grandi; Scorri in su per tornare e tendina dall'alto (facoltativi); 5 pulsanti della barra di ricarica a scelta; tema scuro con i fari; tasti avanti/indietro al volante; direzione dell'aria, sbrinamento e lunotto nel menu Clima (grazie a sommistica)."
 }

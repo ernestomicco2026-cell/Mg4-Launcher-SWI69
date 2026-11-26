@@ -515,4 +515,70 @@
     <string name="news_v045_1" formatted="false">Lade-Animation: startet auch bei eingeschaltetem Bildschirm und Auto in P; stoppt nur bei READY, während der Fahrt oder außerhalb von P</string>
     <string name="news_v045_2" formatted="false">Ladekabel wird zuverlässiger erkannt; neuer Test „READY gelesen“ in der Funktionsprüfung</string>
     <string name="chk_ready" formatted="false">READY gelesen</string>
+    <string name="group_airflow" formatted="false">Luftstrom</string>
+    <string name="airflow_fan_speed" formatted="false">Gebläsestufe</string>
+    <string name="airflow_direction" formatted="false">Luftrichtung</string>
+    <string name="airflow_windscreen" formatted="false">Frontscheibe</string>
+    <string name="airflow_face" formatted="false">Oberkörper</string>
+    <string name="airflow_feet" formatted="false">Fußraum</string>
+    <string name="airflow_window_clearing" formatted="false">Scheiben freimachen</string>
+    <string name="airflow_front_clear" formatted="false">Frontscheibe entfeuchten</string>
+    <string name="airflow_rear_heat" formatted="false">Heckscheibenheizung</string>
+    <string name="chk_power" formatted="false">Ausschalten verfügbar</string>
+    <string name="power_off" formatted="false">Fahrzeug ausschalten</string>
+    <string name="power_off_sub" formatted="false">Wie die Taste im Auto: nur in P, mit Bestätigung</string>
+    <string name="power_off_q" formatted="false">Fahrzeug ausschalten?</string>
+    <string name="power_off_msg" formatted="false">Wenn du nichts berührst, wird in wenigen Sekunden abgebrochen.</string>
+    <string name="power_off_btn" formatted="false">Ausschalten</string>
+    <string name="power_off_not_p" formatted="false">Ausschalten nicht möglich: auf P schalten</string>
+    <string name="power_off_unavailable" formatted="false">Ausschalten ist gerade nicht verfügbar</string>
+    <string name="power_off_failed" formatted="false">Ausschaltbefehl fehlgeschlagen</string>
+    <string name="set_power_btn" formatted="false">Taste Fahrzeug ausschalten in der unteren Leiste</string>
+    <string name="set_power_btn_sub" formatted="false">Gleiche Bestätigung wie in den Einstellungen; nur in P</string>
+    <string name="set_car_panel" formatted="false">Fahrzeugbereich</string>
+    <string name="set_car_panel_sub" formatted="false">Das Auto im linken Bereich; wenn du es ausblendest, kommt ein anderer Bereich an seine Stelle</string>
+    <string name="car_panel_show" formatted="false">Anzeigen</string>
+    <string name="car_panel_hide" formatted="false">Ausblenden</string>
+    <string name="set_side_widget" formatted="false">Anstelle des Autos</string>
+    <string name="set_side_widget_sub" formatted="false">Große Uhr mit Datum, Karte, Medien oder Telefon-Favoriten (dieselben wie in der Leiste)</string>
+    <string name="side_clock" formatted="false">Uhr</string>
+    <string name="nav_missing_send" formatted="false">Protokoll zum fehlenden Symbol an den Entwickler senden</string>
+    <string name="nav_missing_code">Fehlendes Symbol: Code %1$d</string>
+    <string name="nav_missing_sending">Fehlendes Symbol %1$d wird gesendet…</string>
+    <string name="nav_missing_sent" formatted="false">Protokoll an den Entwickler gesendet</string>
+    <string name="nav_missing_queued" formatted="false">Protokoll gespeichert: es wird beim nächsten Senden übertragen</string>
+    <string name="nav_missing_retry" formatted="false">Senden fehlgeschlagen: Protokoll gespeichert, später neuer Versuch</string>
+    <string name="nav_missing_not_configured" formatted="false">Protokollversand ist in dieser Version nicht verfügbar</string>
+    <string name="nav_missing_error" formatted="false">Protokoll zum fehlenden Symbol konnte nicht gesendet werden</string>
+    <string name="set_map_panel" formatted="false">Inhalt des Kartenbereichs (experimentell)</string>
+    <string name="set_map_panel_sub" formatted="false">Hinweise wie bisher oder das MG-Navi in einem Fenster nur zum Ansehen: Antippen öffnet es im Vollbild</string>
+    <string name="map_panel_directions" formatted="false">Hinweise</string>
+    <string name="map_panel_window" formatted="false">Navi im Fenster</string>
+    <string name="pip_refused" formatted="false">Das Navi im Fenster wird in diesem Auto nicht unterstützt: der Kartenbereich ist wieder wie vorher</string>
+    <string name="anim_sim" formatted="false">Laden simulieren</string>
+    <string name="anim_sim_sub" formatted="false">Simuliert nur das Kabel (25 s eingesteckt, 10 s fertig geladen, ausgesteckt): READY, Gang und Tempo sind echt</string>
+    <string name="anim_sim_label" formatted="false">Simulation</string>
+    <string name="anim_sim_no_car" formatted="false">Zum Simulieren den Fahrzeugbereich anzeigen (Einstellungen → Startseite)</string>
+    <string name="set_swipe_back" formatted="false">Nach oben wischen zum Zurückkehren</string>
+    <string name="set_swipe_back_sub" formatted="false">In anderen Apps vom unteren Bildschirmrand nach oben wischen, um zum Launcher zurückzukehren</string>
+    <string name="chk_batt_heat" formatted="false">Batterieheizung</string>
+    <string name="theme_src" formatted="false">Automatisches Design</string>
+    <string name="theme_src_sub" formatted="false">Nur Scheinwerfer: dunkel, sobald das Licht an ist, zu jeder Uhrzeit</string>
+    <string name="theme_src_lights_time" formatted="false">Licht und Uhrzeit</string>
+    <string name="theme_src_lights" formatted="false">Nur Scheinwerfer</string>
+    <string name="set_top_swipe" formatted="false">Wischen von oben im Vollbild erlauben</string>
+    <string name="set_top_swipe_sub" formatted="false">Beim Wischen vom oberen Rand nach unten erscheint das Feld mit der Helligkeit und schließt sich danach von selbst</string>
+    <string name="set_charge_pick" formatted="false">Tasten der Ladeleiste</string>
+    <string name="set_charge_pick_btn" formatted="false">Auswählen</string>
+    <string name="set_charge_pick_sub" formatted="false">Tippe bis zu 5 Tasten in der gewünschten Reihenfolge an. Es erscheinen nur die, die das Auto unterstützt.</string>
+    <string name="set_charge_pick_wait" formatted="false">Das Auto ist noch nicht verbunden, daher ist unklar, welche Tasten es unterstützt. Versuche es gleich noch einmal.</string>
+    <string name="cb_heat" formatted="false">Batterieheizung</string>
+    <string name="cb_heat_title" formatted="false">Intelligente Batterieheizung</string>
+    <string name="cb_heat_msg" formatted="false">Vorerst liest der Launcher nur den Status und sendet keine Befehle an das Auto. Ändern unter Fahrzeugeinstellungen → Ladeverwaltung.</string>
+    <string name="news_v046_1" formatted="false">Android Auto, USB-Stick und Radio funktionieren beim Start normal · Fahrzeug in den Einstellungen ausschalten (nur in P)</string>
+    <string name="news_v046_2" formatted="false">Lade-Animation: Taste Laden simulieren und schnellere Vorbereitung · Fahrzeugbereich ausblendbar</string>
+    <string name="news_v046_3" formatted="false">Android Auto und CarPlay bei den Quellen mit Titel und Interpret · größere Titel- und Sendertexte · Lenkradtasten vor/zurück</string>
+    <string name="news_v046_4" formatted="false">Klima-Menü mit Luftrichtung, Entfeuchtung und Heckscheibe (danke an sommistica) · dunkles Design mit Licht (optional) · ein von Hand gewähltes Design springt nicht mehr zurück</string>
+    <string name="check_press_next">Drücke WEITER am Lenkrad (%s s)</string>
+    <string name="check_press_prev">Jetzt ZURÜCK am Lenkrad drücken (%s s)</string>
 </resources>

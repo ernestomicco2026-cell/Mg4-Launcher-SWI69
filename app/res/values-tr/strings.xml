@@ -515,4 +515,70 @@
     <string name="news_v045_1" formatted="false">Şarj animasyonu: ekran açıkken ve araç P\'de dururken de başlar; yalnızca READY\'de, hareket halinde veya P dışında durur</string>
     <string name="news_v045_2" formatted="false">Şarj kablosu daha iyi algılanıyor; İşlev kontrolünde yeni “READY okundu” testi</string>
     <string name="chk_ready" formatted="false">READY okundu</string>
+    <string name="group_airflow" formatted="false">Hava akışı</string>
+    <string name="airflow_fan_speed" formatted="false">Fan hızı</string>
+    <string name="airflow_direction" formatted="false">Hava yönü</string>
+    <string name="airflow_windscreen" formatted="false">Ön cam</string>
+    <string name="airflow_face" formatted="false">Yüz</string>
+    <string name="airflow_feet" formatted="false">Ayaklar</string>
+    <string name="airflow_window_clearing" formatted="false">Buğu giderme</string>
+    <string name="airflow_front_clear" formatted="false">Ön cam buğu giderme</string>
+    <string name="airflow_rear_heat" formatted="false">Arka cam ısıtma</string>
+    <string name="chk_power" formatted="false">Kapatma kullanılabilir</string>
+    <string name="power_off" formatted="false">Aracı kapat</string>
+    <string name="power_off_sub" formatted="false">Aracın kendi düğmesi gibi: yalnızca P\'de, onayla</string>
+    <string name="power_off_q" formatted="false">Araç kapatılsın mı?</string>
+    <string name="power_off_msg" formatted="false">Hiçbir şeye dokunmazsanız birkaç saniye içinde iptal edilir.</string>
+    <string name="power_off_btn" formatted="false">Kapat</string>
+    <string name="power_off_not_p" formatted="false">Kapatılamıyor: P konumuna alın</string>
+    <string name="power_off_unavailable" formatted="false">Kapatma şu anda kullanılamıyor</string>
+    <string name="power_off_failed" formatted="false">Kapatma komutu başarısız</string>
+    <string name="set_power_btn" formatted="false">Alt çubukta Aracı kapat düğmesi</string>
+    <string name="set_power_btn_sub" formatted="false">Ayarlardakiyle aynı onay; yalnızca P\'de çalışır</string>
+    <string name="set_car_panel" formatted="false">Araç paneli</string>
+    <string name="set_car_panel_sub" formatted="false">Sol paneldeki araç; gizlerseniz yerine başka bir panel gelir</string>
+    <string name="car_panel_show" formatted="false">Göster</string>
+    <string name="car_panel_hide" formatted="false">Gizle</string>
+    <string name="set_side_widget" formatted="false">Araç yerine</string>
+    <string name="set_side_widget_sub" formatted="false">Büyük saat ve tarih, harita, medya veya telefon favorileri (çubuktakilerle aynı)</string>
+    <string name="side_clock" formatted="false">Saat</string>
+    <string name="nav_missing_send" formatted="false">Eksik simge günlüğünü geliştiriciye gönder</string>
+    <string name="nav_missing_code">Eksik simge: kod %1$d</string>
+    <string name="nav_missing_sending">Eksik simge %1$d gönderiliyor…</string>
+    <string name="nav_missing_sent" formatted="false">Günlük geliştiriciye gönderildi</string>
+    <string name="nav_missing_queued" formatted="false">Günlük kaydedildi: bir sonraki gönderimde gidecek</string>
+    <string name="nav_missing_retry" formatted="false">Gönderim başarısız: günlük kaydedildi, sonra tekrar denenecek</string>
+    <string name="nav_missing_not_configured" formatted="false">Bu sürümde günlük gönderimi yok</string>
+    <string name="nav_missing_error" formatted="false">Eksik simge günlüğü gönderilemedi</string>
+    <string name="set_map_panel" formatted="false">Harita paneli içeriği (deneysel)</string>
+    <string name="set_map_panel_sub" formatted="false">Bugünkü gibi yön bilgisi ya da yalnızca izlenebilen pencerede MG navigasyonu: dokununca tam ekran açılır</string>
+    <string name="map_panel_directions" formatted="false">Yön bilgisi</string>
+    <string name="map_panel_window" formatted="false">Pencerede navigasyon</string>
+    <string name="pip_refused" formatted="false">Pencerede navigasyon bu araçta desteklenmiyor: harita paneli eski haline döner</string>
+    <string name="anim_sim" formatted="false">Şarjı simüle et</string>
+    <string name="anim_sim_sub" formatted="false">Yalnızca kabloyu taklit eder (25 sn takılı, 10 sn şarj bitti, çıkarıldı): READY, vites ve hız gerçektir</string>
+    <string name="anim_sim_label" formatted="false">Simülasyon</string>
+    <string name="anim_sim_no_car" formatted="false">Şarjı simüle etmek için araç panelini gösterin (Ayarlar → Ana ekran)</string>
+    <string name="set_swipe_back" formatted="false">Geri dönmek için yukarı kaydır</string>
+    <string name="set_swipe_back_sub" formatted="false">Diğer uygulamalarda, başlatıcıya dönmek için ekranın alt kenarından yukarı kaydırın</string>
+    <string name="chk_batt_heat" formatted="false">Batarya ısıtma</string>
+    <string name="theme_src" formatted="false">Otomatik tema</string>
+    <string name="theme_src_sub" formatted="false">Yalnızca farlar: farlar açıkken her saatte koyu</string>
+    <string name="theme_src_lights_time" formatted="false">Farlar ve saat</string>
+    <string name="theme_src_lights" formatted="false">Yalnızca farlar</string>
+    <string name="set_top_swipe" formatted="false">Tam ekranda yukarıdan kaydırmaya izin ver</string>
+    <string name="set_top_swipe_sub" formatted="false">Üst kenardan aşağı kaydırınca parlaklık paneli açılır, sonra kendiliğinden kapanır</string>
+    <string name="set_charge_pick" formatted="false">Şarj çubuğu düğmeleri</string>
+    <string name="set_charge_pick_btn" formatted="false">Seç</string>
+    <string name="set_charge_pick_sub" formatted="false">Görmek istediğin sırayla en fazla 5 düğmeye dokun. Yalnızca aracın desteklediği düğmeler listelenir.</string>
+    <string name="set_charge_pick_wait" formatted="false">Araç henüz bağlı değil, hangi düğmeleri desteklediği bilinmiyor. Kısa süre sonra tekrar dene.</string>
+    <string name="cb_heat" formatted="false">Batarya ısıtma</string>
+    <string name="cb_heat_title" formatted="false">Akıllı batarya ısıtma</string>
+    <string name="cb_heat_msg" formatted="false">Launcher şimdilik yalnızca durumu okur, araca komut göndermez. Araç ayarları → Şarj yönetimi bölümünden değiştirilir.</string>
+    <string name="news_v046_1" formatted="false">Android Auto, USB bellek ve radyo açılışta normal çalışır · Ayarlardan aracı kapat (yalnızca P\'de)</string>
+    <string name="news_v046_2" formatted="false">Şarj animasyonu: Şarjı simüle et düğmesi ve daha hızlı hazırlık · araç paneli gizlenebilir</string>
+    <string name="news_v046_3" formatted="false">Kaynaklar arasında başlık ve sanatçıyla Android Auto ve CarPlay · daha büyük şarkı ve istasyon yazıları · direksiyondaki ileri/geri düğmeleri</string>
+    <string name="news_v046_4" formatted="false">Hava yönü, buğu giderme ve arka camlı Klima menüsü (sommistica\'ya teşekkürler) · farlarla koyu tema (isteğe bağlı) · elle seçilen tema artık geri dönmüyor</string>
+    <string name="check_press_next">Direksiyonda İLERİ tuşuna bas (%s sn)</string>
+    <string name="check_press_prev">Şimdi direksiyonda GERİ tuşuna bas (%s sn)</string>
 </resources>

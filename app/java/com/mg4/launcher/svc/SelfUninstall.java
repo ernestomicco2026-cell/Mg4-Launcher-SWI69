@@ -37,6 +37,7 @@ public final class SelfUninstall {
         // 0) issue #29: segno "disinstallazione in corso" su disco PRIMA di tutto. Da qui HomeLock non spegne più la
         //    home MG, nemmeno se il launcher torna davanti mentre la conferma di sistema è a schermo.
         HomeLock.beginUninstall(app);
+        DayNight.restoreSaicMode(app);   // 0.4.6 (punto 14): "tema automatico" SAIC come prima
         Diag.put("disinstalla", "richiesta · segno disinstallazione in corso");
         new Thread(() -> {
             // 1) home MG riattivata, rimessa come predefinita e VERIFICATA (fino a 3 tentativi)

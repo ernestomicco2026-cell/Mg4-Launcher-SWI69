@@ -45,8 +45,8 @@ public final class SelfCheck {
         /** Una riga è cambiata (sul thread principale). */
         void onItem(Item it);
 
-        /** Prova dei tasti: secondi che restano (sul thread principale); 0 = finita. */
-        void onKeysCountdown(int seconds);
+        /** Prova dei tasti: passo (1 = premi AVANTI, 2 = premi INDIETRO) e secondi che restano (thread principale); 0 = finita. */
+        void onKeysCountdown(int step, int seconds);
 
         /** 1.0.4: prova dei fari: secondi che restano (sul thread principale); 0 = finita. */
         default void onLightsCountdown(int seconds) {
@@ -100,6 +100,8 @@ public final class SelfCheck {
         l.add(new Item("avvisi", R.string.chk_notices));
         l.add(new Item("animazione", R.string.chk_charge_anim));
         l.add(new Item("ready", R.string.chk_ready));
+        l.add(new Item("spegnimento", R.string.chk_power));
+        l.add(new Item("riscaldamentoBatteria", R.string.chk_batt_heat));
         return l;
     }
 
@@ -233,7 +235,10 @@ public final class SelfCheck {
             case "temaSistema": {
                 // 0.4.4: il tema scritto dal launcher nel sistema, riletto da Settings.System SKIN_THEME_CONFIG
                 Boolean[] r = DayNight.get(c).systemCheck();
-                if (r[0] == null) set(it, FAIL, "tema non ancora deciso · " + DayNight.get(c).systemTxt(), "");
+                // 0.4.6 (punto 14): auto senza SKIN_THEME_CONFIG: non è un errore
+                if (DayNight.get(c).skinAbsent()) set(it, ABSENT, "tema di sistema non presente su quest'auto (solo avviso e UiModeManager) · "
+                        + DayNight.get(c).systemTxt(), "");
+                else if (r[0] == null) set(it, FAIL, "tema non ancora deciso · " + DayNight.get(c).systemTxt(), "");
                 else if (r[1] == null) set(it, FAIL, "SKIN_THEME_CONFIG non leggibile · " + DayNight.get(c).systemTxt(), "");
                 else set(it, r[0].equals(r[1]) && DayNight.get(c).systemApplied() ? OK : FAIL, "voluto " + (r[0] ? "giorno" : "notte") + " · sistema " + (r[1] ? "giorno" : "notte")
                         + (DayNight.get(c).systemApplied() ? "" : " · configurazione diversa")
@@ -261,6 +266,23 @@ public final class SelfCheck {
                 if (p != null) main.post(() -> p.onLightsCountdown(0));
                 set(it, seenOn ? OK : FAIL, (seenOn ? "accensione vista" : "nessuna accensione vista in 10 s") + " · "
                         + VehicleClient.lightsDescription(), "");
+                break;
+            }
+            case "riscaldamentoBatteria": {
+                // 0.4.6 (punto 11): SOLA LETTURA, nessun comando (EH32: proprietà BMS DRVNG_PTC_HEAT, come l'app di ricarica)
+                int bh = v == null ? Integer.MIN_VALUE : v.batteryHeat();
+                String study = v == null ? "servizio veicolo assente" : v.batteryHeatStudy();
+                if (bh == Integer.MIN_VALUE) set(it, ABSENT, "non leggibile (disponibile: no) · " + study, "");
+                else set(it, OK, "disponibile: sì · " + study + (bh == 1 ? " (acceso)" : " (spento)")
+                        + " · comando (stesso valore 1/2) non usato", String.valueOf(bh));
+                break;
+            }
+            case "spegnimento": {
+                // 0.4.6 (punto 3): SOLA LETTURA, non spegne niente: metodo presente sì/no
+                String av = v == null ? null : v.powerOffAvailable();
+                if (av == null) set(it, ABSENT, "spegnimento disponibile: no (servizio comfort di CarAdapterService non raggiungibile)", "");
+                else set(it, OK, "spegnimento disponibile: sì · " + av + " · marcia " + (s == null ? "?" : VehicleClient.gearName(s.gear))
+                        + " (si spegne solo in P e ferma)", "");
                 break;
             }
             case "animazione": {
@@ -315,6 +337,8 @@ public final class SelfCheck {
                 int f = ms.favorites == null ? 0 : ms.favorites.size();
                 String elenco = Diag.value("radio.elenco");
                 if (n > 0 || f > 0) set(it, OK, n + " stazioni · " + f + " preferiti · " + elenco, String.valueOf(Math.max(n, f)));
+                // 1.0.6: nel controllo automatico (Radio magari mai aperta) l'elenco vuoto è "da verificare", non un errore
+                else if (!interactive) set(it, SKIPPED, "da verificare: elenco non ancora arrivato (Radio non aperta?) · " + elenco, "0");
                 else set(it, FAIL, "nessuna stazione ricevuta (aprire la Radio e fare una ricerca) · " + elenco, "0");
                 break;
             }
@@ -323,28 +347,42 @@ public final class SelfCheck {
                     set(it, SKIPPED, "saltata (controllo automatico: serve premere un tasto)", "");
                     break;
                 }
-                final int[] seen = {-1};
-                Object lock = new Object();
-                WheelKeys.setProbe((code, down, lp) -> {
-                    if (WheelKeys.isSkip(code)) synchronized (lock) {
-                        seen[0] = code;
-                        lock.notifyAll();
-                    }
-                });
-                try {
-                    for (int sec = 10; sec > 0 && seen[0] < 0; sec--) {
-                        int left = sec;
-                        if (p != null) main.post(() -> p.onKeysCountdown(left));
+                // 0.4.6 (punto 15): passo guidato. "Premi AVANTI", poi "premi INDIETRO": si registra il primo codice
+                // (tasto lasciato) di ciascun passo, tranne volume, muto e chiamata di Android; i codici si salvano e
+                // diventano avanti/indietro anche per il launcher (WheelKeys.learn)
+                int[] got = new int[3];
+                for (int step = 1; step <= 2; step++) {
+                    final int st = step;
+                    final int[] seen = {-1};
+                    Object lock = new Object();
+                    WheelKeys.setProbe((code, down, lp) -> {
+                        if (down || code < 0 || code == 24 || code == 25 || code == 164 || code == 5 || code == 6) return;
+                        if (st == 2 && code == got[1]) return;   // AVANTI premuto di nuovo: si aspetta INDIETRO
                         synchronized (lock) {
-                            if (seen[0] < 0) lock.wait(1000);
+                            if (seen[0] < 0) seen[0] = code;
+                            lock.notifyAll();
                         }
+                    });
+                    try {
+                        for (int sec = 10; sec > 0 && seen[0] < 0; sec--) {
+                            int left = sec;
+                            if (p != null) main.post(() -> p.onKeysCountdown(st, left));
+                            synchronized (lock) {
+                                if (seen[0] < 0) lock.wait(1000);
+                            }
+                        }
+                    } finally {
+                        WheelKeys.setProbe(null);
                     }
-                } finally {
-                    WheelKeys.setProbe(null);
-                    if (p != null) main.post(() -> p.onKeysCountdown(0));
+                    got[step] = seen[0];
                 }
-                if (seen[0] > 0) set(it, OK, "visto codice " + seen[0] + " (" + WheelKeys.name(seen[0]) + ")", "#" + seen[0]);
-                else set(it, FAIL, "nessun tasto avanti/indietro visto in 10 s · " + Diag.value("media.tastiVolante"), "");
+                if (p != null) main.post(() -> p.onKeysCountdown(0, 0));
+                WheelKeys.learn(c, got[1], got[2]);
+                String txt = "AVANTI " + (got[1] > 0 ? "codice " + got[1] : "non premuto") + " · INDIETRO " + (got[2] > 0 ? "codice " + got[2] : "non premuto")
+                        + " · in uso " + WheelKeys.learnedText();
+                if (got[1] > 0 && got[2] > 0) set(it, OK, txt, "#" + got[1] + "/#" + got[2]);
+                else if (got[1] > 0 || got[2] > 0) set(it, FAIL, txt + " · un tasto non è arrivato", got[1] > 0 ? "#" + got[1] : "#" + got[2]);
+                else set(it, FAIL, "nessun tasto visto in 2 × 10 s · " + Diag.value("media.tastiVolante"), "");
                 break;
             }
             case "ready": {

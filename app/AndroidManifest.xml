@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- 0.4.4: il launcher scrive il tema giorno/notte nel sistema (Settings.System SKIN_THEME_CONFIG, come le app SAIC EH32) -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.MODIFY_DAY_NIGHT_MODE" />
     <!-- 1.0.4: luci dell'auto (posizione, anabbaglianti, leva) per i fari e il tema -->
     <uses-permission android:name="android.car.permission.CAR_EXTERIOR_LIGHTS" />
     <!-- 1.0.4: riportare davanti la finestra già aperta dopo la retromarcia -->
@@ -45,6 +46,11 @@
     <uses-permission android:name="android.permission.FORCE_STOP_PACKAGES" />
     <!-- 0.3.3: disinstallazione dalle impostazioni, senza computer -->
     <uses-permission android:name="android.permission.DELETE_PACKAGES" />
+    <!-- 1.0.5 (sperimentale): navigatore in finestra su uno schermo virtuale del launcher (firma platform) -->
+    <uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW" />
+    <uses-permission android:name="android.permission.ACTIVITY_EMBEDDING" />
+    <!-- 1.0.6: app davanti sullo schermo centrale (stack del display 0), non quelle del quadro -->
+    <uses-permission android:name="android.permission.MANAGE_ACTIVITY_STACKS" />
 
     <!-- SWI69: gestore batteria ("bms"), clima e luci dal CarService, concessi dalla firma platform -->
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />

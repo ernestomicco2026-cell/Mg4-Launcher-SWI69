@@ -23,6 +23,7 @@ import java.util.zip.ZipInputStream;
  * <ul>
  *   <li>in background, con ripresa se il download si interrompe (Range), controllo sha256 e dimensione;</li>
  *   <li>se si cambia colore si scarica il nuovo e si cancella il vecchio;</li>
+ *   <li>1.0.5: se il pacchetto su GitHub cambia (sha256 in animazioni.json) si riscarica, al massimo un controllo ogni 12 ore;</li>
  *   <li>se animazioni.json o il pacchetto non ci sono: niente animazione, nessun errore a schermo.</li>
  * </ul>
  * Le 8 clip si estraggono in files/animazione/&lt;colore&gt;/ (carica-&lt;colore&gt;-&lt;giorno|notte&gt;-&lt;fase&gt;.mp4).

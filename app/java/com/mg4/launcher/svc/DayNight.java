@@ -88,6 +88,36 @@ public final class DayNight {
         work.postDelayed(() -> evaluate(false), CONFIRM_MS + 1000);
     }
 
+    /**
+     * 1.0.6 (issue #43): i fari sono diventati leggibili (CarService pronto) o è cambiata la fonte nelle impostazioni:
+     * si rilegge e si ridecide SUBITO, senza i 60 s di conferma, e la home si ricostruisce se il tema cambia.
+     */
+    public static void redecideNow(String why) {
+        DayNight d = instance;
+        if (d == null) return;
+        d.work.post(() -> d.redecide(why));
+    }
+
+    private synchronized void redecide(String why) {
+        boolean target;
+        try {
+            target = compute();
+        } catch (Throwable e) {
+            Diag.error("tema.stato", e.toString());
+            return;
+        }
+        pending = null;
+        Diag.put("tema.ridecisione", why + " · fonte " + source + " → " + (target ? "giorno" : "notte")
+                + (applied != null && applied == target ? " (già così)" : ""));
+        if (applied != null && applied == target) {
+            writeDiag();
+            return;
+        }
+        applyNow(target, "subito: " + why);
+        Listener l = listener;
+        if (l != null) h.post(() -> l.onThemeChange(target));
+    }
+
     /** Tema automatico da applicare adesso (alla prima chiamata si calcola subito, senza attesa). */
     public synchronized boolean isDay() {
         if (applied == null) evaluate(true);
@@ -174,48 +204,146 @@ public final class DayNight {
      * cambia la scelta manuale; mai a ogni giro.
      */
     public void syncSystem(String why) {
-        work.post(() -> {
-            String mode = sp.getString("theme", "auto");
-            Boolean day = "giorno".equals(mode) ? Boolean.TRUE : "notte".equals(mode) ? Boolean.FALSE : applied;
-            if (day == null) return;
-            String at = new SimpleDateFormat("HH:mm:ss", Locale.ITALY).format(new Date());
-            int want = day ? 1 : 0;
-            android.content.ContentResolver cr = ctx.getContentResolver();
-            String auto = "";
+        work.post(() -> syncNow(why));
+    }
+
+    // ---- 0.4.6 (punto 14): tema di sistema della SWI69 -------------------------------------------------------
+    /** "Tema automatico" SAIC (Impostazioni → Generali): 1 = il sistema segue le luci di posizione, 0 = manuale, -1 assente. */
+    public static final String SKIN_MODE_KEY = "screen_skin_mode";
+    private static final String K_SKIN_ABSENT = "temaSistemaAssente", K_SKIN_MODE_BEFORE = "temaSaicPrima";
+
+    /** true se su quest'auto SKIN_THEME_CONFIG non esiste: niente scritture in Settings, solo avviso e UiModeManager. */
+    public boolean skinAbsent() {
+        return sp.getBoolean(K_SKIN_ABSENT, false);
+    }
+
+    private int readInt(String key) {
+        try {
+            return android.provider.Settings.System.getInt(ctx.getContentResolver(), key, -1);
+        } catch (Throwable e) {
+            return -1;
+        }
+    }
+
+    /** "Tema automatico" SAIC acceso e scelta del launcher su Automatico: il launcher segue il tema SAIC. */
+    private boolean followSaic() {
+        return "auto".equals(sp.getString("theme", "auto")) && !skinAbsent() && readInt(SKIN_MODE_KEY) == 1 && readInt(SKIN_KEY) >= 0;
+    }
+
+    private void syncNow(String why) {
+        String mode = sp.getString("theme", "auto");
+        boolean manual = "giorno".equals(mode) || "notte".equals(mode);
+        android.content.ContentResolver cr = ctx.getContentResolver();
+        String at = new SimpleDateFormat("HH:mm:ss", Locale.ITALY).format(new Date());
+        int skinBefore = readInt(SKIN_KEY), modeBefore = readInt(SKIN_MODE_KEY);
+        StringBuilder note = new StringBuilder();
+        // a) auto senza SKIN_THEME_CONFIG (letto -1 con screen_skin_mode -1): mai scritture in Settings
+        if (!skinAbsent() && skinBefore < 0 && modeBefore < 0) {
+            sp.edit().putBoolean(K_SKIN_ABSENT, true).apply();
+            Diag.put("tema.sistemaAssente", "SKIN_THEME_CONFIG e screen_skin_mode non esistono su quest'auto: solo avviso "
+                    + SKIN_ACTION + " e UiModeManager, nessuna scrittura in Settings");
+        }
+        // b) "tema automatico" SAIC: con una scelta MANUALE nel launcher lo si mette in manuale (ricordando il valore di
+        //    prima), altrimenti il sistema rimette il suo tema dopo 3 s; con "Automatico" si rimette com'era
+        if (!skinAbsent()) {
+            int saved = sp.getInt(K_SKIN_MODE_BEFORE, -1);
             try {
-                auto = " · tema automatico SAIC (screen_skin_mode) " + android.provider.Settings.System.getInt(cr, "screen_skin_mode", -1);
-            } catch (Throwable ignored) {
-            }
-            try {
-                int now = android.provider.Settings.System.getInt(cr, SKIN_KEY, -1);
-                if (now == want) {
-                    sysTxt = "già " + (day ? "giorno" : "notte") + " (" + SKIN_KEY + " " + now + ") · controllato alle " + at + " · " + why + auto;
-                } else {
-                    boolean ok = android.provider.Settings.System.putInt(cr, SKIN_KEY, want);
-                    ctx.sendBroadcast(new android.content.Intent(SKIN_ACTION));
-                    int after = android.provider.Settings.System.getInt(cr, SKIN_KEY, -1);
-                    sysTxt = "scritto " + (day ? "giorno" : "notte") + " (" + SKIN_KEY + " " + now + " → " + want + ", avviso " + SKIN_ACTION
-                            + ") · alle " + at + " · esito " + (ok && after == want ? "ok" : "errore (il sistema dice " + after + ")")
-                            + " · " + why + auto;
+                if (manual && modeBefore == 1) {
+                    android.provider.Settings.System.putInt(cr, SKIN_MODE_KEY, 0);
+                    sp.edit().putInt(K_SKIN_MODE_BEFORE, 1).apply();
+                    note.append(" · tema automatico SAIC messo in manuale (prima 1)");
+                } else if (!manual && saved >= 0 && modeBefore != saved) {
+                    android.provider.Settings.System.putInt(cr, SKIN_MODE_KEY, saved);
+                    sp.edit().remove(K_SKIN_MODE_BEFORE).apply();
+                    note.append(" · tema automatico SAIC rimesso a ").append(saved);
+                    work.postDelayed(() -> redecide("tema automatico SAIC rimesso"), 4000);
+                } else if (!manual && saved >= 0) {
+                    sp.edit().remove(K_SKIN_MODE_BEFORE).apply();
                 }
             } catch (Throwable e) {
-                sysTxt = "scritto " + (day ? "giorno" : "notte") + " · alle " + at + " · esito errore " + e.getClass().getSimpleName()
-                        + " · " + why + auto;
+                note.append(" · screen_skin_mode non scritto (").append(e.getClass().getSimpleName()).append(")");
             }
+        }
+        int modeNow = readInt(SKIN_MODE_KEY);
+        String head = "screen_skin_mode " + modeBefore + (modeNow != modeBefore ? " → " + modeNow : "") + " · " + SKIN_KEY + " " + skinBefore;
+        // c) Automatico con il tema automatico SAIC acceso: non si combatte, si segue il tema SAIC (solo log)
+        if (!manual && !skinAbsent() && modeNow == 1) {
+            int sk = readInt(SKIN_KEY);
+            sysTxt = "segue il tema automatico SAIC: " + (sk == 1 ? "giorno" : sk == 0 ? "notte" : "non leggibile") + " · " + head
+                    + note + " · alle " + at + " · " + why;
+            appliedOk = true;
             Diag.put("tema.sistema", sysTxt);
-            // 3 s dopo si rilegge: se il servizio SAIC lo ha riscritto, si vede nel log (nessuna riscrittura a ripetizione)
-            final int wanted = want;
-            work.postDelayed(() -> {
-                int v = -1;
-                try {
-                    v = android.provider.Settings.System.getInt(ctx.getContentResolver(), SKIN_KEY, -1);
-                } catch (Throwable ignored) {
-                }
-                appliedOk = v == wanted;
-                Diag.put("tema.sistema", sysTxt + " · dopo 3 s: " + (v == 1 ? "giorno" : v == 0 ? "notte" : "non leggibile")
-                        + (appliedOk ? "" : " (DIVERSO da quello scritto)"));
-            }, 3000);
-        });
+            return;
+        }
+        Boolean day = "giorno".equals(mode) ? Boolean.TRUE : "notte".equals(mode) ? Boolean.FALSE : applied;
+        if (day == null) return;
+        int want = day ? 1 : 0;
+        String res;
+        if (skinAbsent()) {
+            res = "solo avviso e UiModeManager (" + uiMode(day) + ")";
+            try {
+                ctx.sendBroadcast(new android.content.Intent(SKIN_ACTION));
+            } catch (Throwable ignored) {
+            }
+        } else if (skinBefore == want) {
+            res = "già " + (day ? "giorno" : "notte");
+        } else {
+            try {
+                boolean ok = android.provider.Settings.System.putInt(cr, SKIN_KEY, want);
+                ctx.sendBroadcast(new android.content.Intent(SKIN_ACTION));
+                int after = readInt(SKIN_KEY);
+                res = "scritto " + skinBefore + " → " + want + " con avviso " + SKIN_ACTION + " · esito " + (ok && after == want ? "ok" : "errore (il sistema dice " + after + ")");
+            } catch (IllegalArgumentException e) {
+                // SKIN_THEME_CONFIG non esiste su quest'auto: una sola riga di log, poi mai più scritture
+                sp.edit().putBoolean(K_SKIN_ABSENT, true).apply();
+                Diag.put("tema.sistemaAssente", "scrittura di " + SKIN_KEY + " rifiutata (IllegalArgumentException): da ora solo avviso e UiModeManager");
+                ctx.sendBroadcast(new android.content.Intent(SKIN_ACTION));
+                res = "non scritto (tema di sistema non presente) · " + uiMode(day);
+            } catch (Throwable e) {
+                res = "errore " + e.getClass().getSimpleName();
+            }
+        }
+        sysTxt = (day ? "giorno" : "notte") + (manual ? " (scelta manuale)" : " (automatico del launcher)") + " · " + res + " · prima: "
+                + head + note + " · alle " + at + " · " + why;
+        Diag.put("tema.sistema", sysTxt);
+        if (skinAbsent()) {
+            appliedOk = true;
+            return;
+        }
+        // 3 s dopo si rilegge: se il servizio SAIC lo ha riscritto, si vede nel log (nessuna riscrittura a ripetizione)
+        final int wanted = want;
+        work.postDelayed(() -> {
+            int v = readInt(SKIN_KEY), m = readInt(SKIN_MODE_KEY);
+            appliedOk = v == wanted;
+            Diag.put("tema.sistema", sysTxt + " · dopo 3 s: " + (v == 1 ? "giorno" : v == 0 ? "notte" : "non leggibile")
+                    + " (screen_skin_mode " + m + ")" + (appliedOk ? "" : " (DIVERSO da quello scritto)"));
+        }, 3000);
+    }
+
+    /** Solo dove SKIN_THEME_CONFIG non c'è: il tema anche in UiModeManager (permesso della firma platform). */
+    private String uiMode(boolean day) {
+        try {
+            android.app.UiModeManager um = (android.app.UiModeManager) ctx.getSystemService(Context.UI_MODE_SERVICE);
+            int m = day ? android.app.UiModeManager.MODE_NIGHT_NO : android.app.UiModeManager.MODE_NIGHT_YES;
+            if (um.getNightMode() != m) um.setNightMode(m);
+            return "UiModeManager " + (um.getNightMode() == m ? "ok" : "non cambiato");
+        } catch (Throwable e) {
+            return "UiModeManager errore " + e.getClass().getSimpleName();
+        }
+    }
+
+    /** Alla disinstallazione dal launcher: il "tema automatico" SAIC torna com'era prima della nostra scelta manuale. */
+    public static void restoreSaicMode(Context c) {
+        android.content.SharedPreferences p = c.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE);
+        int saved = p.getInt(K_SKIN_MODE_BEFORE, -1);
+        if (saved < 0 || p.getBoolean(K_SKIN_ABSENT, false)) return;
+        try {
+            android.provider.Settings.System.putInt(c.getContentResolver(), SKIN_MODE_KEY, saved);
+            p.edit().remove(K_SKIN_MODE_BEFORE).commit();
+            Diag.put("tema.sistema", "disinstallazione: tema automatico SAIC rimesso a " + saved);
+        } catch (Throwable e) {
+            Diag.put("tema.sistema", "disinstallazione: tema automatico SAIC non rimesso (" + e.getClass().getSimpleName() + ")");
+        }
     }
 
     /** Tema scritto nel sistema adesso: true giorno, false notte, null non leggibile (Controllo funzioni). */
@@ -296,6 +424,24 @@ public final class DayNight {
         // alba/tramonto) e lo SCRIVIAMO nel sistema (syncSystem). uiMode, UiModeManager e NIGHT_MODE restano nel log.
         uiStuckTxt = "";
         boolean sunNight = sun.elevation < -0.833;
+        // 1.0.6 (issue #43): "Solo fari": scuro quando i fari sono accesi, a qualunque ora; chiaro quando sono spenti.
+        // Con i fari non leggibili si usa l'orario finché il CarService non risponde (poi si ridecide subito).
+        // 0.4.6 (punto 14, SWI69): "tema automatico" SAIC acceso (screen_skin_mode 1): il sistema rimette il suo tema
+        // dopo 3 s, quindi in Automatico non si combatte: si segue il tema SAIC (SKIN_THEME_CONFIG)
+        if (followSaic()) {
+            int sk = readInt(SKIN_KEY);
+            source = "tema automatico SAIC (screen_skin_mode 1, " + SKIN_KEY + " " + sk + ")";
+            return sk == 1;
+        }
+        boolean onlyLights = "solo_fari".equals(sp.getString("temaAutoFonte", "fari_orario"));
+        if (onlyLights && lights >= 0) {
+            source = "solo fari (" + lightsTxt + ")";
+            return lights != 1;
+        }
+        if (onlyLights) {
+            source = "solo fari, ma fari non leggibili: orario (alba/tramonto) finché il CarService non risponde";
+            return !sunNight;
+        }
         if (lights >= 0) {
             // con il sole alto i fari accesi sono quelli diurni o la galleria: resta giorno
             boolean night = sunNight || (lights == 1 && sun.elevation < 6);

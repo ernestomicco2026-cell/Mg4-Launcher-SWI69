@@ -515,4 +515,70 @@
     <string name="news_v045_1" formatted="false">Animação de carregamento: arranca também com o ecrã ligado e o carro parado em P; para só em READY, em movimento ou fora de P</string>
     <string name="news_v045_2" formatted="false">Cabo de carregamento detetado melhor; novo teste «READY lido» na Verificação de funções</string>
     <string name="chk_ready" formatted="false">READY lido</string>
+    <string name="group_airflow" formatted="false">Fluxo de ar</string>
+    <string name="airflow_fan_speed" formatted="false">Velocidade da ventoinha</string>
+    <string name="airflow_direction" formatted="false">Direção do ar</string>
+    <string name="airflow_windscreen" formatted="false">Para-brisas</string>
+    <string name="airflow_face" formatted="false">Rosto</string>
+    <string name="airflow_feet" formatted="false">Pés</string>
+    <string name="airflow_window_clearing" formatted="false">Desembaciamento</string>
+    <string name="airflow_front_clear" formatted="false">Desembaciar para-brisas</string>
+    <string name="airflow_rear_heat" formatted="false">Óculo traseiro aquecido</string>
+    <string name="chk_power" formatted="false">Desligar disponível</string>
+    <string name="power_off" formatted="false">Desligar o carro</string>
+    <string name="power_off_sub" formatted="false">Como o botão do carro: só em P, com confirmação</string>
+    <string name="power_off_q" formatted="false">Desligar o carro?</string>
+    <string name="power_off_msg" formatted="false">Se não tocares em nada, cancela daqui a alguns segundos.</string>
+    <string name="power_off_btn" formatted="false">Desligar</string>
+    <string name="power_off_not_p" formatted="false">Não é possível desligar: põe em P</string>
+    <string name="power_off_unavailable" formatted="false">Desligar não está disponível neste momento</string>
+    <string name="power_off_failed" formatted="false">O comando de desligar falhou</string>
+    <string name="set_power_btn" formatted="false">Botão Desligar o carro na barra inferior</string>
+    <string name="set_power_btn_sub" formatted="false">Mesma confirmação das definições; só funciona em P</string>
+    <string name="set_car_panel" formatted="false">Painel do carro</string>
+    <string name="set_car_panel_sub" formatted="false">O carro no painel esquerdo; se o esconderes, outro painel fica no seu lugar</string>
+    <string name="car_panel_show" formatted="false">Mostrar</string>
+    <string name="car_panel_hide" formatted="false">Esconder</string>
+    <string name="set_side_widget" formatted="false">Em vez do carro</string>
+    <string name="set_side_widget_sub" formatted="false">Relógio e data grandes, mapa, multimédia ou favoritos do telemóvel (os mesmos da barra)</string>
+    <string name="side_clock" formatted="false">Relógio</string>
+    <string name="nav_missing_send" formatted="false">Enviar ao programador o registo do ícone em falta</string>
+    <string name="nav_missing_code">Ícone em falta: código %1$d</string>
+    <string name="nav_missing_sending">A enviar o ícone em falta %1$d…</string>
+    <string name="nav_missing_sent" formatted="false">Registo enviado ao programador</string>
+    <string name="nav_missing_queued" formatted="false">Registo guardado: segue no próximo envio</string>
+    <string name="nav_missing_retry" formatted="false">Envio falhou: o registo está guardado e tenta-se mais tarde</string>
+    <string name="nav_missing_not_configured" formatted="false">O envio de registos não está disponível nesta versão</string>
+    <string name="nav_missing_error" formatted="false">Não foi possível enviar o registo do ícone em falta</string>
+    <string name="set_map_panel" formatted="false">Conteúdo do painel de mapas (experimental)</string>
+    <string name="set_map_panel_sub" formatted="false">Indicações como hoje, ou o navegador MG numa janela só de visualização: um toque abre-o em ecrã inteiro</string>
+    <string name="map_panel_directions" formatted="false">Indicações</string>
+    <string name="map_panel_window" formatted="false">Navegador em janela</string>
+    <string name="pip_refused" formatted="false">O navegador em janela não é suportado neste carro: o painel de mapas volta ao normal</string>
+    <string name="anim_sim" formatted="false">Simular carregamento</string>
+    <string name="anim_sim_sub" formatted="false">Só simula o cabo (ligado 25 s, carga concluída 10 s, desligado): READY, mudança e velocidade são os reais</string>
+    <string name="anim_sim_label" formatted="false">Simulação</string>
+    <string name="anim_sim_no_car" formatted="false">Para simular, mostra o painel do carro (Definições → Início)</string>
+    <string name="set_swipe_back" formatted="false">Deslizar para cima para voltar</string>
+    <string name="set_swipe_back_sub" formatted="false">Dentro das outras apps, desliza para cima a partir do fundo do ecrã para voltar ao launcher</string>
+    <string name="chk_batt_heat" formatted="false">Aquecimento da bateria</string>
+    <string name="theme_src" formatted="false">Tema automático</string>
+    <string name="theme_src_sub" formatted="false">Só faróis: escuro quando os faróis estão ligados, a qualquer hora</string>
+    <string name="theme_src_lights_time" formatted="false">Faróis e hora</string>
+    <string name="theme_src_lights" formatted="false">Só faróis</string>
+    <string name="set_top_swipe" formatted="false">Permitir deslizar de cima em ecrã inteiro</string>
+    <string name="set_top_swipe_sub" formatted="false">Ao deslizar para baixo a partir do topo aparece o painel com o brilho, que depois fecha sozinho</string>
+    <string name="set_charge_pick" formatted="false">Botões da barra de carregamento</string>
+    <string name="set_charge_pick_btn" formatted="false">Escolher</string>
+    <string name="set_charge_pick_sub" formatted="false">Toca até 5 botões, pela ordem em que os queres ver. Só aparecem os que o carro suporta.</string>
+    <string name="set_charge_pick_wait" formatted="false">O carro ainda não está ligado: não se sabe que botões suporta. Tenta novamente dentro de pouco.</string>
+    <string name="cb_heat" formatted="false">Aquec. bateria</string>
+    <string name="cb_heat_title" formatted="false">Aquecimento inteligente da bateria</string>
+    <string name="cb_heat_msg" formatted="false">Por agora o launcher só lê o estado e não envia comandos ao carro. Muda-se em Definições do veículo → Gestão de carregamento.</string>
+    <string name="news_v046_1" formatted="false">Android Auto, pen USB e rádio funcionam bem ao ligar · Desligar o carro nas definições (só em P)</string>
+    <string name="news_v046_2" formatted="false">Animação de carregamento: botão Simular carregamento e preparação mais rápida · painel do carro ocultável</string>
+    <string name="news_v046_3" formatted="false">Android Auto e CarPlay entre as fontes com título e artista · textos da música e da estação maiores · botões seguinte/anterior do volante</string>
+    <string name="news_v046_4" formatted="false">Menu Clima com direção do ar, desembaciamento e óculo traseiro (obrigado a sommistica) · tema escuro com os faróis (opcional) · o tema escolhido à mão já não volta atrás</string>
+    <string name="check_press_next">Carrega em SEGUINTE no volante (%s s)</string>
+    <string name="check_press_prev">Agora carrega em ANTERIOR no volante (%s s)</string>
 </resources>

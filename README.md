@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.5.apk"><img alt="Scarica / Download 0.4.5" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.5-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.6.apk"><img alt="Scarica / Download 0.4.6" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.6-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -50,45 +50,52 @@
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-normale-giorno.png" alt="Home di giorno con la radio: FM/DAB sotto Radio, Mappa/Media in basso (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-normale-giorno.png" alt="Home di giorno con la radio: FM/DAB sotto Radio, Mappa/Media in basso (simulazione)" width="100%"><br>
 <sub>Tema <b>giorno</b> con la radio: <b>FM/DAB</b> sotto Radio, <b>Mappa/Media</b> in basso prima dei preferiti · <i><b>Day</b> theme with the radio: <b>FM/DAB</b> under Radio, <b>Map/Media</b> at the bottom before the favourites</i></sub></td>
 <td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-ricarica.gif" alt="Animazione di ricarica: l'auto si gira, il cavo si aggancia e la carica scorre (simulazione)" width="100%"><br>
 <sub><b>Animazione di ricarica</b>: l'auto si gira, il cavo si aggancia e la carica scorre; potenza accanto alla temperatura · <i><b>Charging animation</b>: the car turns, the cable plugs in and the charge flows; power next to the temperature</i></sub></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-normale-notte.png" alt="Home di notte con la radio (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-normale-notte.png" alt="Home di notte con la radio (simulazione)" width="100%"><br>
 <sub>Tema <b>notte</b> con la radio e l'elenco delle stazioni · <i><b>Night</b> theme with the radio and the station list</i></sub></td>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-usb-notte.png" alt="Home di notte con la chiavetta USB (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-usb-notte.png" alt="Home di notte con la chiavetta USB (simulazione)" width="100%"><br>
 <sub>Sorgente <b>USB</b>: pulsanti delle sorgenti più grandi, ognuno con il suo fondo · <i><b>USB</b> source: bigger source buttons, each with its own background</i></sub></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-mappa-giorno.png" alt="Riquadro Mappa di giorno (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-mappa-giorno.png" alt="Riquadro Mappa di giorno (simulazione)" width="100%"><br>
 <sub>Riquadro <b>Mappa</b>: si naviga con CarPlay o Android Auto, Mappa/Media in basso a sinistra · <i><b>Map</b> panel: navigation via CarPlay or Android Auto, Map/Media at the bottom left</i></sub></td>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-grande-giorno.png" alt="Home con Dimensione comandi Grande (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-grande-giorno.png" alt="Home con Dimensione comandi Grande (simulazione)" width="100%"><br>
 <sub>Dimensione comandi <b>Grande</b>: testo e pulsanti crescono insieme · <i>Control size <b>Large</b>: text and buttons grow together</i></sub></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-grande-notte.png" alt="Home con Dimensione comandi Grande di notte (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-grande-notte.png" alt="Home con Dimensione comandi Grande di notte (simulazione)" width="100%"><br>
 <sub>Dimensione comandi <b>Grande</b>, di notte · <i>Control size <b>Large</b>, at night</i></sub></td>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-molto-grande-notte.png" alt="Home con Dimensione comandi Molto grande di notte (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-molto-grande-notte.png" alt="Home con Dimensione comandi Molto grande di notte (simulazione)" width="100%"><br>
 <sub>Dimensione comandi <b>Molto grande</b>, di notte: tutte le sorgenti con la scritta · <i>Control size <b>Extra large</b>, at night: every source keeps its label</i></sub></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.4-molto-grande-giorno.png" alt="Home con Dimensione comandi Molto grande di giorno (simulazione)" width="100%"><br>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-molto-grande-giorno.png" alt="Home con Dimensione comandi Molto grande di giorno (simulazione)" width="100%"><br>
 <sub>Dimensione comandi <b>Molto grande</b>, di giorno · <i>Control size <b>Extra large</b>, by day</i></sub></td>
 <td width="50%" valign="top"><img src="screenshots/guida.png" alt="Gruppo Guida: corsia, One Pedal, assistente, pedale del freno" width="100%"><br>
 <sub>Gruppo <b>Guida</b>: corsia, One Pedal, assistente, pedale del freno · <i><b>Driving</b> group: lane, One Pedal, assistant, brake pedal</i></sub></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="screenshots/clima-rapido.png" alt="Gruppo Clima: A/C, automatico, ricircolo" width="100%"><br>
-<sub>Gruppo <b>Clima</b>: A/C, automatico, ricircolo · <i><b>Climate</b> group: A/C, auto, recirculation</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-clima-notte.png" alt="Menu Clima a 8 tasti con direzione dell'aria, sbrinamento e lunotto (simulazione)" width="100%"><br>
+<sub>Menu <b>Clima</b>: A/C, automatico, ricircolo, direzione dell'aria, sbrinamento e lunotto · <i><b>Climate</b> menu: A/C, auto, recirculation, air direction, demist and rear window</i></sub></td>
 <td width="50%" valign="top"><img src="screenshots/impostazioni.png" alt="Impostazioni: colore, cerchi e tetto dell'auto" width="100%"><br>
 <sub><b>Impostazioni</b>: colore, cerchi e tetto dell'auto · <i><b>Settings</b>: car colour, wheels and roof</i></sub></td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="screenshots/mg4clima.png" alt="MG4 Clima aperto dal tasto del clima" width="100%"><br>
 <sub><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> aperto dal tasto del clima · <i><a href="https://github.com/ernestomicco2026-cell/HVAC-Clima-MG4">MG4 Clima</a> opened from the climate button</i></sub></td>
-<td width="50%" valign="top"></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-android-auto-notte.png" alt="Android Auto tra le sorgenti con titolo e artista, pulsante Spegni nella barra (simulazione)" width="100%"><br>
+<sub><b>Android Auto</b> tra le sorgenti con titolo e artista; pulsante <b>Spegni</b> nella barra (facoltativo) · <i><b>Android Auto</b> among the sources with title and artist; optional <b>Turn off</b> button in the bar</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-barra-ricarica-notte.png" alt="Barra di ricarica con i 5 pulsanti scelti (simulazione)" width="100%"><br>
+<sub><b>Barra di ricarica</b> con i 5 pulsanti scelti · <i><b>Charging bar</b> with the 5 chosen buttons</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-senza-auto-giorno.png" alt="Riquadro auto nascosto con un widget al suo posto (simulazione)" width="100%"><br>
+<sub><b>Riquadro auto</b> nascosto, con un widget al suo posto · <i><b>Car panel</b> hidden, with a widget in its place</i></sub></td>
 </tr>
 </table>
 
@@ -221,7 +228,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.5.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.6.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -238,7 +245,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.5.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.6.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -314,6 +321,22 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.6
+- Android Auto, chiavetta USB e radio regolari all'accensione (il riavvio del dongle interviene solo con un dongle vero).
+- Spegni la vettura dalle impostazioni (solo in P, ricontrollata prima del comando).
+- Riquadro auto nascondibile.
+- Navigatore in finestra nel pannello mappe (sperimentale, se il navigatore lo permette).
+- Animazione di ricarica: pulsante Simula ricarica, preparazione molto più veloce e log inviato da solo alla prima ricarica.
+- Android Auto e CarPlay tra le sorgenti quando il telefono è collegato, con titolo e artista (e copertina, se trovata).
+- Testi del brano e della stazione più grandi.
+- Scorri in su per tornare (facoltativo).
+- Tendina dall'alto a schermo intero (facoltativa).
+- Scegli i 5 pulsanti della barra di ricarica.
+- Tema scuro quando i fari sono accesi (a scelta); tema scelto a mano che non torna più indietro.
+- Tasti avanti/indietro al volante.
+- Direzione dell'aria, sbrinamento e lunotto nel menu Clima (grazie a sommistica).
+- Niente più falso errore delle stazioni.
 
 #### 0.4.5
 - **Animazione di ricarica**: ora parte anche con lo schermo acceso e l'auto ferma in P. Prima la 0.4.4 scambiava il
@@ -791,7 +814,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.5.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.6.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -807,7 +830,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.5.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.6.apk
    ```
 2. Make it the default home:
    ```bash
@@ -879,6 +902,22 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.6
+- Android Auto, USB stick and radio work normally at start-up (the dongle restart only acts with a real dongle).
+- Turn off the car from the settings (only in P, checked again before the command).
+- The car panel can be hidden.
+- Navigation in a window inside the map panel (experimental, if the navigation app allows it).
+- Charging animation: Simulate charging button, much faster preparation and a log sent automatically on the first charge.
+- Android Auto and CarPlay among the sources while the phone is connected, with title and artist (and cover, if found).
+- Bigger song and station text.
+- Swipe up to go back (optional).
+- Swipe down from the top in full screen (optional).
+- Choose the 5 buttons of the charging bar.
+- Dark theme when the headlights are on (optional); a manually chosen theme no longer switches back.
+- Steering-wheel next/previous buttons.
+- Air direction, front demist and rear-window heating in the Climate menu (thanks to sommistica).
+- No more false station error.
 
 #### 0.4.5
 - **Charging animation**: it now also starts with the screen on and the car parked in P. Version 0.4.4 mistook

@@ -99,10 +99,11 @@ public final class CheckPanel {
             }
 
             @Override
-            public void onKeysCountdown(int seconds) {
+            public void onKeysCountdown(int step, int seconds) {
                 if (ki < 0 || seconds <= 0) return;
                 marks[ki].setText("…");
-                subs[ki].setText(L.f(R.string.check_press_keys, String.valueOf(seconds)));
+                // 0.4.6 (punto 15): passo guidato, prima AVANTI poi INDIETRO
+                subs[ki].setText(L.f(step == 2 ? R.string.check_press_prev : R.string.check_press_next, String.valueOf(seconds)));
             }
 
             @Override

@@ -16,6 +16,24 @@ public final class EmbedCheck {
 
     private EmbedCheck() {}
 
+    /**
+     * 1.0.6: la schermata principale dell'app si può ridimensionare? resizeMode diverso da 0 (RESIZE_MODE_UNRESIZEABLE);
+     * il navigatore MG ha 1 e nel riquadro funziona (prova della 1.0.5).
+     */
+    public static boolean resizeable(Context c, String pkg) {
+        try {
+            PackageManager pm = c.getPackageManager();
+            android.content.Intent li = pm.getLaunchIntentForPackage(pkg);
+            if (li == null || li.getComponent() == null) return false;
+            ActivityInfo a = pm.getActivityInfo(li.getComponent(), 0);
+            int resize = ActivityInfo.class.getField("resizeMode").getInt(a);
+            Diag.put("pip.appScelta", pkg + " · resize=" + resize + (resize != 0 ? " · ridimensionabile" : " · non ridimensionabile"));
+            return resize != 0;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
     public static void log(Context c) {
         new Thread(() -> {
             PackageManager pm = c.getPackageManager();
@@ -45,6 +63,17 @@ public final class EmbedCheck {
                     sb.append(e.getClass().getSimpleName());
                 }
                 Diag.put("pip." + p, sb.length() == 0 ? "nessuna attività esportata" : sb.toString());
+            }
+            // 0.4.6 (punto 1c/9, SWI69): niente navigatore MG di serie; si usa l'app di navigazione scelta, se
+            // ridimensionabile. Se nessuna lo è, l'opzione "Navigatore in finestra" non compare.
+            try {
+                com.mg4.launcher.ui.Prefs pr = new com.mg4.launcher.ui.Prefs(c);
+                String target = com.mg4.launcher.ui.NavWindow.target(c, pr);
+                Diag.put("pip.disponibile", target == null ? "no: nessun navigatore ridimensionabile (app scelta " + pr.navApp()
+                        + ", navigatore MG " + (pm.getLaunchIntentForPackage("com.telenav.app.arp") == null ? "assente" : "presente")
+                        + "): opzione nascosta" : "sì: " + target);
+            } catch (Throwable e) {
+                Diag.put("pip.disponibile", "controllo non riuscito: " + e.getClass().getSimpleName());
             }
         }, "mg4-pip-check").start();
     }

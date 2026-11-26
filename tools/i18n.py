@@ -599,6 +599,12 @@ def main():
         sys.exit("voci senza 7 traduzioni: %s" % bad)
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from i18n_pl import PL
+    from i18n_new import NEW   # 0.4.6: testi con il polacco già nella tupla (it, en, es, de, pt, fr, tr, pl)
+    for k, v in NEW.items():
+        if len(v) != 8 or k in S:
+            sys.exit("voce di i18n_new.py non valida o doppia: %s" % k)
+        S[k] = v[:7]
+        PL[k] = v[7]
     missing = [k for k in S if k not in PL]
     if missing:
         print("polacco: %d voci in inglese (%s)" % (len(missing), ", ".join(missing[:8])))

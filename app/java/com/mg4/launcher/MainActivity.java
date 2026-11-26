@@ -110,7 +110,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         setContentView(root);
         getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(vis -> {
             // se il sistema rimostra le barre (es. dopo un popup) le rinasconde
-            if ((vis & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) root.postDelayed(this::goFullscreen, 2500);
+            // 1.0.6 (issue #42): con la tendina dall'alto accesa si lascia più tempo (barra e tendina si chiudono da sole)
+            if ((vis & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) root.postDelayed(this::goFullscreen, prefs.topSwipe() ? 6000 : 2500);
         });
         goFullscreen();
         build();
@@ -179,7 +180,10 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
             com.mg4.launcher.svc.DongleWatch.get(this, media).start();
             com.mg4.launcher.svc.EmbedCheck.log(this);
             // 0.4.2 (punto 11a): all'accensione dell'auto si riprende l'ultima sorgente audio usata davvero
-            if (android.os.SystemClock.elapsedRealtime() < 5 * 60_000L) media.resumeLastSource("accensione");
+            // 0.4.6 (punto 0b): media.avvio sempre scritto, anche quando la ripresa non si fa
+            if (android.os.SystemClock.elapsedRealtime() < 5 * 60_000L) media.resumeLastSource("accensione (avvio del launcher)");
+            else com.mg4.launcher.svc.MediaClient.powerOnSkipped("launcher avviato " + android.os.SystemClock.elapsedRealtime() / 60_000
+                    + " min dopo l'accensione (aggiornamento o riavvio a metà viaggio)");
         });
         // 0.4.2 (punto 2): misura della finestra della spia luci della SystemUI (se cambia lo spazio, si ridisegna la home)
         root.postDelayed(probeLight, 12_000);
@@ -345,7 +349,9 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
                 screenOffAt = android.os.SystemClock.elapsedRealtime();
                 if (home != null) home.pauseChargeAnim();   // 0.4.4: animazione di ricarica ferma a schermo spento
             } else if (screenOffAt > 0 && android.os.SystemClock.elapsedRealtime() - screenOffAt > 5 * 60_000L) {
+                long off = android.os.SystemClock.elapsedRealtime() - screenOffAt;
                 screenOffAt = -1;
+                com.mg4.launcher.svc.BootLog.powerOn("risveglio dello schermo dopo " + (off / 60_000) + " min");
                 if (home != null) home.onScreenOn();
                 if (media != null) media.resumeLastSource("risveglio dopo lo spegnimento");
             }
@@ -498,6 +504,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Novità di ogni versione (testi in tutte le lingue in strings.xml). */
     private static int[] newsFor(String ver) {
         switch (ver) {
+            case "0.4.6":
+                return new int[]{R.string.news_v046_1, R.string.news_v046_2, R.string.news_v046_3, R.string.news_v046_4};
             case "0.4.5":
                 return new int[]{R.string.news_v045_1, R.string.news_v045_2};
             case "0.4.4":
@@ -874,6 +882,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Apre il navigatore scelto: MG, quello del telefono (CarPlay/Android Auto) o un'app installata. */
     @Override
     public void launchNavigator(String which) {
+        // 1.0.5: il navigatore non deve restare (o finire) nel riquadro mentre lo si apre a tutto schermo
+        com.mg4.launcher.ui.NavWindow.releaseActive("navigatore aperto a tutto schermo");
         boolean phone = media.last().deviceType != 0;
         if (Prefs.NAV_PHONE.equals(which) || (Prefs.NAV_AUTO.equals(which) && phone)) {
             if (phone) {
@@ -925,6 +935,20 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
      * animazione-<colore>.zip nella cartella principale della chiavetta USB. Si chiudono le impostazioni e la prova
      * gira sull'auto della home: aggancio → loop (3 giri) → finita → sgancio.
      */
+    @Override
+    public VehicleClient vehicle() {
+        return vehicle;
+    }
+
+    @Override
+    public void simulateCharge() {
+        if (settings != null) closeSettings();
+        if (home == null || !home.simulateCharge()) {
+            android.widget.Toast.makeText(this, L.s(R.string.anim_sim_no_car), android.widget.Toast.LENGTH_LONG).show();
+            Diag.put("ricarica.simulazione", "non avviata: riquadro auto nascosto");
+        }
+    }
+
     @Override
     public void testChargeAnimation() {
         String color = Prefs.CAR_COLORS[prefs.carColorIndex()];
