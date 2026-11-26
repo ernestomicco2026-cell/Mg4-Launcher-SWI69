@@ -386,6 +386,7 @@ public final class MediaClient {
 
     public void stop() {
         running = false;
+        if (instanceNow == this) instanceNow = null;   // 0.4.7 (dalla SWI68 1.0.7): un'accensione dopo lo stop aspetta il prossimo client
         started = false;
         if (bg != null) bg.removeCallbacks(loop);
         radio.stop();
@@ -477,6 +478,162 @@ public final class MediaClient {
         return null;
     }
 
+    // ---- 0.4.7 (punto 8, dalla SWI68 1.0.7, issue #30): copertina con CarPlay -----------------------------------------------------------------
+    private static final String[][] ART_KEYS = {
+            {MediaMetadata.METADATA_KEY_ALBUM_ART, "ALBUM_ART"}, {MediaMetadata.METADATA_KEY_ART, "ART"},
+            {MediaMetadata.METADATA_KEY_DISPLAY_ICON, "DISPLAY_ICON"}};
+    private static final String[][] ART_URI_KEYS = {
+            {MediaMetadata.METADATA_KEY_ALBUM_ART_URI, "ALBUM_ART_URI"}, {MediaMetadata.METADATA_KEY_ART_URI, "ART_URI"},
+            {MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI, "DISPLAY_ICON_URI"}};
+    private String artLog = "";
+
+    /**
+     * Copertina di CarPlay / Android Auto, solo in lettura. Si provano, in ordine: la sessione di RemoteUI (quella di
+     * sempre), poi le sessioni delle app AllGo (CarPlay e Android Auto). In ognuna: le immagini ALBUM_ART, ART e
+     * DISPLAY_ICON, l'icona della descrizione, poi gli indirizzi (…_URI, icona della descrizione) se sono locali
+     * (content://, file://, android.resource://): mai internet. L'immagine da un indirizzo si legge una volta e si
+     * ricorda finché l'indirizzo non cambia. Log media.copertina quando cambia l'esito (nomi delle chiavi e dimensioni,
+     * mai titoli).
+     */
+    private Bitmap projectionArt(MediaController main, int src) {
+        java.util.List<MediaController> list = new ArrayList<>();
+        if (main != null) list.add(main);
+        try {
+            android.media.session.MediaSessionManager msm =
+                    (android.media.session.MediaSessionManager) ctx.getSystemService(Context.MEDIA_SESSION_SERVICE);
+            for (MediaController mc : msm.getActiveSessions(null)) {
+                String p = mc.getPackageName();
+                if (p.startsWith("com.allgo.") && (main == null || !mc.getSessionToken().equals(main.getSessionToken()))) list.add(mc);
+            }
+        } catch (Throwable ignored) {
+        }
+        StringBuilder seen = new StringBuilder();
+        Bitmap found = null;
+        String how = "nessuna";
+        for (MediaController mc : list) {
+            MediaMetadata m;
+            try {
+                m = mc.getMetadata();
+            } catch (Throwable e) {
+                continue;
+            }
+            if (m == null) continue;
+            String pk = mc.getPackageName().replace("com.allgo.", "");
+            for (String[] k : ART_KEYS) {
+                Bitmap b = m.getBitmap(k[0]);
+                if (b == null) continue;
+                seen.append(' ').append(pk).append(':').append(k[1]).append(' ').append(b.getWidth()).append('×').append(b.getHeight());
+                if (found == null) {
+                    found = b;
+                    how = pk + " " + k[1];
+                }
+            }
+            android.media.MediaDescription d = m.getDescription();
+            if (d != null && d.getIconBitmap() != null) {
+                Bitmap b = d.getIconBitmap();
+                seen.append(' ').append(pk).append(":icona ").append(b.getWidth()).append('×').append(b.getHeight());
+                if (found == null) {
+                    found = b;
+                    how = pk + " icona della descrizione";
+                }
+            }
+            java.util.List<String> uris = new ArrayList<>();
+            for (String[] k : ART_URI_KEYS) {
+                String u = m.getString(k[0]);
+                if (u == null || u.isEmpty()) continue;
+                seen.append(' ').append(pk).append(':').append(k[1]).append('(').append(scheme(u)).append(')');
+                uris.add(u);
+            }
+            if (d != null && d.getIconUri() != null) {
+                seen.append(' ').append(pk).append(":iconaUri(").append(scheme(d.getIconUri().toString())).append(')');
+                uris.add(d.getIconUri().toString());
+            }
+            if (found == null) {
+                for (String u : uris) {
+                    Bitmap b = loadLocalArt(u);
+                    if (b != null) {
+                        found = b;
+                        how = pk + " indirizzo " + scheme(u);
+                        break;
+                    }
+                }
+            }
+            if (found == null) {
+                // come nella 0.4.6: icona dell'elemento in riproduzione nella coda (MediaDescription)
+                try {
+                    java.util.List<android.media.session.MediaSession.QueueItem> q = mc.getQueue();
+                    long active = mc.getPlaybackState() == null ? -1 : mc.getPlaybackState().getActiveQueueItemId();
+                    if (q != null) for (android.media.session.MediaSession.QueueItem it : q) {
+                        if (active >= 0 && it.getQueueId() != active) continue;
+                        android.media.MediaDescription qd = it.getDescription();
+                        Bitmap b = qd.getIconBitmap();
+                        if (b == null && qd.getIconUri() != null) b = loadLocalArt(qd.getIconUri().toString());
+                        if (b != null) {
+                            seen.append(' ').append(pk).append(":coda");
+                            found = b;
+                            how = pk + " coda";
+                        }
+                        break;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+        String log = (src == SRC_CARPLAY ? "CarPlay" : "Android Auto") + " · sessioni " + list.size() + " · chiavi:"
+                + (seen.length() == 0 ? " nessuna" : seen.toString()) + " · esito " + (found != null ? "copertina da " + how : "nessuna copertina");
+        if (!log.equals(artLog)) {
+            artLog = log;
+            Diag.put("media.copertina", log);
+        }
+        projArtFrom = found != null ? how : "";
+        return found;
+    }
+
+    private static String scheme(String u) {
+        int i = u.indexOf(':');
+        return i > 0 && i < 20 ? u.substring(0, i) : "?";
+    }
+
+    /**
+     * Immagine da un indirizzo locale (content, file, android.resource), ridotta a 512 px; null altrimenti.
+     * 0.4.7: ricordata per indirizzo (anche quando non si legge), le ultime 4: con due indirizzi nella stessa sessione
+     * (uno che non si apre e uno buono) non si rilegge a ogni aggiornamento.
+     */
+    private final java.util.LinkedHashMap<String, Bitmap> artCache = new java.util.LinkedHashMap<String, Bitmap>(8, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(java.util.Map.Entry<String, Bitmap> e) {
+            return size() > 4;
+        }
+    };
+
+    private Bitmap loadLocalArt(String u) {
+        if (artCache.containsKey(u)) return artCache.get(u);
+        Bitmap out = null;
+        String sc = scheme(u);
+        if ("content".equals(sc) || "file".equals(sc) || "android.resource".equals(sc)) {
+            try {
+                android.net.Uri uri = android.net.Uri.parse(u);
+                android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+                o.inJustDecodeBounds = true;
+                try (java.io.InputStream in = ctx.getContentResolver().openInputStream(uri)) {
+                    android.graphics.BitmapFactory.decodeStream(in, null, o);
+                }
+                int sample = 1;
+                while (o.outWidth / (sample * 2) >= 512 && o.outHeight / (sample * 2) >= 512) sample *= 2;
+                o = new android.graphics.BitmapFactory.Options();
+                o.inSampleSize = sample;
+                try (java.io.InputStream in = ctx.getContentResolver().openInputStream(uri)) {
+                    out = android.graphics.BitmapFactory.decodeStream(in, null, o);
+                }
+            } catch (Throwable e) {
+                Diag.putQuiet("media.copertinaUri", sc + ": " + e.getClass().getSimpleName());
+                out = null;
+            }
+        }
+        artCache.put(u, out);
+        return out;
+    }
+
     /** 0.4.6: tocco sul pulsante CarPlay/AA tra le sorgenti: play alla sessione AllGo, altrimenti il tasto del servizio. */
     public void playProjection() {
         post(() -> {
@@ -495,82 +652,8 @@ public final class MediaClient {
         });
     }
 
-    /** Copertina trovata per CarPlay/AA (con la fonte, solo per il log), letta al massimo ogni 3 s per URI. */
-    private Bitmap projArt;
-    private String projArtKey = "", projArtFrom = "";
-
-    /**
-     * 0.4.6 (punto 6): copertina di CarPlay/Android Auto. Come immagine nella sessione di solito non arriva: si provano
-     * nell'ordine immagini e URI dei metadati (ALBUM_ART, ART, DISPLAY_ICON, *_URI) di RemoteUI e delle app AllGo, poi
-     * le icone della coda (MediaDescription). Gli URI content:// si leggono con il ContentResolver (permesso della
-     * sessione). Nessun titolo né immagine nei log: solo sì/no e dimensioni (media.proiezione).
-     */
-    private Bitmap projectionArt(MediaController... list) {
-        for (MediaController mc : list) {
-            if (mc == null) continue;
-            MediaMetadata m = mc.getMetadata();
-            if (m != null) {
-                for (String k : new String[]{MediaMetadata.METADATA_KEY_ALBUM_ART, MediaMetadata.METADATA_KEY_ART, MediaMetadata.METADATA_KEY_DISPLAY_ICON}) {
-                    Bitmap b = m.getBitmap(k);
-                    if (b != null) {
-                        projArtFrom = mc.getPackageName() + " " + k.replace("android.media.metadata.", "");
-                        return b;
-                    }
-                }
-                for (String k : new String[]{MediaMetadata.METADATA_KEY_ALBUM_ART_URI, MediaMetadata.METADATA_KEY_ART_URI, MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI}) {
-                    String u = m.getString(k);
-                    if (u == null || u.isEmpty()) continue;
-                    Bitmap b = loadArtUri(u);
-                    if (b != null) {
-                        projArtFrom = mc.getPackageName() + " " + k.replace("android.media.metadata.", "");
-                        return b;
-                    }
-                }
-            }
-            try {
-                java.util.List<android.media.session.MediaSession.QueueItem> q = mc.getQueue();
-                long active = mc.getPlaybackState() == null ? -1 : mc.getPlaybackState().getActiveQueueItemId();
-                if (q != null) for (android.media.session.MediaSession.QueueItem it : q) {
-                    if (active >= 0 && it.getQueueId() != active) continue;
-                    android.media.MediaDescription d = it.getDescription();
-                    Bitmap b = d.getIconBitmap();
-                    if (b == null && d.getIconUri() != null) b = loadArtUri(d.getIconUri().toString());
-                    if (b != null) {
-                        projArtFrom = mc.getPackageName() + " coda";
-                        return b;
-                    }
-                }
-            } catch (Throwable ignored) {
-            }
-        }
-        projArtFrom = "";
-        return null;
-    }
-
-    private Bitmap loadArtUri(String u) {
-        if (u.equals(projArtKey)) return projArt;
-        projArtKey = u;
-        projArt = null;
-        android.net.Uri uri = android.net.Uri.parse(u);
-        try {
-            // prima solo le misure, poi l'immagine ridotta a circa 512 px (una copertina grande non deve pesare in memoria)
-            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
-            o.inJustDecodeBounds = true;
-            try (java.io.InputStream in = ctx.getContentResolver().openInputStream(uri)) {
-                if (in == null) return null;
-                android.graphics.BitmapFactory.decodeStream(in, null, o);
-            }
-            int sample = 1;
-            while (Math.max(o.outWidth, o.outHeight) / (sample * 2) >= 512) sample *= 2;
-            o = new android.graphics.BitmapFactory.Options();
-            o.inSampleSize = sample;
-            try (java.io.InputStream in = ctx.getContentResolver().openInputStream(uri)) {
-                if (in != null) projArt = android.graphics.BitmapFactory.decodeStream(in, null, o);
-            }
-        } catch (Throwable ignored) {
-        }
-        return projArt;
-    }
+    /** Fonte della copertina CarPlay/AA, solo per il log media.proiezione. */
+    private String projArtFrom = "";
 
     private String lastProjStudy;
 
@@ -805,8 +888,8 @@ public final class MediaClient {
                         if (s.durationMs <= 0) s.durationMs = m.getLong(MediaMetadata.METADATA_KEY_DURATION);
                     }
                 }
-                if (s.art == null) s.art = projectionArt(c, a);
-                else projArtFrom = "RemoteUI ALBUM_ART";
+                if (s.art == null) s.art = projectionArt(c, src);
+                else projArtFrom = "RemoteUI immagine della sessione";
                 if (s.title.isEmpty()) s.title = src == SRC_CARPLAY ? "CarPlay" : "Android Auto";
                 if (s.subtitle.isEmpty()) s.subtitle = s.deviceName.isEmpty() ? com.mg4.launcher.L.s(R.string.from_phone) : s.deviceName;
                 break;
@@ -1466,7 +1549,7 @@ public final class MediaClient {
     }
 
     private static String clock() {
-        return new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT).format(new java.util.Date());
+        return new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(new java.util.Date());
     }
 
     /**

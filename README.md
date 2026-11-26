@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-<a href="releases/MG4Launcher-SWI69-0.4.6.apk"><img alt="Scarica / Download 0.4.6" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.6-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="releases/MG4Launcher-SWI69-0.4.7.apk"><img alt="Scarica / Download 0.4.7" src="https://img.shields.io/badge/Scarica%20%2F%20Download-0.4.7-2ea44f?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT"><img alt="Sostieni il progetto con PayPal · Support the project with PayPal" src="https://img.shields.io/badge/Sostieni%20%2F%20Support-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -96,6 +96,12 @@
 <sub><b>Barra di ricarica</b> con i 5 pulsanti scelti · <i><b>Charging bar</b> with the 5 chosen buttons</i></sub></td>
 <td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.6-senza-auto-giorno.png" alt="Riquadro auto nascosto con un widget al suo posto (simulazione)" width="100%"><br>
 <sub><b>Riquadro auto</b> nascosto, con un widget al suo posto · <i><b>Car panel</b> hidden, with a widget in its place</i></sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.7-consumo-entrambi-notte.png" alt="Batteria e consumo istantaneo insieme, di notte (simulazione)" width="100%"><br>
+<sub><b>Accanto alla batteria: Entrambi</b> (batteria e consumo istantaneo) · <i><b>Next to the battery: Both</b> (battery and instant consumption)</i></sub></td>
+<td width="50%" valign="top"><img src="screenshots/MG4Launcher-SWI69-0.4.7-consumo-entrambi-giorno.png" alt="Batteria e consumo istantaneo insieme, di giorno (simulazione)" width="100%"><br>
+<sub><b>Entrambi</b> di giorno · <i><b>Both</b> by day</i></sub></td>
 </tr>
 </table>
 
@@ -228,7 +234,7 @@ Ci sono due modi per installarlo: da chiavetta USB, se riesci ad aprire un file 
 
 Serve poter aprire un file manager sull'infotainment.
 
-1. Copia `MG4Launcher-SWI69-0.4.6.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
+1. Copia `MG4Launcher-SWI69-0.4.7.apk` su una chiavetta USB formattata **FAT32** o **exFAT**.
 2. Inserisci la chiavetta nell'auto, apri il file manager e tocca l'APK.
 3. Se Android avvisa che non può installare app da questa fonte: tocca **Impostazioni**, attiva
    **Consenti da questa fonte** per il file manager e torna indietro.
@@ -245,7 +251,7 @@ Il firmware MG può bloccare l'installazione normale delle app: l'opzione `-f` l
 
 1. Installa:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.6.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.7.apk
    ```
 2. Rendilo la home predefinita:
    ```bash
@@ -321,6 +327,15 @@ Anche solo **2 €** sono un aiuto prezioso per continuare a sviluppare e provar
 [![Offrimi un caffè con PayPal](https://img.shields.io/badge/Offrimi%20un%20caff%C3%A8-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Versioni
+
+#### 0.4.7
+- Invio dei log più sicuro (tramite server ponte).
+- Diagnostica completa nelle impostazioni, e automatica una volta dopo ogni aggiornamento (a scelta, solo letture).
+- Controllo funzioni più preciso dopo l'accensione: "in attesa" invece di un errore finché i servizi non sono pronti.
+- Barre di sistema a posto durante le chiamate (grazie a lukeet332).
+- Copertina con CarPlay più affidabile.
+- Consumo istantaneo accanto alla batteria (a scelta: Batteria, Consumo istantaneo o Entrambi).
+- Riavvio del dongle più prudente durante la riproduzione e le chiamate.
 
 #### 0.4.6
 - Android Auto, chiavetta USB e radio regolari all'accensione (il riavvio del dongle interviene solo con un dongle vero).
@@ -814,7 +829,7 @@ There are two ways to install it: from a USB stick, if you can open a file manag
 
 You need to be able to open a file manager on the infotainment.
 
-1. Copy `MG4Launcher-SWI69-0.4.6.apk` to a USB stick formatted as **FAT32** or **exFAT**.
+1. Copy `MG4Launcher-SWI69-0.4.7.apk` to a USB stick formatted as **FAT32** or **exFAT**.
 2. Plug it into the car, open the file manager and tap the APK.
 3. If Android says it cannot install apps from this source: tap **Settings**, enable
    **Allow from this source** for the file manager and go back.
@@ -830,7 +845,7 @@ The MG firmware may block normal app installs; the `-f` option allows it.
 
 1. Install it:
    ```bash
-   adb install -r -f MG4Launcher-SWI69-0.4.6.apk
+   adb install -r -f MG4Launcher-SWI69-0.4.7.apk
    ```
 2. Make it the default home:
    ```bash
@@ -902,6 +917,15 @@ Even just **€2** is a great help to keep developing and testing new versions i
 [![Buy me a coffee with PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/ErnestoMicco?locale.x=it_IT&country.x=IT)
 
 ### Changelog
+
+#### 0.4.7
+- Safer log upload (through a relay server).
+- Full diagnostics in the settings, and automatically once after each update (optional, reads only).
+- More accurate function check after start-up: "waiting" instead of an error until the services are ready.
+- System bars fixed during calls (thanks to lukeet332).
+- More reliable cover art with CarPlay.
+- Instant consumption next to the battery (optional: Battery, Instant consumption or Both).
+- More careful dongle restart during playback and calls.
 
 #### 0.4.6
 - Android Auto, USB stick and radio work normally at start-up (the dongle restart only acts with a real dongle).

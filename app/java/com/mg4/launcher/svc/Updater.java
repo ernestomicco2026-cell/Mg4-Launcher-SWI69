@@ -733,7 +733,7 @@ public final class Updater {
     }
 
     private static String now() {
-        return new java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.ITALY).format(new java.util.Date());
+        return new java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.US).format(new java.util.Date());
     }
 
     /** true se il launcher ha il permesso di installare senza conferma (firmato con la chiave platform). */

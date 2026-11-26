@@ -581,4 +581,24 @@
     <string name="news_v046_4" formatted="false">Menu Clima con direzione dell\'aria, sbrinamento e lunotto (grazie a sommistica) · tema scuro con i fari (a scelta) · tema scelto a mano che non torna più indietro</string>
     <string name="check_press_next">Premi AVANTI sul volante (%s s)</string>
     <string name="check_press_prev">Ora premi INDIETRO sul volante (%s s)</string>
+    <string name="deep_title" formatted="false">Diagnostica completa</string>
+    <string name="deep_sub" formatted="false">Legge tutto quello che serve per correggere i problemi e preparare le prossime versioni, poi invia il log. Solo letture, nessun comando all\'auto. Dura circa un minuto.</string>
+    <string name="deep_start" formatted="false">Avvia</string>
+    <string name="deep_running">In corso: passo %1$d di %2$d…</string>
+    <string name="deep_sent" formatted="false">Fatto: rapporto inviato. Grazie!</string>
+    <string name="deep_queued" formatted="false">Fatto: senza rete adesso, il rapporto partirà da solo appena c\'è internet.</string>
+    <string name="deep_no_logs" formatted="false">Fatto, ma questa versione non può inviare log: salva il log su chiavetta.</string>
+    <string name="deep_failed" formatted="false">Rapporto non salvato: riprova più tardi.</string>
+    <string name="check_waiting" formatted="false">In attesa</string>
+    <string name="deep_auto" formatted="false">Diagnostica automatica dopo ogni aggiornamento</string>
+    <string name="deep_auto_sub" formatted="false">Una volta per versione, ad auto ferma e con internet. Solo letture.</string>
+    <string name="set_beside" formatted="false">Accanto alla batteria</string>
+    <string name="set_beside_sub" formatted="false">Consumo istantaneo in kW: la barra va a sinistra quando l\'auto recupera energia</string>
+    <string name="beside_battery" formatted="false">Batteria</string>
+    <string name="beside_power" formatted="false">Consumo istantaneo</string>
+    <string name="beside_both" formatted="false">Entrambi</string>
+    <string name="power_kw">%1$s kW</string>
+    <string name="news_v047_1" formatted="false">Invio dei log più sicuro (tramite server ponte) · diagnostica automatica a ogni versione</string>
+    <string name="news_v047_2" formatted="false">Controllo funzioni più preciso dopo l\'accensione · barre di sistema a posto durante le chiamate · copertina con CarPlay</string>
+    <string name="news_v047_3" formatted="false">Consumo istantaneo accanto alla batteria (a scelta) · Diagnostica completa nelle impostazioni</string>
 </resources>

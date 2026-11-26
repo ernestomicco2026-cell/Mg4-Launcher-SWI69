@@ -27,8 +27,19 @@ public final class Theme {
      * 0.4.2 (punto 1): scelta manuale Giorno/Notte, altrimenti il tema automatico di {@link com.mg4.launcher.svc.DayNight}
      * (uiMode se cambia davvero, NIGHT_MODE dell'auto, fari, alba/tramonto; cambio dopo 60 s stabili).
      */
+    private static Boolean lastDay;
+    private static String lastChange = "—";
+
     public static Theme resolve(Context c, Prefs p) {
-        return new Theme(wouldBeDay(c, p));
+        boolean day = wouldBeDay(c, p);
+        String mode = p.themeMode();
+        if (lastDay == null || lastDay != day) {
+            lastChange = new java.text.SimpleDateFormat("dd/MM HH:mm:ss", java.util.Locale.US).format(new java.util.Date());
+            lastDay = day;
+        }
+        com.mg4.launcher.svc.Diag.put("tema.scelta", (Prefs.THEME_DAY.equals(mode) ? "scelta Giorno" : Prefs.THEME_NIGHT.equals(mode)
+                ? "scelta Notte" : "automatico") + " · applicato " + (day ? "giorno" : "notte") + " · ricostruito " + lastChange);
+        return new Theme(day);
     }
 
     /** Tema che si applicherebbe adesso (per ricontrollare al ritorno nel launcher). */

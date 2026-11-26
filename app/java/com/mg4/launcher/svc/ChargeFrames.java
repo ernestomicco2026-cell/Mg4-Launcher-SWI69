@@ -19,12 +19,13 @@ import java.io.FileOutputStream;
  */
 public final class ChargeFrames {
     private static final String DONE = "pronto", DIR = "fotogrammi";
-    /**
-     * Marcatore nel file "pronto" ("&lt;numero&gt; colori2"): fotogrammi con i colori giusti. Quelli fatti prima (colori
-     * BT.709 TV trattati come BT.601 pieni: sfondo notte 222327 invece di 15171B) non lo hanno e si rifanno da soli.
-     */
-    private static final String COLORS_MARK = "colori2";
     private static final int JPEG_Q = 88;
+    /**
+     * 1.0.7: marcatore nel file "pronto" dei fotogrammi con i colori corretti. Quelli della 1.0.6 (MediaCodec) leggevano
+     * i colori "TV" (16-235, BT.709) delle clip come pieni: sfondo 222327 invece di 15171B (riquadro visibile attorno
+     * all'auto) e bianco grigio.
+     */
+    private static final String COLOR_MARK = "colori2";
 
     private ChargeFrames() {}
 
@@ -43,16 +44,17 @@ public final class ChargeFrames {
         if (!done.isFile()) return null;
         int n;
         try {
-            String[] p = new String(read(done)).trim().split("\\s+");
-            if (p.length < 2 || !COLORS_MARK.equals(p[1])) return null;   // colori vecchi: si rifanno
-            n = Integer.parseInt(p[0]);
+            String[] t = new String(read(done)).trim().split("\\s+");
+            // 1.0.7: senza il marcatore dei colori corretti (fotogrammi della 1.0.6) si rifanno da capo
+            if (t.length < 2 || !COLOR_MARK.equals(t[1])) return null;
+            n = Integer.parseInt(t[0]);
         } catch (Exception e) {
             return null;
         }
         if (n <= 0) return null;
         File[] out = new File[n];
         for (int i = 0; i < n; i++) {
-            out[i] = new File(d, String.format(java.util.Locale.ROOT, "%04d.jpg", i + 1));
+            out[i] = new File(d, String.format(java.util.Locale.US, "%04d.jpg", i + 1));
             if (!out[i].isFile()) return null;
         }
         return out;
@@ -105,8 +107,7 @@ public final class ChargeFrames {
             codecErr = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : " " + e.getMessage());
         }
         if (codecErr == null) {
-            lastNote = "MediaCodec · " + lastWritten + " fotogrammi in " + (android.os.SystemClock.elapsedRealtime() - t0) / 1000 + " s · 0 ripetuti · "
-                    + lastColors;
+            lastNote = "MediaCodec · " + lastWritten + " fotogrammi in " + (android.os.SystemClock.elapsedRealtime() - t0) / 1000 + " s · 0 ripetuti · " + convNote;
             return writeDone(d, lastWritten);
         }
         ChargePack.deleteTree(d);
@@ -117,104 +118,81 @@ public final class ChargeFrames {
     }
 
     private static int lastWritten;
-    private static String lastColors = "";
+    private static String convNote = "";
 
     /**
-     * Conversione dei valori NV21 perché il JPEG (YuvImage, che li legge come BT.601 a gamma piena 0–255) dia i colori
-     * giusti. Le clip sono BT.709 "TV" (16–235): coefficienti × 1024
-     * Y' = (1192·(Y−16) + 118·(U−128) + 229·(V−128)) / 1024
-     * U' = 128 + (1154·(U−128) − 129·(V−128)) / 1024
-     * V' = 128 + (−84·(U−128) + 1146·(V−128)) / 1024
-     * (calcolati qui da standard e gamma letti dal formato: per BT.709 TV escono proprio questi). U' e V' dipendono
-     * solo dal blocco 2×2: si trasforma sul posto. BT.601 pieno = nessuna conversione.
+     * 1.0.7: YuvImage.compressToJpeg considera i valori YUV come JPEG (BT.601, pieni 0-255). Le clip sono BT.709 "TV"
+     * (16-235): qui i valori NV21 si trasformano perché il JPEG dia gli stessi colori RGB della clip. È una
+     * trasformazione lineare esatta: Y' dipende da Y, U, V del blocco; U', V' solo da U, V (niente media fra pixel).
      */
     static final class ColorConv {
-        final boolean active;
+        final int yy, yu, yv, uu, uv, vu, vv, yOff;
         final String note;
-        private final int yy, yu, yv, uu, uv, vu, vv, yOff;
 
-        private ColorConv(double kr, double kb, boolean full, String note) {
-            this.note = note;
-            if (full && Math.abs(kr - 0.299) < 1e-6 && Math.abs(kb - 0.114) < 1e-6) {
-                active = false;
-                yy = yu = yv = uu = uv = vu = vv = yOff = 0;
-                return;
-            }
-            // RGB dai valori della clip, poi YCbCr BT.601 pieno (quello del JPEG)
-            double sy = full ? 1.0 : 255.0 / 219.0, sc = full ? 1.0 : 255.0 / 224.0;
+        private ColorConv(double kr, double kb, boolean limited, String note) {
             double kg = 1 - kr - kb;
-            // sorgente: R = Y + 2(1−kr)·Pr, B = Y + 2(1−kb)·Pb, G = (Y − kr·R − kb·B) / kg
-            double rPr = 2 * (1 - kr), bPb = 2 * (1 - kb);
-            double gPb = -kb * bPb / kg, gPr = -kr * rPr / kg;
-            // destinazione BT.601 pieno
-            double dr = 0.299, db = 0.114, dg = 1 - dr - db;
-            double[] yRow = {dr, dg, db};
-            double[] uRow = {-dr / (2 * (1 - db)), -dg / (2 * (1 - db)), 0.5};
-            double[] vRow = {0.5, -dg / (2 * (1 - dr)), -db / (2 * (1 - dr))};
-            // colonne: contributo di Y, Pb, Pr a R, G, B
-            double[] cY = {1, 1, 1}, cU = {0, gPb, bPb}, cV = {rPr, gPr, 0};
-            yy = (int) Math.round(dot(yRow, cY) * sy * 1024);
-            yu = (int) Math.round(dot(yRow, cU) * sc * 1024);
-            yv = (int) Math.round(dot(yRow, cV) * sc * 1024);
-            uu = (int) Math.round(dot(uRow, cU) * sc * 1024);
-            uv = (int) Math.round(dot(uRow, cV) * sc * 1024);
-            vu = (int) Math.round(dot(vRow, cU) * sc * 1024);
-            vv = (int) Math.round(dot(vRow, cV) * sc * 1024);
-            yOff = full ? 0 : 16;
-            active = true;
-        }
-
-        private static double dot(double[] a, double[] b) {
-            return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-        }
-
-        /** Dai formati (il primo che ha i valori): gamma e standard; se mancano, BT.709 TV. */
-        static ColorConv of(android.media.MediaFormat... fs) {
-            int range = -1, std = -1;
-            for (android.media.MediaFormat f : fs) {
-                if (f == null) continue;
-                try {
-                    if (range < 0 && f.containsKey(android.media.MediaFormat.KEY_COLOR_RANGE))
-                        range = f.getInteger(android.media.MediaFormat.KEY_COLOR_RANGE);
-                    if (std < 0 && f.containsKey(android.media.MediaFormat.KEY_COLOR_STANDARD))
-                        std = f.getInteger(android.media.MediaFormat.KEY_COLOR_STANDARD);
-                } catch (Throwable ignored) {
+            // YUV normalizzato → RGB
+            double[][] a = {{1, 0, 2 * (1 - kr)}, {1, -2 * (1 - kb) * kb / kg, -2 * (1 - kr) * kr / kg}, {1, 2 * (1 - kb), 0}};
+            double sy = limited ? 1 / 219.0 : 1 / 255.0, sc = limited ? 1 / 224.0 : 1 / 255.0;
+            // RGB → YUV JPEG (BT.601 pieno) × 255
+            double[][] b = {{0.299, 0.587, 0.114}, {-0.168736, -0.331264, 0.5}, {0.5, -0.418688, -0.081312}};
+            double[][] t = new double[3][3];
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++) {
+                    double v = 0;
+                    for (int k = 0; k < 3; k++) v += b[i][k] * a[k][j];
+                    t[i][j] = v * 255 * (j == 0 ? sy : sc);
                 }
-            }
-            boolean full = range == android.media.MediaFormat.COLOR_RANGE_FULL;
-            double kr, kb;
-            String name;
-            if (std == android.media.MediaFormat.COLOR_STANDARD_BT601_PAL || std == android.media.MediaFormat.COLOR_STANDARD_BT601_NTSC) {
-                kr = 0.299; kb = 0.114; name = "BT.601";
-            } else if (std == android.media.MediaFormat.COLOR_STANDARD_BT2020) {
-                kr = 0.2627; kb = 0.0593; name = "BT.2020";
-            } else {
-                kr = 0.2126; kb = 0.0722; name = "BT.709";
-            }
-            String r = full ? "pieni" : "TV";
-            String src = (std < 0 ? "standard non indicato" : "standard " + std) + ", " + (range < 0 ? "gamma non indicata" : "gamma " + range);
-            boolean conv = !(full && kr == 0.299);
-            return new ColorConv(kr, kb, full, "colori " + name + " " + r + (conv ? " convertiti" : ": nessuna conversione") + " (" + src + ")");
+            yy = (int) Math.round(t[0][0] * 1024);
+            yu = (int) Math.round(t[0][1] * 1024);
+            yv = (int) Math.round(t[0][2] * 1024);
+            uu = (int) Math.round(t[1][1] * 1024);
+            uv = (int) Math.round(t[1][2] * 1024);
+            vu = (int) Math.round(t[2][1] * 1024);
+            vv = (int) Math.round(t[2][2] * 1024);
+            yOff = limited ? 16 : 0;
+            this.note = note;
         }
 
-        /** Trasforma sul posto un fotogramma NV21 w×h (Y, poi V/U alternati per ogni blocco 2×2). */
-        void apply(byte[] nv, int w, int h) {
-            if (!active) return;
-            int ySize = w * h, cw = w / 2;
-            for (int by = 0; by < h / 2; by++) {
-                for (int bx = 0; bx < cw; bx++) {
-                    int ci = ySize + (by * cw + bx) * 2;
-                    int dv = (nv[ci] & 0xff) - 128, du = (nv[ci + 1] & 0xff) - 128;
-                    int addY = yu * du + yv * dv;
-                    for (int k = 0; k < 4; k++) {
-                        int yi = (by * 2 + (k >> 1)) * w + bx * 2 + (k & 1);
-                        int y = (yy * ((nv[yi] & 0xff) - yOff) + addY + 512) >> 10;
-                        nv[yi] = (byte) (y < 0 ? 0 : y > 255 ? 255 : y);
+        /** null se i colori sono già quelli del JPEG (BT.601 pieni). Senza indicazioni: BT.709 TV, come le clip. */
+        static ColorConv of(android.media.MediaFormat in, android.media.MediaFormat out) {
+            int range = key(out, android.media.MediaFormat.KEY_COLOR_RANGE, key(in, android.media.MediaFormat.KEY_COLOR_RANGE, 0));
+            int std = key(out, android.media.MediaFormat.KEY_COLOR_STANDARD, key(in, android.media.MediaFormat.KEY_COLOR_STANDARD, 0));
+            boolean limited = range != android.media.MediaFormat.COLOR_RANGE_FULL;
+            boolean bt601 = std == android.media.MediaFormat.COLOR_STANDARD_BT601_PAL || std == android.media.MediaFormat.COLOR_STANDARD_BT601_NTSC;
+            if (!limited && bt601) return null;
+            String n = "colori " + (bt601 ? "BT.601" : "BT.709") + (limited ? " TV" : " pieni") + " convertiti"
+                    + (range == 0 && std == 0 ? " (non indicati dal decoder)" : "");
+            return bt601 ? new ColorConv(0.299, 0.114, limited, n) : new ColorConv(0.2126, 0.0722, limited, n);
+        }
+
+        private static int key(android.media.MediaFormat f, String k, int def) {
+            try {
+                return f != null && f.containsKey(k) ? f.getInteger(k) : def;
+            } catch (Throwable e) {
+                return def;
+            }
+        }
+
+        private static byte clamp(int v) {
+            return (byte) (v < 0 ? 0 : v > 255 ? 255 : v);
+        }
+
+        /** NV21 (Y piena, poi VU alternati a metà risoluzione) trasformato sul posto. */
+        void apply(byte[] nv21, int w, int h) {
+            int cw = w / 2, base = w * h;
+            for (int r = 0; r < h / 2; r++) {
+                for (int c = 0; c < cw; c++) {
+                    int ci = base + (r * cw + c) * 2;
+                    int v = (nv21[ci] & 0xff) - 128, u = (nv21[ci + 1] & 0xff) - 128;
+                    int cy = yu * u + yv * v;
+                    for (int dy = 0; dy < 2; dy++) {
+                        int yi = (2 * r + dy) * w + 2 * c;
+                        nv21[yi] = clamp((yy * ((nv21[yi] & 0xff) - yOff) + cy + 512) >> 10);
+                        nv21[yi + 1] = clamp((yy * ((nv21[yi + 1] & 0xff) - yOff) + cy + 512) >> 10);
                     }
-                    int u = 128 + ((uu * du + uv * dv + 512) >> 10);
-                    int v = 128 + ((vu * du + vv * dv + 512) >> 10);
-                    nv[ci] = (byte) (v < 0 ? 0 : v > 255 ? 255 : v);
-                    nv[ci + 1] = (byte) (u < 0 ? 0 : u > 255 ? 255 : u);
+                    nv21[ci] = clamp(128 + ((vu * u + vv * v + 512) >> 10));
+                    nv21[ci + 1] = clamp(128 + ((uu * u + uv * v + 512) >> 10));
                 }
             }
         }
@@ -223,7 +201,7 @@ public final class ChargeFrames {
     private static String writeDone(File d, int written) {
         if (written <= 0) return "nessun fotogramma";
         try (FileOutputStream fo = new FileOutputStream(new File(d, DONE))) {
-            fo.write((written + " " + COLORS_MARK).getBytes());
+            fo.write((written + " " + COLOR_MARK).getBytes());
             return null;
         } catch (Exception e) {
             return "file pronto non scritto";
@@ -257,8 +235,8 @@ public final class ChargeFrames {
             codec.configure(fmt, null, null, 0);
             codec.start();
             android.media.MediaCodec.BufferInfo info = new android.media.MediaCodec.BufferInfo();
-            // colori della clip: dal formato d'uscita (poi da quello della traccia); se mancano, BT.709 TV
-            ColorConv conv = ColorConv.of(fmt);
+            ColorConv conv = null;
+            boolean convSet = false;
             boolean inEos = false;
             int written = 0, idle = 0;
             byte[] nv21 = null;
@@ -278,12 +256,13 @@ public final class ChargeFrames {
                     }
                 }
                 int out = codec.dequeueOutputBuffer(info, 10_000);
-                if (out == android.media.MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    conv = ColorConv.of(codec.getOutputFormat(), fmt);
-                    continue;
-                }
                 if (out >= 0) {
                     idle = 0;
+                    if (!convSet) {
+                        convSet = true;
+                        conv = ColorConv.of(fmt, codec.getOutputFormat());
+                        convNote = conv == null ? "colori già pieni BT.601" : conv.note;
+                    }
                     if (info.size > 0) {
                         android.media.Image img = codec.getOutputImage(out);
                         if (img == null) {
@@ -295,9 +274,9 @@ public final class ChargeFrames {
                             int w = crop.width() & ~1, h = crop.height() & ~1;
                             if (nv21 == null || nv21.length != w * h * 3 / 2) nv21 = new byte[w * h * 3 / 2];
                             toNv21(img, crop, w, h, nv21);
-                            conv.apply(nv21, w, h);
+                            if (conv != null) conv.apply(nv21, w, h);
                             written++;
-                            File o = new File(d, String.format(java.util.Locale.ROOT, "%04d.jpg", written));
+                            File o = new File(d, String.format(java.util.Locale.US, "%04d.jpg", written));
                             try (FileOutputStream fo = new FileOutputStream(o)) {
                                 if (!new android.graphics.YuvImage(nv21, android.graphics.ImageFormat.NV21, w, h, null)
                                         .compressToJpeg(new android.graphics.Rect(0, 0, w, h), JPEG_Q, fo))
@@ -314,7 +293,6 @@ public final class ChargeFrames {
                 }
             }
             lastWritten = written;
-            lastColors = conv.note;
             // controllo: devono esserci (quasi) tutti i fotogrammi attesi
             int expected = -1;
             try {
@@ -396,7 +374,7 @@ public final class ChargeFrames {
                     }
                 }
                 written++;
-                File out = new File(d, String.format(java.util.Locale.ROOT, "%04d.jpg", written));
+                File out = new File(d, String.format(java.util.Locale.US, "%04d.jpg", written));
                 if (b == null) {
                     // fotogramma illeggibile (succede verso la fine delle clip): si ripete il precedente
                     missing++;
@@ -412,7 +390,7 @@ public final class ChargeFrames {
             }
             if (missing * 10 > n) return missing + " fotogrammi su " + n + " non letti";
             lastNote = "uno alla volta · " + written + " fotogrammi in " + (android.os.SystemClock.elapsedRealtime() - t0) / 1000
-                    + " s · " + missing + " ripetuti · colori convertiti dal sistema (RGB, nessuna conversione)";
+                    + " s · " + missing + " ripetuti";
             return writeDone(d, written);
         } catch (Throwable e) {
             return e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());

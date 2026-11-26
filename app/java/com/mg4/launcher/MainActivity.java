@@ -111,9 +111,9 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(vis -> {
             // se il sistema rimostra le barre (es. dopo un popup) le rinasconde
             // 1.0.6 (issue #42): con la tendina dall'alto accesa si lascia più tempo (barra e tendina si chiudono da sole)
-            if ((vis & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) root.postDelayed(this::goFullscreen, prefs.topSwipe() ? 6000 : 2500);
+            if ((vis & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) hideBarsSoon(prefs.topSwipe() ? 6000 : 2500);
         });
-        goFullscreen();
+        hideBarsSoon(0);
         build();
         // primo avvio dopo un aggiornamento: popup "Novità" (una sola volta per versione)
         root.postDelayed(this::showNewsIfUpdated, 1500);
@@ -179,6 +179,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
             logs.start();
             com.mg4.launcher.svc.DongleWatch.get(this, media).start();
             com.mg4.launcher.svc.EmbedCheck.log(this);
+            // 0.4.7 (punto 5): diagnostica completa automatica, una volta per versione (solo letture)
+            com.mg4.launcher.svc.DeepCheck.onPowerOn(this, "avvio del launcher");
             // 0.4.2 (punto 11a): all'accensione dell'auto si riprende l'ultima sorgente audio usata davvero
             // 0.4.6 (punto 0b): media.avvio sempre scritto, anche quando la ripresa non si fa
             if (android.os.SystemClock.elapsedRealtime() < 5 * 60_000L) media.resumeLastSource("accensione (avvio del launcher)");
@@ -352,6 +354,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
                 long off = android.os.SystemClock.elapsedRealtime() - screenOffAt;
                 screenOffAt = -1;
                 com.mg4.launcher.svc.BootLog.powerOn("risveglio dello schermo dopo " + (off / 60_000) + " min");
+                com.mg4.launcher.svc.DeepCheck.onPowerOn(MainActivity.this, "risveglio dello schermo");   // 0.4.7 (punto 5)
                 if (home != null) home.onScreenOn();
                 if (media != null) media.resumeLastSource("risveglio dopo lo spegnimento");
             }
@@ -504,6 +507,8 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     /** Novità di ogni versione (testi in tutte le lingue in strings.xml). */
     private static int[] newsFor(String ver) {
         switch (ver) {
+            case "0.4.7":
+                return new int[]{R.string.news_v047_1, R.string.news_v047_2, R.string.news_v047_3};
             case "0.4.6":
                 return new int[]{R.string.news_v046_1, R.string.news_v046_2, R.string.news_v046_3, R.string.news_v046_4};
             case "0.4.5":
@@ -569,12 +574,70 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         if (d.getSystemUiVisibility() != IMMERSIVE) d.setSystemUiVisibility(IMMERSIVE);
     }
 
+    // ---- 0.4.7 (punto 7, PR #44 di lukeet332): barre di sistema durante le chiamate ------------------------------------------
+    // La finestra della chiamata SAIC riporta le barre sopra la home: riscrivere i flag immersivi durante la chiamata le
+    // fa lampeggiare e non le nasconde. Durante la chiamata i flag non si toccano; a chiamata finita, con il launcher
+    // davanti e con il fuoco, si nascondono una volta sola. Senza chiamata tutto come prima (subito, o dopo 2,5 s / 6 s
+    // nel listener della visibilità). Settings.Global.policy_control non si tocca.
+    private static final long CALL_POLL_MS = 2000L;
+    private final android.os.Handler callBars = new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean waitingCall;
+    private final Runnable hideBars = new Runnable() {
+        @Override
+        public void run() {
+            if (!inFront || isFinishing() || isDestroyed()) return;
+            if (inCall()) {
+                if (!waitingCall) {
+                    waitingCall = true;
+                    com.mg4.launcher.svc.Diag.put("finestra.chiamata", "barre non toccate durante la chiamata");
+                }
+                callBars.postDelayed(this, CALL_POLL_MS);
+                return;
+            }
+            if (!hasWindowFocus()) return;   // al ritorno del fuoco onWindowFocusChanged richiama hideBarsSoon
+            if (waitingCall) {
+                waitingCall = false;
+                com.mg4.launcher.svc.Diag.put("finestra.chiamata", "chiamata finita: barre nascoste");
+            }
+            goFullscreen();
+        }
+    };
+
+    /** Nasconde le barre tra delay ms (0 = subito); durante una chiamata aspetta che finisca. */
+    private void hideBarsSoon(long delay) {
+        callBars.removeCallbacks(hideBars);
+        if (delay <= 0 && !inCall()) {
+            // come prima: subito (anche in onCreate, prima del primo disegno)
+            if (waitingCall) {
+                waitingCall = false;
+                com.mg4.launcher.svc.Diag.put("finestra.chiamata", "chiamata finita: barre nascoste");
+            }
+            goFullscreen();
+            return;
+        }
+        callBars.postDelayed(hideBars, inCall() ? CALL_POLL_MS : delay);
+    }
+
+    /** Chiamata in corso o squillo (le chiamate Bluetooth passano da Android Telecom e cambiano il modo audio). */
+    private boolean inCall() {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am == null) return false;
+            int m = am.getMode();
+            return m == android.media.AudioManager.MODE_IN_CALL || m == android.media.AudioManager.MODE_IN_COMMUNICATION
+                    || m == android.media.AudioManager.MODE_RINGTONE;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     /** 0.4.0: true mentre il launcher è davanti (onResume..onPause), per sapere se Home arriva "da dentro". */
     private boolean inFront;
 
     @Override
     protected void onPause() {
         inFront = false;
+        callBars.removeCallbacks(hideBars);
         super.onPause();
     }
 
@@ -583,7 +646,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
         super.onResume();
         inFront = true;
         if (wrongFirmware) {
-            goFullscreen();
+            hideBarsSoon(0);
             return;
         }
         // avvio sicuro: tornati nel launcher dopo aver aperto apposta la home MG → la sua schermata si rispegne
@@ -593,7 +656,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
                     && !com.mg4.launcher.svc.HomeLock.mgDisabled(app)) com.mg4.launcher.svc.HomeLock.apply(app, "ritorno nel launcher");
         }, "mg4-homelock").start();
         askOfficina();
-        goFullscreen();
+        hideBarsSoon(0);   // 0.4.7 (punto 7): durante una chiamata le barre non si toccano
         com.mg4.launcher.svc.RetroReturn.noteBroughtBy("launcher ripreso (MainActivity.onResume)");
         // 0.4.3 (punto 6): tornando dall'app Radio l'elenco delle stazioni si rilegge subito
         if (media != null) media.refreshRadioLists("ritorno nel launcher");
@@ -610,7 +673,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) goFullscreen();
+        if (hasFocus) hideBarsSoon(0);
     }
 
     private void build() {
@@ -663,6 +726,7 @@ public final class MainActivity extends Activity implements HomeView.Host, AppsV
 
     @Override
     protected void onDestroy() {
+        callBars.removeCallbacks(hideBars);
         super.onDestroy();
         root.removeCallbacks(saveDiag);
         logs.stop();

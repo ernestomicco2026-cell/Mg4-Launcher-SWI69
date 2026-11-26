@@ -7,6 +7,7 @@ keys/platform.key.pem
 art/preview_*
 __pycache__/
 tools/log-token.txt
+tools/log-relay.txt
 .env
 tools/*token*
 # 1.0.4: APK di MG4 Store da includere nel launcher (non va nel repository)

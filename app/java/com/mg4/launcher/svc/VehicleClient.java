@@ -130,6 +130,8 @@ public final class VehicleClient {
         public int chargingStatus = -1;   // codici SAIC (uguali alla SWI68), vedi chargeText
         public int predictMinutes = -1;
         public float chargeKw = 0;
+        /** 0.4.7: tensione della batteria di trazione (BMS PACK_VOL), -1 = non letta. */
+        public float batteryVolts = -1;
         public int chargeLimit = -1;      // % (convertito dal codice SAIC)
         public int chargeLimitCode = -1;  // 1..7
         public int currentLimit = -1;     // 1..4 (6 A, 8 A, 16 A, Max), 0 = non disponibile
@@ -236,13 +238,95 @@ public final class VehicleClient {
     /** Sospende le letture (launcher non visibile) senza scollegarsi dai servizi. */
     public void pause() {
         running = false;
-        if (bg != null) bg.removeCallbacks(loop);
+        if (bg != null) {
+            bg.removeCallbacks(loop);
+            bg.removeCallbacks(powerLoop);
+        }
+    }
+
+    // ---- 0.4.7 (punto 9, dalla SWI68 1.0.7): consumo istantaneo (potenza della batteria) ---------------------------
+    /** kW smussati: positivo = consumo, negativo = recupero; NaN = non leggibile. Sul thread principale. */
+    public interface PowerListener {
+        void onPower(float kw);
+    }
+
+    private volatile PowerListener powerListener;
+    private float powerSmooth = Float.NaN;
+    private static volatile boolean powerLogged;
+    private static final long POWER_MS = 500;   // al massimo 2 volte al secondo
+
+    /**
+     * Potenza istantanea = corrente × tensione della batteria di trazione. SWI69 (EH32): proprietà BMS di CarService
+     * PACK_CRNT (560002055, A) × PACK_VOL (560002054, V), le stesse della potenza di ricarica. Come sulla SWI68 si
+     * considera la corrente positiva in consumo e negativa in recupero: il verso va confermato dai log in auto
+     * (consumo.fonte). Solo letture. null = ferma. Solo mentre il launcher è visibile (pause() la ferma).
+     */
+    public void setPowerListener(PowerListener l) {
+        powerListener = l;
+        restartPower();
+    }
+
+    /**
+     * Riparte da zero il giro della potenza. Tutto sul thread di sfondo: lì il giro non può essere a metà, quindi non
+     * restano mai due giri insieme (che leggerebbero 4 volte al secondo).
+     */
+    private void restartPower() {
+        Handler h = bg;
+        if (h == null) return;
+        h.post(() -> {
+            h.removeCallbacks(powerLoop);
+            powerSmooth = Float.NaN;
+            if (powerListener != null) h.post(powerLoop);
+        });
+    }
+
+    /** Toglie l'ascoltatore solo se è ancora quello dato (una home ricostruita ha già messo il suo). */
+    public void clearPowerListener(PowerListener l) {
+        if (powerListener == l) setPowerListener(null);
+    }
+
+    private final Runnable powerLoop = new Runnable() {
+        @Override
+        public void run() {
+            PowerListener l = powerListener;
+            if (l == null || !running) return;
+            float kw = Float.NaN;
+            try {
+                if (last.connected && bms.isReady()) {
+                    float a = bms.getFloat(CarBms.PACK_CRNT), v = bms.getFloat(CarBms.PACK_VOL);
+                    // tensione fuori scala o valori non letti = dato non valido
+                    if (ok(a) && ok(v) && v > 100 && v < 1000 && Math.abs(a) < 1000) kw = a * v / 1000f;
+                    if (!powerLogged) {
+                        powerLogged = true;
+                        Diag.put("consumo.fonte", "BMS PACK_CRNT 560002055 × PACK_VOL 560002054 · "
+                                + (Float.isNaN(kw) ? "non leggibile (" + a + " A / " + v + " V)"
+                                : String.format(java.util.Locale.US, "primo valore %.1f kW (%.1f A × %.0f V, ricarica %d)", kw, a, v, last.chargingStatus)));
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            // smussatura esponenziale: la barra non balla a ogni lettura
+            if (Float.isNaN(kw)) powerSmooth = Float.NaN;
+            else powerSmooth = Float.isNaN(powerSmooth) ? kw : powerSmooth + 0.3f * (kw - powerSmooth);
+            final float out = powerSmooth;
+            main.post(() -> {
+                PowerListener cur = powerListener;
+                if (cur != null) cur.onPower(out);
+            });
+            if (bg != null) bg.postDelayed(this, POWER_MS);
+        }
+    };
+
+    /** true se la potenza della batteria si legge (per mostrare l'opzione nelle impostazioni). */
+    public static boolean powerReadable(State s) {
+        return s != null && s.connected && s.batteryVolts > 100 && s.batteryVolts < 1000;
     }
 
     public void resume() {
         if (bg == null || running) return;
         running = true;
         bg.post(loop);
+        if (powerListener != null) restartPower();
     }
 
     private final Runnable loop = new Runnable() {
@@ -268,6 +352,15 @@ public final class VehicleClient {
             }
         }
         return b;
+    }
+
+    /** 0.4.7 (diagnostica completa): servizio del hub per codice, solo per letture; null se non c'è. */
+    public IBinder subService(int code) {
+        try {
+            return sub(code);
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     private void forget(int code) {
@@ -479,6 +572,7 @@ public final class VehicleClient {
         float amps = bms.getFloat(CarBms.PACK_CRNT);
         float volts = bms.getFloat(CarBms.PACK_VOL);
         if (ok(amps) && ok(volts)) s.chargeKw = Math.abs(amps * volts) / 1000f;
+        s.batteryVolts = ok(volts) ? volts : -1;   // 0.4.7: per l'opzione del consumo istantaneo
         if (s.rangeKm <= 0) {
             int r = bms.getInt(CarBms.ESTD_ELEC_RNG);
             if (r > 0 && r < 2000) s.rangeKm = r;
@@ -871,7 +965,7 @@ public final class VehicleClient {
         float v = speedKmh();
         int g = gear();
         boolean ok = (!Float.isNaN(v) && v < 1f) || g == GEAR_PARK;
-        Diag.putQuiet("auto.fermaPerAggiornamento", "velocità " + (Float.isNaN(v) ? "non letta" : String.format(java.util.Locale.ROOT, "%.1f km/h", v))
+        Diag.putQuiet("auto.fermaPerAggiornamento", "velocità " + (Float.isNaN(v) ? "non letta" : String.format(java.util.Locale.US, "%.1f km/h", v))
                 + " · marcia " + (g == Integer.MIN_VALUE ? "non letta" : String.valueOf(g)) + " → " + (ok ? "ferma" : "non sicura"));
         return ok;
     }
@@ -1574,7 +1668,7 @@ public final class VehicleClient {
         bg.post(() -> {
             boolean ok = bms.setInt(CarBms.RESER_ST_HOUR, sh) & bms.setInt(CarBms.RESER_ST_MIN, sm)
                     & bms.setInt(CarBms.RESER_SP_HOUR, eh) & bms.setInt(CarBms.RESER_SP_MIN, em);
-            Diag.put("ricarica.ultimoComando", String.format(java.util.Locale.ROOT, "ricarica.programmata → %02d:%02d - %02d:%02d", sh, sm, eh, em)
+            Diag.put("ricarica.ultimoComando", String.format(java.util.Locale.US, "ricarica.programmata → %02d:%02d - %02d:%02d", sh, sm, eh, em)
                     + (ok ? " · inviato" : " · non inviato (gestore batteria non pronto)"));
             poll();
         });
@@ -1586,7 +1680,7 @@ public final class VehicleClient {
         hold(CarBms.CHRG_LOCK, 2);
         bg.post(() -> {
             boolean sent = bms.setInt(CarBms.CHRG_LOCK, 2);
-            String ora = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT).format(new java.util.Date());
+            String ora = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(new java.util.Date());
             Diag.put("ricarica.sbloccaPresa", (sent ? "inviato alle " : "NON inviato (gestore batteria non pronto) alle ") + ora);
             poll();
         });
